@@ -1,0 +1,13 @@
+# 1. 忽略所有内容
+*
+
+# 2. 允许 Assets 目录本身
+!Assets/
+
+# 3. 允许 Assets/Scripts 目录
+!Assets/Scripts/
+
+# 4. 允许 Scripts 目录下的所有内容
+!Assets/Scripts/**
+
+.meta
