@@ -12,5 +12,9 @@ namespace RogueGame.Map
         void StartRun(RoomMeta startMeta);
         void SwitchToNextRoom(Direction exitDir);
         bool TryEnterDoor(Direction dir);
+        // 启动指定层的运行（由 GameStateManager 调用）
+        void StartFloor(int floor, RoomMeta startMeta);
+        // 返回解锁 Boss 所需清理战斗房间阈值
+        int GetBossUnlockThreshold();
     }
 }

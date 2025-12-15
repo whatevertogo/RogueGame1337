@@ -8,7 +8,6 @@ namespace RogueGame.Map
     /// </summary>
     public interface IReadOnlyRoomRepository
     {
-        RoomMeta GetMeta(int roomId);
         RoomInstanceState GetInstance(int instanceId);
         bool TryGetInstance(int instanceId, out RoomInstanceState instance);
         IEnumerable<RoomInstanceState> GetAllInstances();

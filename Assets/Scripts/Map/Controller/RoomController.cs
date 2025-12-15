@@ -340,6 +340,8 @@ namespace RogueGame.Map
                 return;
             }
 
+            if(!IsCombatRoom) return;
+
             int count = UnityEngine.Random.Range(minEnemies, maxEnemies + 1);
 
             for (int i = 0; i < count; i++)

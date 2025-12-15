@@ -51,8 +51,6 @@ namespace RogueGame.Map
         private readonly List<GameObject> _activeStubs = new();
         private readonly HashSet<DoorController> _subscribedDoors = new();
 
-        private int _roomsCleared;
-        private bool _bossUnlocked;
         private int _currentFloor = 1;
         private bool _isSwitchingRoom;
 
@@ -67,16 +65,15 @@ namespace RogueGame.Map
         public event Action<int> OnFloorComplete;
         public event Action OnBossUnlocked;
         public event Action<string> OnShowMessage;
-        // 门触发请求已用 EventBus 发布，不再提供本地事件以向后兼容
+        // 门触发请求已用 EventBus 发布
 
         #endregion
 
         #region 公共属性
 
         public RoomInstanceState CurrentRoom => _current;
-        public int RoomsCleared => _roomsCleared;
         public int CurrentFloor => _currentFloor;
-        public bool IsBossUnlocked => _bossUnlocked;
+        // 注意: 层级计数与 Boss 解锁由 GameStateManager 管理，RoomManager 仅保留当前层号作信息用途
         public Vector2 CurrentRoomSize => _current?.CachedSize ?? new Vector2(defaultRoomWidth, defaultRoomHeight);
         public RoomController CurrentRoomController => _current?.Instance?.GetComponent<RoomController>();
 
@@ -123,9 +120,16 @@ namespace RogueGame.Map
         public void StartFloor(int floor, RoomMeta startMeta)
         {
             _currentFloor = floor;
-            _roomsCleared = 0;
-            _bossUnlocked = false;
             StartRun(startMeta);
+        }
+
+        public int GetBossUnlockThreshold()
+        {
+            if (weightTable != null)
+            {
+                try { return weightTable.BossAfterRooms; } catch { }
+            }
+            return roomsToUnlockBoss;
         }
 
         public bool TryEnterDoor(Direction dir)
@@ -158,12 +162,6 @@ namespace RogueGame.Map
         }
 
         // IReadOnlyRoomRepository 实现 - 只读查询接口
-        public RoomMeta GetMeta(int roomId)
-        {
-            var state = _allRooms.Find(r => r?.Meta != null && r.Meta.Index == roomId);
-            return state?.Meta;
-        }
-
         public RoomInstanceState GetInstance(int instanceId)
         {
             return _allRooms.Find(r => r.InstanceId == instanceId);
@@ -278,6 +276,10 @@ namespace RogueGame.Map
             {
                 state.MarkVisited(entryDir);
             }
+
+            //将入口的门标记为Locked
+            roomPrefab.GetDoor(entryDir)?.Lock();
+
 
             // 保存到列表
             _allRooms.Add(state);
@@ -460,26 +462,9 @@ namespace RogueGame.Map
 
         private void HandleRoomCleared(RoomController room)
         {
-            _roomsCleared++;
+            // 仅做本地回调与日志；层级统计与 Boss 解锁由 GameStateManager 负责
             OnRoomCleared?.Invoke(room);
-
-            // RoomController 已作为事实发布者（RoomClearedEvent）。
-            // 此处只负责本地统计与回调，不再重复发布 RoomClearedEvent，避免重复事件流。
-
-            Log($"[RoomManager] 房间清理完成，已清理: {_roomsCleared}");
-
-            if (!_bossUnlocked && _roomsCleared >= roomsToUnlockBoss)
-            {
-                _bossUnlocked = true;
-                OnBossUnlocked?.Invoke();
-                //TODO-Boss解锁的逻辑
-                Log("[RoomManager] Boss 房间已解锁！");
-            }
-
-            if (room.RoomType == RoomType.Boss)
-            {
-                OnFloorComplete?.Invoke(_currentFloor);
-            }
+            Log($"[RoomManager] 房间清理完成, 房间类型: {room?.RoomType}, InstanceId: {room?.RoomMeta?.Index}");
         }
 
         // ========== EventBus 事件处理（最小） ==========
@@ -513,8 +498,6 @@ namespace RogueGame.Map
 
         private void ResetRunState()
         {
-            _roomsCleared = 0;
-            _bossUnlocked = false;
             _isSwitchingRoom = false;
         }
 

@@ -20,12 +20,12 @@ namespace Character
         public TeamType Team => team;
 
         // 组件缓存
-        public CharacterStats Stats { get; private set; }
-        public HealthComponent Health { get; private set; }
-        public MovementComponent Movement { get; private set; }
-        public CombatComponent Combat { get; private set; }
-        public StatusEffectComponent StatusEffects { get; private set; }
-        public SpriteRenderer SpriteRenderer { get; private set; }
+        public CharacterStats Stats;
+        public HealthComponent Health;
+        public MovementComponent Movement;
+        public CombatComponent Combat;
+        public StatusEffectComponent StatusEffects;
+        public SpriteRenderer SpriteRenderer;
 
         protected virtual void Awake()
         {

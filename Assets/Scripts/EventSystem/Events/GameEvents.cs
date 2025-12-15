@@ -66,4 +66,18 @@ namespace RogueGame.Events
         public int InstanceId;
         public string RewardId; // 简化的奖励标识
     }
+
+    /// <summary>
+    /// 交互提示事件：UI 层可订阅以显示/隐藏交互提示（例如按 E 进入）
+    /// </summary>
+    public class InteractionPromptEvent
+    {
+        public string Message;
+        public bool Show;
+    }
+
+    public class BossUnlockedEvent
+    {
+        public int Layer;
+    }
 }

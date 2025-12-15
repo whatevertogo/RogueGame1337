@@ -32,6 +32,9 @@ public class GameStateManager : MonoBehaviour, IGameStateManager
 
     private bool _isTransitioning = false;
     private bool _subscribed = false;
+    // 每层已清理的战斗房间数（GameStateManager 为权威）
+    private int _roomsClearedThisLayer = 0;
+    private bool _bossUnlockedThisLayer = false;
 
     private void Start()
     {
@@ -58,9 +61,11 @@ public class GameStateManager : MonoBehaviour, IGameStateManager
             _subscribed = true;
         }
 
-        // 启动房间生成流程（RoomManager 内部会生成并发布 RoomEnteredEvent）
-        // 使用可写接口委托 RoomManager 启动 Run
-        RoomManager.StartRun(meta);
+        // 将层级初始化交由 GameStateManager 处理：设置 CurrentLayer 并委托 RoomManager 启动该层
+        CurrentLayer = 1;
+        _roomsClearedThisLayer = 0;
+        _bossUnlockedThisLayer = false;
+        RoomManager.StartFloor(CurrentLayer, meta);
 
         // 不再主动 EnterRoom：依赖低层发布的 RoomEnteredEvent 来驱动状态机以保持单一事实源。
         // 仍保留对 CurrentRoom 的一次性同步检查（通过只读仓库查询最新实例）
@@ -141,6 +146,7 @@ public class GameStateManager : MonoBehaviour, IGameStateManager
         CurrentRoomId = roomId;
         // 触发 EnterRoom 状态
         // 仅进入 EnterRoom 状态；是否进入战斗应由 RoomController 发布的事实（CombatStartedEvent / RoomClearedEvent）驱动
+        // 实际进入的房间类型可由 RoomManager控制
         ChangeState(GameFlowState.EnterRoom);
     }
 
@@ -171,8 +177,21 @@ public class GameStateManager : MonoBehaviour, IGameStateManager
         // 进入已清理状态
         ChangeState(GameFlowState.RoomCleared);
 
-        // 决定奖励与下一步流程 —— 奖励选择直接分发到 Reward 系统）
-        //TODO-写一个奖励系统
+        // 统计本层已清理战斗房间数（仅对战斗房间计数；RoomClearedEvent 的 RoomType 可用于判断）
+        if (evt.RoomType == RoomType.Normal || evt.RoomType == RoomType.Elite)
+        {
+            _roomsClearedThisLayer++;
+            // 检查 Boss 解锁阈值
+            int threshold = 0;
+            try { threshold = RoomManager.GetBossUnlockThreshold(); } catch { threshold = 0; }
+            if (!_bossUnlockedThisLayer && threshold > 0 && _roomsClearedThisLayer >= threshold)
+            {
+                _bossUnlockedThisLayer = true;
+                try { EventBus.Publish(new BossUnlockedEvent { Layer = CurrentLayer }); } catch { }
+            }
+        }
+
+        // 决定奖励与下一步流程 —— 奖励选择直接分发到 Reward 系统
         try
         {
             EventBus.Publish(new RewardSelectionRequestedEvent { RoomId = evt.RoomId, InstanceId = evt.InstanceId, RoomType = evt.RoomType });
@@ -180,6 +199,13 @@ public class GameStateManager : MonoBehaviour, IGameStateManager
         catch (System.Exception ex)
         {
             Debug.LogWarning("[GameStateManager] 发布 RewardSelectionRequestedEvent 失败: " + ex.Message);
+        }
+
+        // 若清理的是 Boss 房，则触发层间过渡
+        if (evt.RoomType == RoomType.Boss)
+        {
+            TransitionToNextLayer();
+            return;
         }
 
         // 进入选择下一个房间阶段
@@ -191,24 +217,25 @@ public class GameStateManager : MonoBehaviour, IGameStateManager
         if (_isTransitioning) return;
         StartCoroutine(PerformRoomTransition(evt.Direction));
     }
-    
+
     private IEnumerator PerformRoomTransition(Direction dir)
     {
         _isTransitioning = true;
         var tc = TransitionController ?? GameManager.Instance?.transitionController;
 
-        if (tc != null)
-        {
-            // 在过渡过程中由 RoomManager 实际执行房间切换（通过接口调用）
-            yield return StartCoroutine(tc.DoRoomTransitionCoroutine(() =>
+
+            if (tc != null)
+            {
+                // 在过渡过程中由 RoomManager 实际执行房间切换（通过接口调用）
+                yield return StartCoroutine(tc.DoRoomTransitionCoroutine(() =>
+                {
+                    RoomManager?.SwitchToNextRoom(dir);
+                }));
+            }
+            else
             {
                 RoomManager?.SwitchToNextRoom(dir);
-            }));
-        }
-        else
-        {
-            RoomManager?.SwitchToNextRoom(dir);
-        }
+            }
         _isTransitioning = false;
     }
 
@@ -226,10 +253,19 @@ public class GameStateManager : MonoBehaviour, IGameStateManager
     /// </summary>
     public void TransitionToNextLayer()
     {
-        // int from = CurrentLayer;
-        // CurrentLayer++;
-        // EventBus.Publish(new LayerTransitionEvent { FromLayer = from, ToLayer = CurrentLayer });
-        // // 进入新的起始房
-        // EnterRoom(RoomType.Start, 0);
+        int from = CurrentLayer;
+        CurrentLayer++;
+        _roomsClearedThisLayer = 0;
+        _bossUnlockedThisLayer = false;
+
+        try
+        {
+            EventBus.Publish(new LayerTransitionEvent { FromLayer = from, ToLayer = CurrentLayer });
+        }
+        catch { }
+
+        // 发放层间固定奖励（由上层系统处理；此处仅调用 RoomManager 启动新层）
+        var startMeta = new RoomMeta { RoomType = RoomType.Start, Index = 0, BundleName = "Room_Start_0" };
+        RoomManager?.StartFloor(CurrentLayer, startMeta);
     }
 }

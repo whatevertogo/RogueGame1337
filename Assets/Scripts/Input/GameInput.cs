@@ -14,6 +14,10 @@ public class GameInput : Singleton<GameInput>
     public bool AttackReleasedThisFrame => playerInput != null && playerInput.PlayerControl.Attack.WasReleasedThisFrame();
     public bool AttackIsPressed => playerInput != null && playerInput.PlayerControl.Attack.IsPressed();
 
+    public bool InteractPressedThisFrame => playerInput != null && playerInput.PlayerControl.Interact.WasPerformedThisFrame();
+    public bool InteractReleasedThisFrame => playerInput != null && playerInput.PlayerControl.Interact.WasReleasedThisFrame();
+    public bool InteractIsPressed => playerInput != null && playerInput.PlayerControl.Interact.IsPressed(); 
+
 
 
     protected override void Awake()
@@ -35,7 +39,7 @@ public class GameInput : Singleton<GameInput>
         if (!hasLoggedZero) return;
         if (AttackPressedThisFrame)
         {
-            Debug.Log("🎯 Attack Pressed!");
+            Debug.Log("Attack Pressed!");
         }
     }
 

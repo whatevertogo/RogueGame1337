@@ -35,6 +35,10 @@ namespace RogueGame.Map
         [Header("调试")]
         [SerializeField] private bool enableDebugLog = true;
 
+        [Header("交互设置")]
+        [Tooltip("是否在玩家靠近时发布交互提示事件（由 UI 层订阅显示）")]
+        [SerializeField] private bool showPrompt = true;
+
         // 事件
         public event Action<Direction> OnPlayerEnterDoor;
 
@@ -146,30 +150,12 @@ namespace RogueGame.Map
             UpdateVisual();
         }
 
-        /// <summary>
-        /// 设置门状态（兼容旧接口）
-        /// </summary>
-        public void SetState(Direction dir, bool visited, bool open)
-        {
-            if (dir != direction) return;
-            if (currentState == DoorState.Hidden) return;
-
-            currentState = open ? DoorState.Open : DoorState.Closed;
-            UpdateVisual();
-        }
-
         // ========== 视觉更新 ==========
 
         private void UpdateVisual()
         {
             bool showVisual = currentState != DoorState.Hidden;
             bool blockPlayer = currentState != DoorState.Open;
-
-            // 更新阻挡碰撞体
-            if (doorBlocker != null)
-            {
-                doorBlocker.enabled = blockPlayer;
-            }
 
             // 触发器始终开启（用于检测玩家）
             if (doorTrigger != null)
@@ -201,20 +187,67 @@ namespace RogueGame.Map
 
         // ========== 交互 ==========
 
+        private GameObject _playerInRange;
+
         private void OnTriggerEnter2D(Collider2D other)
         {
             if (!other.CompareTag("Player")) return;
+
+            _playerInRange = other.gameObject;
 
             Log($"[Door-{direction}] 玩家进入触发区，当前状态: {currentState}");
 
             if (currentState != DoorState.Open)
             {
                 Log($"[Door-{direction}] 门未开启，无法通过");
+                // 若门未开启，仍可显示提示（例如提示锁定）
+                if (showPrompt)
+                {
+                    if (currentState == DoorState.Locked)
+                    {
+                        try { EventBus.Publish(new RogueGame.Events.InteractionPromptEvent { Message = "门已锁定", Show = true }); } catch { }
+                    }
+                    if(currentState == DoorState.Closed)
+                    {
+                        try { EventBus.Publish(new RogueGame.Events.InteractionPromptEvent { Message = "门已关闭", Show = true }); } catch { }
+                    }
+                    if(currentState == DoorState.Open)
+                    {
+                        try { EventBus.Publish(new RogueGame.Events.InteractionPromptEvent { Message = "按 E 进入", Show = true }); } catch { }
+                    }
+                }
                 return;
             }
 
-            Log($"[Door-{direction}] 触发通过事件");
-            OnPlayerEnterDoor?.Invoke(direction);
+            // 显示按键提示（实际穿门由按键触发）
+            if (showPrompt)
+            {
+                try { EventBus.Publish(new RogueGame.Events.InteractionPromptEvent { Message = "按 E 进入", Show = true }); } catch { }
+            }
+        }
+
+        private void OnTriggerExit2D(Collider2D other)
+        {
+            if (!other.CompareTag("Player")) return;
+            if (_playerInRange == other.gameObject) _playerInRange = null;
+            if (showPrompt)
+            {
+                try { EventBus.Publish(new RogueGame.Events.InteractionPromptEvent { Message = "", Show = false }); } catch { }
+            }
+        }
+
+        private void Update()
+        {
+            if (_playerInRange == null) return;
+
+            // 使用集中输入管理（GameInput）判断是否按下交互键
+            bool pressed = false;
+            try { pressed = GameInput.Instance != null && GameInput.Instance.InteractPressedThisFrame; } catch { pressed = false; }
+
+            if (pressed && currentState == DoorState.Open)
+            {
+                OnPlayerEnterDoor?.Invoke(direction);
+            }
         }
 
         // ========== 工具 ==========
@@ -264,6 +297,6 @@ namespace RogueGame.Map
         }
 #endif
         #endregion
-        
+
     }
 }
