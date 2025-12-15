@@ -12,5 +12,5 @@ public interface IGameStateManager
     /// <summary>
     /// 初始化注入依赖（由组合根 GameManager 调用）。
     /// </summary>
-    void Initialize(RogueGame.Map.IRoomManager roomManager, TransitionController transitionController);
+    void Initialize(RogueGame.Map.IReadOnlyRoomRepository roomRepository, RogueGame.Map.IRoomManager roomManager, TransitionController transitionController);
 }

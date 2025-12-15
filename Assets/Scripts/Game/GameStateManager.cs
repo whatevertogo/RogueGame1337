@@ -16,14 +16,16 @@ public class GameStateManager : MonoBehaviour, IGameStateManager
     public int CurrentLayer { get; private set; } = 1;
     public int CurrentRoomId { get; private set; } = 0;
     public int CurrentRoomInstanceId { get; private set; } = 0;
-    // 可注入的 RoomManager 引用（由 GameManager 注入或自动查找）
-    // 使用接口以降低耦合
-    public IRoomManager RoomManager { get; set; }
+    // 可注入的只读房间仓库与可写房间管理接口（由 GameManager 注入）
+    // 使用 IReadOnlyRoomRepository 进行查询以保证只读契约，使用 IRoomManager 执行需写入的操作
+    public IReadOnlyRoomRepository RoomRepository { get; private set; }
+    public IRoomManager RoomManager { get; private set; }
     // 可注入的 TransitionController（用于执行过渡协程）
     public TransitionController TransitionController { get; set; }
 
-    public void Initialize(IRoomManager roomManager, TransitionController transitionController)
+    public void Initialize(IReadOnlyRoomRepository roomRepository, IRoomManager roomManager, TransitionController transitionController)
     {
+        this.RoomRepository = roomRepository;
         this.RoomManager = roomManager;
         this.TransitionController = transitionController;
     }
@@ -40,7 +42,7 @@ public class GameStateManager : MonoBehaviour, IGameStateManager
     /// </summary>
     public void StartRun(RoomMeta meta)
     {
-        if(RoomManager == null)
+        if (RoomManager == null || RoomRepository == null)
         {
             CDTU.Utils.Logger.LogError("GameStateManager: RoomManager is not set. Cannot start run.");
             return;
@@ -57,12 +59,17 @@ public class GameStateManager : MonoBehaviour, IGameStateManager
         }
 
         // 启动房间生成流程（RoomManager 内部会生成并发布 RoomEnteredEvent）
+        // 使用可写接口委托 RoomManager 启动 Run
         RoomManager.StartRun(meta);
 
         // 不再主动 EnterRoom：依赖低层发布的 RoomEnteredEvent 来驱动状态机以保持单一事实源。
-        // 仍保留对 CurrentRoom 的一次性同步检查（若需要快速访问）
-        CurrentRoomId = RoomManager.CurrentRoom?.Meta?.Index ?? 0;
-        CurrentRoomInstanceId = RoomManager.CurrentRoom?.InstanceId ?? 0;
+        // 仍保留对 CurrentRoom 的一次性同步检查（通过只读仓库查询最新实例）
+        var latest = GetLatestInstanceFromRepository();
+        if (latest != null)
+        {
+            CurrentRoomId = latest.Meta?.Index ?? 0;
+            CurrentRoomInstanceId = latest.InstanceId;
+        }
     }
 
     private void OnDisable()
@@ -75,6 +82,21 @@ public class GameStateManager : MonoBehaviour, IGameStateManager
             EventBus.Unsubscribe<CombatStartedEvent>(HandleCombatStartedEvent);
             _subscribed = false;
         }
+    }
+
+    private RoomInstanceState GetLatestInstanceFromRepository()
+    {
+        if (RoomRepository == null) return null;
+        RoomInstanceState latest = null;
+        foreach (var inst in RoomRepository.GetAllInstances())
+        {
+            if (inst == null) continue;
+            if (latest == null || inst.InstanceId > latest.InstanceId)
+            {
+                latest = inst;
+            }
+        }
+        return latest;
     }
 
     public void ChangeState(GameFlowState newState)
@@ -118,27 +140,13 @@ public class GameStateManager : MonoBehaviour, IGameStateManager
     {
         CurrentRoomId = roomId;
         // 触发 EnterRoom 状态
+        // 仅进入 EnterRoom 状态；是否进入战斗应由 RoomController 发布的事实（CombatStartedEvent / RoomClearedEvent）驱动
         ChangeState(GameFlowState.EnterRoom);
-        // 如果是战斗房则自动切换到战斗状态（最小实现）
-        if (type == RoomType.Normal || type == RoomType.Elite || type == RoomType.Boss)
-        {
-            ChangeState(GameFlowState.RoomCombat);
-        }
-        else
-        {
-            // 非战斗房直接标记为已清理
-            ChangeState(GameFlowState.RoomCleared);
-        }
     }
 
-    /// <summary>
-    /// 房间内战斗结束，由 RoomManager/CombatManager 调用。
-    /// </summary>
-    public void OnRoomCombatEnded(int clearedEnemyCount)
-    {
-        // 低层 RoomController 将发布 RoomClearedEvent；这里只推进状态机为保险（可视需要保留或移除）
-        ChangeState(GameFlowState.RoomCleared);
-    }
+    // NOTE: RoomController publishes RoomClearedEvent/CombatStartedEvent as facts.
+    // GameStateManager 不再依赖外部直接调用以推进流程（例如 OnRoomCombatEnded），
+    // 一切流程推进应由订阅事实事件执行，保留此处为空以避免双向调用。
 
     private void HandleRoomEnteredEvent(RoomEnteredEvent evt)
     {
@@ -160,7 +168,22 @@ public class GameStateManager : MonoBehaviour, IGameStateManager
         // 更新内部状态
         CurrentRoomId = evt.RoomId;
         CurrentRoomInstanceId = evt.InstanceId;
+        // 进入已清理状态
         ChangeState(GameFlowState.RoomCleared);
+
+        // 决定奖励与下一步流程 —— 奖励选择直接分发到 Reward 系统）
+        //TODO-写一个奖励系统
+        try
+        {
+            EventBus.Publish(new RewardSelectionRequestedEvent { RoomId = evt.RoomId, InstanceId = evt.InstanceId, RoomType = evt.RoomType });
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogWarning("[GameStateManager] 发布 RewardSelectionRequestedEvent 失败: " + ex.Message);
+        }
+
+        // 进入选择下一个房间阶段
+        ChangeState(GameFlowState.ChooseNextRoom);
     }
 
     private void HandleDoorRequested(DoorEnterRequestedEvent evt)
@@ -168,6 +191,7 @@ public class GameStateManager : MonoBehaviour, IGameStateManager
         if (_isTransitioning) return;
         StartCoroutine(PerformRoomTransition(evt.Direction));
     }
+    
     private IEnumerator PerformRoomTransition(Direction dir)
     {
         _isTransitioning = true;
@@ -198,7 +222,7 @@ public class GameStateManager : MonoBehaviour, IGameStateManager
 
     /// <summary>
     /// 触发层间过渡（击败 Boss 后）。
-    /// TODO:清理当前层级并加载新层级等复杂逻辑。
+    /// TODO:清理当前层级并加载新层级等复杂逻辑。或许还有奖励系统
     /// </summary>
     public void TransitionToNextLayer()
     {

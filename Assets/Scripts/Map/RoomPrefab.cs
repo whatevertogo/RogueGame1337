@@ -102,6 +102,7 @@ namespace RogueGame.Map
             return door != null ? door.transform : null;
         }
 
+        #region 门管理
         // ========== 门状态控制 ==========
 
         public void OpenAllDoors()
@@ -183,6 +184,7 @@ namespace RogueGame.Map
                 door?.Reset();
             }
         }
+        #endregion
 
         // ========== 尺寸计算 ==========
 

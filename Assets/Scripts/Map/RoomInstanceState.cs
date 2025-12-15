@@ -8,6 +8,8 @@ using UnityEngine;
 public class RoomInstanceState
     {
         public int InstanceId;
+        // 所属楼层（运行时注入），用于只读查询按楼层过滤
+        public int Floor = 1;
         public RoomMeta Meta;
         public GameObject Instance;
         public Direction VisitedMask = Direction.None;

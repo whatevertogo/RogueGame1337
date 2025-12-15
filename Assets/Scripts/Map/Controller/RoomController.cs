@@ -287,8 +287,7 @@ namespace RogueGame.Map
             Log("[RoomController] 战斗结束：开启所有门（入口门保持关闭）");
             roomPrefab?.OpenAllExcept(lastEntryDirection);
 
-            // TODO-生成奖励
-            SpawnRewards();
+            // SpawnRewards() 保留为本地工具，如需迁移可实现独立的 RewardManager。
 
             // 发布房间清理事件到 EventBus
             try

@@ -51,4 +51,19 @@ namespace RogueGame.Events
         public RogueGame.Map.RoomMeta StartMeta;
         public int InitialRoomId;
     }
+
+    // 由 GameStateManager 处理奖励选择逻辑（从事实事件触发）
+    public class RewardSelectionRequestedEvent
+    {
+        public int RoomId;
+        public int InstanceId;
+        public RoomType RoomType;
+    }
+
+    public class RewardGrantedEvent
+    {
+        public int RoomId;
+        public int InstanceId;
+        public string RewardId; // 简化的奖励标识
+    }
 }

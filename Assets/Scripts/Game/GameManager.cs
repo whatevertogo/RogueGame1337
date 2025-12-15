@@ -44,8 +44,8 @@ public class GameManager : Singleton<GameManager>
         // 将 RoomManager 注入到 GameStateManager，确保 GameStateManager 能够委托 RoomManager 启动 Run
         if (gameStateManager != null && roomManager != null)
         {
-            // 使用接口初始化 GameStateManager 的依赖
-            gameStateManager.Initialize(roomManager, transitionController);
+            // 使用只读仓库与可写接口初始化 GameStateManager 的依赖
+            gameStateManager.Initialize(roomManager, roomManager, transitionController);
         }
 
         // 若场景中仍无 TransitionController，则自动创建并初始化（保证 RoomManager 能够依赖它）
@@ -76,7 +76,7 @@ public class GameManager : Singleton<GameManager>
         if (gameStateManager != null)
         {
             // 通过 Initialize 保证 GameStateManager 收到最新注入（roomManager 可为空，Initialize 会处理）
-            gameStateManager.Initialize(roomManager, transitionController);
+            gameStateManager.Initialize(roomManager, roomManager, transitionController);
         }
     }
 

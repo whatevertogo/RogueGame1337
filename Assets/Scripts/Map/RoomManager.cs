@@ -157,6 +157,50 @@ namespace RogueGame.Map
             return true;
         }
 
+        // IReadOnlyRoomRepository 实现 - 只读查询接口
+        public RoomMeta GetMeta(int roomId)
+        {
+            var state = _allRooms.Find(r => r?.Meta != null && r.Meta.Index == roomId);
+            return state?.Meta;
+        }
+
+        public RoomInstanceState GetInstance(int instanceId)
+        {
+            return _allRooms.Find(r => r.InstanceId == instanceId);
+        }
+
+        public bool TryGetInstance(int instanceId, out RoomInstanceState instance)
+        {
+            instance = GetInstance(instanceId);
+            return instance != null;
+        }
+
+        public IEnumerable<RoomInstanceState> GetAllInstances()
+        {
+            return _allRooms.ToArray();
+        }
+
+        public IEnumerable<RoomInstanceState> GetInstancesOnFloor(int floor)
+        {
+            return _allRooms.FindAll(r => r != null && r.Floor == floor).ToArray();
+        }
+
+        public IEnumerable<RoomInstanceState> GetUnvisitedOnFloor(int floor)
+        {
+            var list = new List<RoomInstanceState>();
+            foreach (var r in _allRooms)
+            {
+                if (r == null || r.Floor != floor) continue;
+                var available = r.Meta?.AvailableExits ?? Direction.None;
+                // 若存在至少一个出口未访问，则视为未访问
+                if (((available) & (~r.VisitedMask)) != Direction.None)
+                {
+                    list.Add(r);
+                }
+            }
+            return list.ToArray();
+        }
+
         #endregion
 
         #region 房间切换核心逻辑
@@ -222,6 +266,7 @@ namespace RogueGame.Map
             var state = new RoomInstanceState
             {
                 InstanceId = newInstanceId,
+                Floor = _currentFloor,
                 Meta = meta,
                 Instance = go,
                 WorldPosition = roomPos,
@@ -418,15 +463,8 @@ namespace RogueGame.Map
             _roomsCleared++;
             OnRoomCleared?.Invoke(room);
 
-            // 发布全局房间清理事件，供 GameStateManager 等上层系统使用
-            try
-            {
-                EventBus.Publish(new RoomClearedEvent { RoomId = _current?.Meta?.Index ?? 0, InstanceId = _current?.InstanceId ?? 0, RoomType = room?.RoomType ?? RoomType.Normal, ClearedEnemyCount = 0 });
-            }
-            catch (Exception ex)
-            {
-                Debug.LogWarning("[RoomManager] 发布 RoomClearedEvent 失败: " + ex.Message);
-            }
+            // RoomController 已作为事实发布者（RoomClearedEvent）。
+            // 此处只负责本地统计与回调，不再重复发布 RoomClearedEvent，避免重复事件流。
 
             Log($"[RoomManager] 房间清理完成，已清理: {_roomsCleared}");
 
