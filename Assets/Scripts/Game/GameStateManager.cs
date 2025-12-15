@@ -12,7 +12,7 @@ public class GameStateManager : MonoBehaviour, IGameStateManager
 {
     public GameFlowState CurrentState { get; private set; } = GameFlowState.None;
 
-    // 当前层与房间上下文（最小）
+    // 当前层与房间上下文
     public int CurrentLayer { get; private set; } = 1;
     public int CurrentRoomId { get; private set; } = 0;
     public int CurrentRoomInstanceId { get; private set; } = 0;
@@ -144,7 +144,7 @@ public class GameStateManager : MonoBehaviour, IGameStateManager
         ChangeState(GameFlowState.EnterRoom);
     }
 
-    // NOTE: RoomController publishes RoomClearedEvent/CombatStartedEvent as facts.
+    // NOTE: RoomController 发布 RoomClearedEvent/CombatStartedEvent as facts.
     // GameStateManager 不再依赖外部直接调用以推进流程（例如 OnRoomCombatEnded），
     // 一切流程推进应由订阅事实事件执行，保留此处为空以避免双向调用。
 

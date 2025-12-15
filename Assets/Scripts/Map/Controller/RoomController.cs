@@ -20,7 +20,7 @@ namespace RogueGame.Map
         [SerializeField] private int maxEnemies = 6;
 
         [Header("精英/Boss")]
-        [SerializeField] private Transform bossSpawnPoint;
+        [SerializeField] private Transform eliteAndbossSpawnPoint;
 
         [Header("调试")]
         [SerializeField] private bool enableDebugLog = true;
@@ -119,7 +119,7 @@ namespace RogueGame.Map
         /// </summary>
         public void SetBossSpawnPoint(Transform point)
         {
-            bossSpawnPoint = point;
+            eliteAndbossSpawnPoint = point;
         }
 
         private int instanceId;
@@ -372,8 +372,8 @@ namespace RogueGame.Map
             var elitePrefab = enemySpawnConfig.SelectEnemy(enemySpawnConfig.eliteEnemies, currentFloor);
             if (elitePrefab != null)
             {
-                Vector3 elitePos = bossSpawnPoint != null ?
-                    bossSpawnPoint.position : transform.position;
+                Vector3 elitePos = eliteAndbossSpawnPoint != null ?
+                    eliteAndbossSpawnPoint.position : transform.position;
                 SpawnEnemy(elitePrefab, elitePos);
             }
 
@@ -407,8 +407,8 @@ namespace RogueGame.Map
             var bossPrefab = enemySpawnConfig.SelectEnemy(enemySpawnConfig.bosses, currentFloor);
             if (bossPrefab != null)
             {
-                Vector3 bossPos = bossSpawnPoint != null ?
-                    bossSpawnPoint.position : transform.position;
+                Vector3 bossPos = eliteAndbossSpawnPoint != null ?
+                    eliteAndbossSpawnPoint.position : transform.position;
                 SpawnEnemy(bossPrefab, bossPos);
             }
             else
@@ -537,11 +537,11 @@ namespace RogueGame.Map
                 }
             }
 
-            if (bossSpawnPoint != null)
+            if (eliteAndbossSpawnPoint != null)
             {
                 Gizmos.color = new Color(1f, 0.5f, 0f);
-                Gizmos.DrawWireSphere(bossSpawnPoint.position, 1f);
-                UnityEditor.Handles.Label(bossSpawnPoint.position + Vector3.up, "Boss");
+                Gizmos.DrawWireSphere(eliteAndbossSpawnPoint.position, 1f);
+                UnityEditor.Handles.Label(eliteAndbossSpawnPoint.position + Vector3.up, "Boss");
             }
 
             string stateText = $"State: {currentState}\nType: {roomType}\nEnemies: {enemyCount}\nCanLeave: {CanPlayerLeave}";
