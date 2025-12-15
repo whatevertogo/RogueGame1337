@@ -44,6 +44,8 @@ namespace RogueGame.Map
         private RoomSelector _selector;
         private IRoomLoader _loader;
 
+        private int _nextInstanceId = 1;
+
         private RoomInstanceState _current;
         private readonly List<RoomInstanceState> _allRooms = new(); // 所有已生成的房间
         private readonly List<GameObject> _activeStubs = new();
@@ -146,7 +148,7 @@ namespace RogueGame.Map
             // 不直接执行切换；将请求发布到 EventBus，由 GameStateManager 负责执行过渡
             try
             {
-                EventBus.Publish(new DoorEnterRequestedEvent { Direction = dir, RoomId = _current?.Meta?.Index ?? 0 });
+                EventBus.Publish(new DoorEnterRequestedEvent { Direction = dir, RoomId = _current?.Meta?.Index ?? 0, InstanceId = _current?.InstanceId ?? 0 });
             }
             catch (System.Exception ex)
             {
@@ -208,7 +210,8 @@ namespace RogueGame.Map
             }
 
             // 初始化
-            InitializeRoomController(roomController, meta);
+            int newInstanceId = _nextInstanceId++;
+            InitializeRoomController(roomController, meta, newInstanceId);
 
             // 计算位置
             Vector2 roomSize = GetRoomSize(go, meta);
@@ -218,6 +221,7 @@ namespace RogueGame.Map
             // 创建状态
             var state = new RoomInstanceState
             {
+                InstanceId = newInstanceId,
                 Meta = meta,
                 Instance = go,
                 WorldPosition = roomPos,
@@ -228,7 +232,6 @@ namespace RogueGame.Map
             if (entryDir != Direction.None)
             {
                 state.MarkVisited(entryDir);
-                roomPrefab.SetVisited(entryDir);
             }
 
             // 保存到列表
@@ -267,11 +270,11 @@ namespace RogueGame.Map
             Log($"[RoomManager] 进入房间: {meta.BundleName}, 总房间数: {_allRooms.Count}");
         }
 
-        private void InitializeRoomController(RoomController controller, RoomMeta meta)
+        private void InitializeRoomController(RoomController controller, RoomMeta meta, int instanceId)
         {
             if (controller == null) return;
 
-            controller.Initialize(meta, _currentFloor);
+            controller.Initialize(meta, _currentFloor, instanceId);
 
             // 仅保留敌人死亡的本地事件订阅；房间级生命周期事件使用 EventBus
             controller.OnEnemyKilled -= HandleEnemyKilled;
@@ -322,7 +325,7 @@ namespace RogueGame.Map
         private void HandleRoomEnteredEvent(RoomEnteredEvent evt)
         {
             if (_current == null) return;
-            if (evt.RoomId == _current.Meta?.Index)
+            if (evt.InstanceId == _current.InstanceId)
             {
                 // 触发本地激活逻辑
                 HandleRoomActivated(CurrentRoomController);
@@ -337,7 +340,7 @@ namespace RogueGame.Map
         private void HandleRoomClearedEvent(RoomClearedEvent evt)
         {
             // 找到对应房间并执行本地清理逻辑
-            var state = _allRooms.Find(r => r.Meta?.Index == evt.RoomId);
+            var state = _allRooms.Find(r => r.InstanceId == evt.InstanceId);
             var controller = state?.Instance?.GetComponent<RoomController>();
             if (controller != null)
             {
@@ -418,7 +421,7 @@ namespace RogueGame.Map
             // 发布全局房间清理事件，供 GameStateManager 等上层系统使用
             try
             {
-                EventBus.Publish(new RoomClearedEvent { RoomId = _current?.Meta?.Index ?? 0, RoomType = room?.RoomType ?? RoomType.Normal, ClearedEnemyCount = 0 });
+                EventBus.Publish(new RoomClearedEvent { RoomId = _current?.Meta?.Index ?? 0, InstanceId = _current?.InstanceId ?? 0, RoomType = room?.RoomType ?? RoomType.Normal, ClearedEnemyCount = 0 });
             }
             catch (Exception ex)
             {
@@ -498,6 +501,12 @@ namespace RogueGame.Map
             return new Vector2(defaultRoomWidth, defaultRoomHeight);
         }
 
+        /// <summary>
+        /// 计算新房间位置
+        /// </summary>
+        /// <param name="newSize"></param>
+        /// <param name="entryDir"></param>
+        /// <returns></returns>
         private Vector3 CalculateRoomPosition(Vector2 newSize, Direction entryDir)
         {
             if (_current == null) return Vector3.zero;

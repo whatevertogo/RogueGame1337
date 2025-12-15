@@ -8,18 +8,21 @@ namespace RogueGame.Events
     public class RoomEnteredEvent
     {
         public int RoomId;
+        public int InstanceId;
         public RoomType RoomType;
     }
 
     public class CombatStartedEvent
     {
         public int RoomId;
+        public int InstanceId;
         public RoomType RoomType;
     }
 
     public class RoomClearedEvent
     {
         public int RoomId;
+        public int InstanceId;
         public RoomType RoomType;
         public int ClearedEnemyCount;
     }
@@ -27,6 +30,7 @@ namespace RogueGame.Events
     public class ChooseNextRoomEvent
     {
         public int FromRoomId;
+        public int FromRoomInstanceId;
     }
 
     public class LayerTransitionEvent
@@ -39,6 +43,7 @@ namespace RogueGame.Events
     {
         public Direction Direction;
         public int RoomId;
+        public int InstanceId;
     }
 
     public class StartRunRequestedEvent

@@ -15,6 +15,7 @@ public class GameStateManager : MonoBehaviour, IGameStateManager
     // 当前层与房间上下文（最小）
     public int CurrentLayer { get; private set; } = 1;
     public int CurrentRoomId { get; private set; } = 0;
+    public int CurrentRoomInstanceId { get; private set; } = 0;
     // 可注入的 RoomManager 引用（由 GameManager 注入或自动查找）
     // 使用接口以降低耦合
     public IRoomManager RoomManager { get; set; }
@@ -37,17 +38,15 @@ public class GameStateManager : MonoBehaviour, IGameStateManager
     /// <summary>
     /// 由上层调用以开始一次 Run（将委托 RoomManager 生成起始房）
     /// </summary>
-    public void StartRun(RogueGame.Map.RoomMeta meta)
+    public void StartRun(RoomMeta meta)
     {
-        // 确保 RoomManager（优先使用注入的接口实现，否则查找场景中的具体实现并做接口转换）
-        var rm = RoomManager ?? (RogueGame.Map.IRoomManager)FindObjectOfType<RogueGame.Map.RoomManager>();
-        if (rm == null)
+        if(RoomManager == null)
         {
-            Debug.LogError("[GameStateManager] 找不到 RoomManager，无法开始 Run");
+            CDTU.Utils.Logger.LogError("GameStateManager: RoomManager is not set. Cannot start run.");
             return;
         }
 
-        // 首先订阅事实事件，确保在 RoomManager 启动并发布事件时能被捕获。
+        // 订阅事实事件，确保在 RoomManager 启动并发布事件时能被捕获。
         if (!_subscribed)
         {
             EventBus.Subscribe<DoorEnterRequestedEvent>(HandleDoorRequested);
@@ -58,11 +57,12 @@ public class GameStateManager : MonoBehaviour, IGameStateManager
         }
 
         // 启动房间生成流程（RoomManager 内部会生成并发布 RoomEnteredEvent）
-        rm.StartRun(meta);
+        RoomManager.StartRun(meta);
 
         // 不再主动 EnterRoom：依赖低层发布的 RoomEnteredEvent 来驱动状态机以保持单一事实源。
         // 仍保留对 CurrentRoom 的一次性同步检查（若需要快速访问）
-        CurrentRoomId = rm.CurrentRoom?.Meta?.Index ?? 0;
+        CurrentRoomId = RoomManager.CurrentRoom?.Meta?.Index ?? 0;
+        CurrentRoomInstanceId = RoomManager.CurrentRoom?.InstanceId ?? 0;
     }
 
     private void OnDisable()
@@ -99,7 +99,7 @@ public class GameStateManager : MonoBehaviour, IGameStateManager
                 // 低层负责发布 RoomClearedEvent
                 break;
             case GameFlowState.ChooseNextRoom:
-                EventBus.Publish(new ChooseNextRoomEvent { FromRoomId = CurrentRoomId });
+                EventBus.Publish(new ChooseNextRoomEvent { FromRoomId = CurrentRoomId, FromRoomInstanceId = CurrentRoomInstanceId });
                 break;
             default:
                 break;
@@ -143,12 +143,14 @@ public class GameStateManager : MonoBehaviour, IGameStateManager
     private void HandleRoomEnteredEvent(RoomEnteredEvent evt)
     {
         CurrentRoomId = evt.RoomId;
+        CurrentRoomInstanceId = evt.InstanceId;
         EnterRoom(evt.RoomType, evt.RoomId);
     }
 
     private void HandleCombatStartedEvent(CombatStartedEvent evt)
     {
         CurrentRoomId = evt.RoomId;
+        CurrentRoomInstanceId = evt.InstanceId;
         ChangeState(GameFlowState.RoomCombat);
     }
 
@@ -157,6 +159,7 @@ public class GameStateManager : MonoBehaviour, IGameStateManager
         // 本事件由 RoomManager 发布，GameStateManager 负责将流程推进到选择下一个房间或层间过渡
         // 更新内部状态
         CurrentRoomId = evt.RoomId;
+        CurrentRoomInstanceId = evt.InstanceId;
         ChangeState(GameFlowState.RoomCleared);
     }
 

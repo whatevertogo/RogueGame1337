@@ -13,7 +13,7 @@ namespace RogueGame.Map
     [RequireComponent(typeof(RoomPrefab))]
     public class RoomController : MonoBehaviour
     {
-        [Header("敌人配置"),InlineEditor]
+        [Header("敌人配置"), InlineEditor]
         [SerializeField] private EnemySpawnConfig enemySpawnConfig;
         [SerializeField] private Transform[] enemySpawnPoints;
         [SerializeField] private int minEnemies = 3;
@@ -43,6 +43,22 @@ namespace RogueGame.Map
         // ========== 事件 (已迁移到 EventBus) ==========
         // 房间激活/战斗开始/房间清理已通过全局 EventBus 发布，减少耦合。
         public event Action<RoomController, int> OnEnemyKilled;
+
+        // 转发器: 帮助将 HealthComponent 的事件转发到 RoomController 并携带 enemy 引用
+        private class EnemyDeathForwarder
+        {
+            private readonly RoomController owner;
+            private readonly GameObject enemy;
+
+            public EnemyDeathForwarder(RoomController owner, GameObject enemy)
+            {
+                this.owner = owner;
+                this.enemy = enemy;
+            }
+
+            public void OnDeath() => owner.OnEnemyDeath(enemy);
+            public void OnDeathWithAttacker(GameObject attacker) => owner.OnEnemyDeathWithKiller(enemy, attacker);
+        }
 
         // ========== 属性 ==========
         public RoomState CurrentState => currentState;
@@ -106,8 +122,11 @@ namespace RogueGame.Map
             bossSpawnPoint = point;
         }
 
-        public void Initialize(RoomMeta meta, int floor = 1)
+        private int instanceId;
+
+        public void Initialize(RoomMeta meta, int floor = 1, int instanceId = 0)
         {
+            this.instanceId = instanceId;
             roomMeta = meta;
             roomType = meta.RoomType;
             currentFloor = floor;
@@ -116,7 +135,7 @@ namespace RogueGame.Map
             ClearEnemies();
             UpdateEnemyCount();
 
-            Log($"[RoomController] 初始化房间:  {meta.BundleName}, 类型: {roomType}, IsCombatRoom:  {IsCombatRoom}");
+            Log($"[RoomController] 初始化房间:  {meta.BundleName}, 类型: {roomType}, IsCombatRoom:  {IsCombatRoom}, InstanceId: {instanceId}");
         }
 
         public void ResetRoom()
@@ -143,14 +162,13 @@ namespace RogueGame.Map
             }
 
             currentState = RoomState.Idle;
-            roomPrefab?.SetVisited(entryDirection);
             // 记录入口方向，后续在战斗结束时用于决定哪个门保持关闭
             lastEntryDirection = entryDirection;
 
             // 发布房间进入事件到 EventBus
             try
             {
-                EventBus.Publish(new RoomEnteredEvent { RoomId = roomMeta?.Index ?? 0, RoomType = roomType });
+                EventBus.Publish(new RoomEnteredEvent { RoomId = roomMeta?.Index ?? 0, InstanceId = instanceId, RoomType = roomType });
             }
             catch (Exception ex)
             {
@@ -195,7 +213,7 @@ namespace RogueGame.Map
             // 发布战斗开始事件到 EventBus
             try
             {
-                EventBus.Publish(new CombatStartedEvent { RoomId = roomMeta?.Index ?? 0, RoomType = roomType });
+                EventBus.Publish(new CombatStartedEvent { RoomId = roomMeta?.Index ?? 0, InstanceId = instanceId, RoomType = roomType });
             }
             catch (Exception ex)
             {
@@ -269,12 +287,13 @@ namespace RogueGame.Map
             Log("[RoomController] 战斗结束：开启所有门（入口门保持关闭）");
             roomPrefab?.OpenAllExcept(lastEntryDirection);
 
+            // TODO-生成奖励
             SpawnRewards();
 
             // 发布房间清理事件到 EventBus
             try
             {
-                EventBus.Publish(new RoomClearedEvent { RoomId = roomMeta?.Index ?? 0, RoomType = roomType, ClearedEnemyCount = 0 });
+                EventBus.Publish(new RoomClearedEvent { RoomId = roomMeta?.Index ?? 0, InstanceId = instanceId, RoomType = roomType, ClearedEnemyCount = 0 });
             }
             catch (Exception ex)
             {
@@ -375,6 +394,9 @@ namespace RogueGame.Map
             }
         }
 
+        /// <summary>
+        /// 生成 Boss 房间的敌人
+        /// </summary>
         private void SpawnBoss()
         {
             if (enemySpawnConfig == null)
@@ -467,21 +489,7 @@ namespace RogueGame.Map
                 _enemyDeathWithAttackerHandlersDic.Remove(enemy);
             }
         }
-        // 转发器: 帮助将 HealthComponent 的事件转发到 RoomController 并携带 enemy 引用
-        private class EnemyDeathForwarder
-        {
-            private readonly RoomController owner;
-            private readonly GameObject enemy;
 
-            public EnemyDeathForwarder(RoomController owner, GameObject enemy)
-            {
-                this.owner = owner;
-                this.enemy = enemy;
-            }
-
-            public void OnDeath() => owner.OnEnemyDeath(enemy);
-            public void OnDeathWithAttacker(GameObject attacker) => owner.OnEnemyDeathWithKiller(enemy, attacker);
-        }
         #endregion
 
         private void UpdateEnemyCount()
@@ -513,17 +521,8 @@ namespace RogueGame.Map
             }
         }
 
-        // ========== 工具 ==========
 
-        private void Log(string message)
-        {
-            if (enableDebugLog)
-            {
-                Debug.Log(message);
-            }
-        }
-
-        #region Editor
+        #region Editor And Debug
 #if UNITY_EDITOR
         private void OnDrawGizmosSelected()
         {
@@ -551,6 +550,15 @@ namespace RogueGame.Map
         }
 
         // 注意：已移除自动查找出生点的实现，改为手动配置或通过 SetEnemySpawnPoints 设置。
+        // ========== 工具 ==========
+
+        private void Log(string message)
+        {
+            if (enableDebugLog)
+            {
+                Debug.Log(message);
+            }
+        }
 #endif
 
         #endregion

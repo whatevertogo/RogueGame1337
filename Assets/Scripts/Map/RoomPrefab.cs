@@ -28,7 +28,6 @@ namespace RogueGame.Map
         [SerializeField] private bool isSafeRoom = false;
 
         // 缓存
-        private Direction _visitedMask = Direction.None;
         private Vector2 _cachedSize = Vector2.zero;
         private bool _sizeCalculated = false;
         private List<DoorController> _allDoors;
@@ -175,33 +174,10 @@ namespace RogueGame.Map
             }
         }
 
-        // ========== 访问状态 ==========
-
-        public void SetVisited(Direction dir)
-        {
-            _visitedMask |= dir;
-        }
-
-        public bool IsVisited(Direction dir) => (_visitedMask & dir) != 0;
-
-        /// <summary>
-        /// 重置访问状态（不影响门的开关状态！）
-        /// </summary>
-        public void ResetVisited()
-        {
-            Debug.Log("[RoomPrefab] ResetVisited 调用（只重置访问标记，不改变门状态）");
-            _visitedMask = Direction.None;
-            // 注意：不再调用 door.Reset()！
-            // 门的状态由 RoomController 根据战斗状态控制
-        }
-
-        /// <summary>
-        /// 完全重置房间（包括门状态，用于对象池场景）
-        /// </summary>
+        // FullReset 保留以便对象池场景可以重置门的视觉/交互状态
         public void FullReset()
         {
-            Debug.Log("[RoomPrefab] FullReset 调用");
-            _visitedMask = Direction.None;
+            Debug.Log("[RoomPrefab] FullReset 调用（已移除访问标记逻辑，保留门重置）");
             foreach (var door in Doors)
             {
                 door?.Reset();
@@ -228,6 +204,9 @@ namespace RogueGame.Map
             CalculateSize();
         }
 
+        /// <summary>
+        /// 计算房间尺寸
+        /// </summary>
         private void CalculateSize()
         {
             if (!autoCalculateSize)
