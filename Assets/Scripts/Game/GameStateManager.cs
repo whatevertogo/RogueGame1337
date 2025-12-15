@@ -184,6 +184,7 @@ public class GameStateManager : MonoBehaviour, IGameStateManager
             // 检查 Boss 解锁阈值
             int threshold = 0;
             try { threshold = RoomManager.GetBossUnlockThreshold(); } catch { threshold = 0; }
+            // 1.本层未解锁Boss,2.阈值大于0,3.已清理房间数达到阈值
             if (!_bossUnlockedThisLayer && threshold > 0 && _roomsClearedThisLayer >= threshold)
             {
                 _bossUnlockedThisLayer = true;
@@ -224,18 +225,18 @@ public class GameStateManager : MonoBehaviour, IGameStateManager
         var tc = TransitionController ?? GameManager.Instance?.transitionController;
 
 
-            if (tc != null)
-            {
-                // 在过渡过程中由 RoomManager 实际执行房间切换（通过接口调用）
-                yield return StartCoroutine(tc.DoRoomTransitionCoroutine(() =>
-                {
-                    RoomManager?.SwitchToNextRoom(dir);
-                }));
-            }
-            else
+        if (tc != null)
+        {
+            // 在过渡过程中由 RoomManager 实际执行房间切换（通过接口调用）
+            yield return StartCoroutine(tc.DoRoomTransitionCoroutine(() =>
             {
                 RoomManager?.SwitchToNextRoom(dir);
-            }
+            }));
+        }
+        else
+        {
+            RoomManager?.SwitchToNextRoom(dir);
+        }
         _isTransitioning = false;
     }
 

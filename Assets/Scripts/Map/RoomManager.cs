@@ -62,8 +62,6 @@ namespace RogueGame.Map
         #region 事件
 
         public event Action<RoomController> OnRoomCleared;
-        public event Action<int> OnFloorComplete;
-        public event Action OnBossUnlocked;
         public event Action<string> OnShowMessage;
         // 门触发请求已用 EventBus 发布
 

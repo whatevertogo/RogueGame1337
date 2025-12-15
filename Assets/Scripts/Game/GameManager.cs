@@ -14,8 +14,6 @@ public class GameManager : Singleton<GameManager>
 
     public TransitionController transitionController;
 
-    private bool _isTransitioning = false;
-
     protected override void Awake()
     {
         base.Awake();
