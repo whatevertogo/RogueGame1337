@@ -120,7 +120,8 @@ public class EnemyCharacter : CharacterBase
         // 播放攻击动画
         try
         {
-            enemyAnim?.PlayAttack();
+            enemyAnim?.PlayAttackAnim();
+            Debug.Log($"[EnemyCharacter] {gameObject.name} 播放攻击动画");
         }
         catch (Exception ex)
         {
@@ -179,7 +180,7 @@ public class EnemyCharacter : CharacterBase
         // 播放死亡动画
         try
         {
-            enemyAnim?.PlayDeath();
+            enemyAnim?.PlayDeathAnim();
         }
         catch (Exception ex)
         {

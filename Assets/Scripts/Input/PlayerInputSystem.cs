@@ -118,6 +118,24 @@ public partial class @PlayerInputSystem: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""SkillQ"",
+                    ""type"": ""Button"",
+                    ""id"": ""29c58977-7a17-43fb-af92-4d88ae234568"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""SkillE"",
+                    ""type"": ""Button"",
+                    ""id"": ""ad805586-a1c2-4f85-b1a5-689fd8426c3a"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -208,6 +226,28 @@ public partial class @PlayerInputSystem: IInputActionCollection2, IDisposable
                     ""action"": ""Interact"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""08a2a056-7bbd-4ba1-a8b7-6ec1def72da8"",
+                    ""path"": ""<Keyboard>/q"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""SkillQ"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""62d7a361-cbd2-41e8-92ac-06fbcfc5097f"",
+                    ""path"": ""<Keyboard>/e"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""SkillE"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -219,6 +259,8 @@ public partial class @PlayerInputSystem: IInputActionCollection2, IDisposable
         m_PlayerControl_Move = m_PlayerControl.FindAction("Move", throwIfNotFound: true);
         m_PlayerControl_Attack = m_PlayerControl.FindAction("Attack", throwIfNotFound: true);
         m_PlayerControl_Interact = m_PlayerControl.FindAction("Interact", throwIfNotFound: true);
+        m_PlayerControl_SkillQ = m_PlayerControl.FindAction("SkillQ", throwIfNotFound: true);
+        m_PlayerControl_SkillE = m_PlayerControl.FindAction("SkillE", throwIfNotFound: true);
     }
 
     ~@PlayerInputSystem()
@@ -302,6 +344,8 @@ public partial class @PlayerInputSystem: IInputActionCollection2, IDisposable
     private readonly InputAction m_PlayerControl_Move;
     private readonly InputAction m_PlayerControl_Attack;
     private readonly InputAction m_PlayerControl_Interact;
+    private readonly InputAction m_PlayerControl_SkillQ;
+    private readonly InputAction m_PlayerControl_SkillE;
     /// <summary>
     /// Provides access to input actions defined in input action map "PlayerControl".
     /// </summary>
@@ -325,6 +369,14 @@ public partial class @PlayerInputSystem: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "PlayerControl/Interact".
         /// </summary>
         public InputAction @Interact => m_Wrapper.m_PlayerControl_Interact;
+        /// <summary>
+        /// Provides access to the underlying input action "PlayerControl/SkillQ".
+        /// </summary>
+        public InputAction @SkillQ => m_Wrapper.m_PlayerControl_SkillQ;
+        /// <summary>
+        /// Provides access to the underlying input action "PlayerControl/SkillE".
+        /// </summary>
+        public InputAction @SkillE => m_Wrapper.m_PlayerControl_SkillE;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -360,6 +412,12 @@ public partial class @PlayerInputSystem: IInputActionCollection2, IDisposable
             @Interact.started += instance.OnInteract;
             @Interact.performed += instance.OnInteract;
             @Interact.canceled += instance.OnInteract;
+            @SkillQ.started += instance.OnSkillQ;
+            @SkillQ.performed += instance.OnSkillQ;
+            @SkillQ.canceled += instance.OnSkillQ;
+            @SkillE.started += instance.OnSkillE;
+            @SkillE.performed += instance.OnSkillE;
+            @SkillE.canceled += instance.OnSkillE;
         }
 
         /// <summary>
@@ -380,6 +438,12 @@ public partial class @PlayerInputSystem: IInputActionCollection2, IDisposable
             @Interact.started -= instance.OnInteract;
             @Interact.performed -= instance.OnInteract;
             @Interact.canceled -= instance.OnInteract;
+            @SkillQ.started -= instance.OnSkillQ;
+            @SkillQ.performed -= instance.OnSkillQ;
+            @SkillQ.canceled -= instance.OnSkillQ;
+            @SkillE.started -= instance.OnSkillE;
+            @SkillE.performed -= instance.OnSkillE;
+            @SkillE.canceled -= instance.OnSkillE;
         }
 
         /// <summary>
@@ -441,5 +505,19 @@ public partial class @PlayerInputSystem: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnInteract(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "SkillQ" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnSkillQ(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "SkillE" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnSkillE(InputAction.CallbackContext context);
     }
 }

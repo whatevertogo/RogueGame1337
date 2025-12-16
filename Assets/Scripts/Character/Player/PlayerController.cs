@@ -169,6 +169,45 @@ public class PlayerController : CharacterBase
 			// 	Debug.Log($"攻击失败 - CanAttack: {Combat.CanAttack}, IsOnCooldown: {Combat.IsOnCooldown}, IsDisabled: {Combat.IsDisabled}");
 			// }
 		}
+
+		// 处理技能输入
+		HandleSkillInput();
+	}
+
+	private void HandleSkillInput()
+	{
+		// Q技能 (槽位 0)
+		if (GameInput.Instance.SkillQPressedThisFrame)
+		{
+			TryActivateSkill(0); // 0 = Q技能槽
+		}
+
+		// E技能 (槽位 1) 
+		if (GameInput.Instance.SkillEPressedThisFrame)
+		{
+			TryActivateSkill(1); // 1 = E技能槽
+		}
+	}
+
+	/// <summary>
+	/// 尝试激活指定技能槽
+	/// </summary>
+	/// <param name="slotIndex">技能槽索引 (0=Q, 1=E)</param>
+	private void TryActivateSkill(int slotIndex)
+	{
+		if (PlayerManager.Instance == null) return;
+
+		bool success = PlayerManager.Instance.TryUseSkill(this, slotIndex);
+		if (success)
+		{
+			Debug.Log($"[PlayerController] 技能激活成功 - 槽位: {slotIndex} ({(slotIndex == 0 ? "Q" : "E")})");
+			// 这里可以播放技能动画或特效
+			OnSkillActivated(slotIndex);
+		}
+		else
+		{
+			Debug.Log($"[PlayerController] 技能激活失败 - 槽位: {slotIndex} ({(slotIndex == 0 ? "Q" : "E")})");
+		}
 	}
 
 	/// <summary>

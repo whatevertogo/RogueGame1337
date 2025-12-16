@@ -1,8 +1,8 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using UI;
 using System;
+using UI;
 
 namespace Game.UI
 {

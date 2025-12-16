@@ -2,15 +2,22 @@ using System;
 using System.Collections.Generic;
 using UI.Loading;
 using UnityEngine;
+using CDTU.Utils;
+
 namespace UI
 {
-    public class UIManager : MonoBehaviour
+    /// <summary>
+    /// UI管理器 - 单例模式管理所有UI界面
+    /// </summary>
+    public class UIManager : Singleton<UIManager>
     {
         private Dictionary<Type, UIViewBase> _openViews = new();
         private Dictionary<UILayer, Transform> _layerRoots = new();
 
-        private void Awake()
+        protected override void Awake()
         {
+            base.Awake();
+            
             // 创建各层根节点
             foreach (UILayer layer in Enum.GetValues(typeof(UILayer)))
             {
@@ -19,6 +26,18 @@ namespace UI
                 root.transform.SetParent(transform, false);
                 _layerRoots[layer] = root.transform;
             }
+            
+            Debug.Log("[UIManager] UI管理器初始化完成");
+        }
+
+        /// <summary>
+        /// 获取指定层的根节点
+        /// </summary>
+        /// <param name="layer">UI层</param>
+        /// <returns>层根节点Transform</returns>
+        public Transform GetLayerRoot(UILayer layer)
+        {
+            return _layerRoots.ContainsKey(layer) ? _layerRoots[layer] : transform;
         }
 
         /// <summary>

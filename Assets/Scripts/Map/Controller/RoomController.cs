@@ -309,6 +309,16 @@ namespace RogueGame.Map
                 Debug.LogWarning("[RoomController] 发布 RoomClearedEvent 失败: " + ex.Message);
             }
 
+            // 重置所有玩家的技能使用状态，准备进入下一个房间
+            try
+            {
+                ResetPlayerSkillsForRoomTransition();
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning("[RoomController] 重置玩家技能失败: " + ex.Message);
+            }
+
             Log($"[RoomController] 房间已清理！类型: {roomType}");
         }
 
@@ -580,6 +590,22 @@ namespace RogueGame.Map
             if (enableDebugLog)
             {
                 Debug.Log(message);
+            }
+        }
+
+        /// <summary>
+        /// 重置所有玩家的技能使用状态，为进入下一个房间做准备
+        /// </summary>
+        private void ResetPlayerSkillsForRoomTransition()
+        {
+            if (PlayerManager.Instance != null)
+            {
+                PlayerManager.Instance.ResetSkillUsageForAllPlayers();
+                Log("[RoomController] 已重置所有玩家技能使用状态，准备进入下一个房间");
+            }
+            else
+            {
+                Debug.LogWarning("[RoomController] PlayerManager.Instance 为空，无法重置技能");
             }
         }
 #endif
