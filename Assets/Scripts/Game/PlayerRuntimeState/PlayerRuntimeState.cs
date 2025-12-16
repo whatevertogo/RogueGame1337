@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 public class PlayerRuntimeState
 {
-    public string Id;
+    public string PlayerId;
     public PlayerController Controller;
     public bool IsLocal;
     // Coins and passive card counts are shared via RunInventory; per-player storage removed

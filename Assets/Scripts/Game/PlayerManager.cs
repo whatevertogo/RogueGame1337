@@ -98,17 +98,17 @@ public class PlayerManager : Singleton<PlayerManager>
         if (controller == null) return null;
         if (string.IsNullOrEmpty(id)) id = Guid.NewGuid().ToString();
         if (_players.ContainsKey(id)) return _players[id];
-        var data = new PlayerRuntimeState { Id = id, Controller = controller, IsLocal = isLocal };
-        _players[id] = data;
+        var state = new PlayerRuntimeState { PlayerId = id, Controller = controller, IsLocal = isLocal };
+        _players[id] = state;
         // Subscribe to player's skill component events
         var skillComp = controller.GetComponent<PlayerSkillComponent>();
         if (skillComp != null)
         {
             // 由 PlayerController 创建并绑定转发器，以便生命周期与 GameObject 一致
-            controller.BindSkillForwarder(this, data);
+            controller.BindSkillForwarder(this, state);
         }
-        OnPlayerRegistered?.Invoke(data);
-        return data;
+        OnPlayerRegistered?.Invoke(state);
+        return state;
     }
 
     public void UnregisterPlayer(PlayerController controller)
@@ -118,13 +118,13 @@ public class PlayerManager : Singleton<PlayerManager>
         foreach (var kv in _players)
             if (kv.Value.Controller == controller) { key = kv.Key; break; }
         if (key == null) return;
-        var data = _players[key];
+        var state = _players[key];
         // 清理共享库存中的数据
-        RunInventory.Instance?.RemoveAllEquipsForPlayer(data.Id);
+        RunInventory.Instance?.RemoveAllEquipsForPlayer(state.PlayerId);
         // 通过 PlayerController 解绑处理器，使绑定状态跟随 GameObject
         controller.UnbindSkillHandlers();
         _players.Remove(key);
-        OnPlayerUnregistered?.Invoke(data);
+        OnPlayerUnregistered?.Invoke(state);
     }
 
     public PlayerRuntimeState GetPlayerRuntimeStateByController(PlayerController controller)
@@ -137,8 +137,8 @@ public class PlayerManager : Singleton<PlayerManager>
     public PlayerRuntimeState GetPlayerRuntimeStateById(string id)
     {
         if (string.IsNullOrEmpty(id)) return null;
-        _players.TryGetValue(id, out var data);
-        return data;
+        _players.TryGetValue(id, out var state);
+        return state;
     }
 
     // 由 PlayerController 内部的 forwarder 调用，以把事件从 controller 转发到 PlayerManager 的事件链

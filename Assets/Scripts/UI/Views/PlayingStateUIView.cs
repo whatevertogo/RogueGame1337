@@ -14,7 +14,7 @@ namespace Game.UI
         // UI Components
         [SerializeField] private Image bloorBarBackGround;
         [SerializeField] private Image bloorBar;
-        [SerializeField] private TMP_Text textTMP;
+        [SerializeField] private TMP_Text nowLevel;
         [SerializeField] private Image skillSlote1BackGround;
         [SerializeField] private Image skillSlote1Image;
         [SerializeField] private Image skillSlote2BackGround;
@@ -41,11 +41,11 @@ namespace Game.UI
                 if (t != null) bloorBar = t.GetComponent<Image>();
                 if (bloorBar == null) Debug.LogWarning("[PlayingStateUIView] bloorBar (Image) 未绑定");
             }
-            if (textTMP == null)
+            if (nowLevel == null)
             {
-                var t = transform.Find("NowLevel/Text (TMP)");
-                if (t != null) textTMP = t.GetComponent<TMP_Text>();
-                if (textTMP == null) Debug.LogWarning("[PlayingStateUIView] textTMP (TMP_Text) 未绑定");
+                var t = transform.Find("NowLevel/NowLevel");
+                if (t != null) nowLevel = t.GetComponent<TMP_Text>();
+                if (nowLevel == null) Debug.LogWarning("[PlayingStateUIView] nowLevel (TMP_Text) 未绑定");
             }
             if (skillSlote1BackGround == null)
             {
@@ -74,9 +74,46 @@ namespace Game.UI
         }
 
         /// <summary>更新文本内容</summary>
-        public void SetTextTMP(string content)
+        public void SetNowLevel(string content)
         {
-            if (textTMP != null) textTMP.text = content;
+            if (nowLevel != null) nowLevel.text = content;
+        }
+
+        /// <summary>
+        /// 以归一化值（0-1）更新生命值显示（血条）。
+        /// View 层负责具体的 UI 控制，Logic 层只传递数据。
+        /// </summary>
+        public void SetHealthNormalized(float normalized)
+        {
+            if (bloorBar != null)
+            {
+                bloorBar.fillAmount = Mathf.Clamp01(normalized);
+            }
+        }
+
+        /// <summary>
+        /// 设置当前关卡/层级显示文本
+        /// </summary>
+        public void SetLevelText(string content)
+        {
+            if (nowLevel != null) nowLevel.text = content;
+        }
+
+        /// <summary>
+        /// 更新技能槽图标（slotIndex 从 0 开始）
+        /// </summary>
+        public void SetSkillSlotIcon(int slotIndex, Sprite icon)
+        {
+            if (slotIndex == 0 && skillSlote1Image != null)
+            {
+                skillSlote1Image.sprite = icon;
+                skillSlote1Image.enabled = icon != null;
+            }
+            else if (slotIndex == 1 && skillSlote2Image != null)
+            {
+                skillSlote2Image.sprite = icon;
+                skillSlote2Image.enabled = icon != null;
+            }
         }
 
         public void Close()

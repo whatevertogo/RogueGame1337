@@ -157,7 +157,7 @@ public class PlayerSkillComponent : CharacterSkillComponent
         if (playerRuntimeState == null) return false;
         if (slotIndex < 0 || slotIndex >= playerRuntimeState.SkillSlots.Length) return false;
         // 在RunInventory中预留主动技能卡
-        if (!RunInventory.Instance.TryEquipActive(playerRuntimeState.Id, skillId)) return false;
+        if (!RunInventory.Instance.TryEquipActive(playerRuntimeState.PlayerId, skillId)) return false;
         playerRuntimeState.SkillSlots[slotIndex].EquippedSkillId = skillId;
         return true;
     }
@@ -172,7 +172,7 @@ public class PlayerSkillComponent : CharacterSkillComponent
         if (slotIndex < 0 || slotIndex >= playerRuntimeState.SkillSlots.Length) return;
         var id = playerRuntimeState.SkillSlots[slotIndex].EquippedSkillId;
         if (string.IsNullOrEmpty(id)) return;
-        RunInventory.Instance.UnequipActive(playerRuntimeState.Id, id);
+        RunInventory.Instance.UnequipActive(playerRuntimeState.PlayerId, id);
         playerRuntimeState.SkillSlots[slotIndex].EquippedSkillId = null;
     }
 }

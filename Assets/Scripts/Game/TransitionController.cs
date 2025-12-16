@@ -71,7 +71,7 @@ public class TransitionController : MonoBehaviour
             Vector3 targetPos = exitPos;
             targetPos.z = playerTransform.position.z;
 
-            Debug.Log($"[TransitionController] 传送玩家 {p.Id}: {playerTransform.position} -> {targetPos}");
+            Debug.Log($"[TransitionController] 传送玩家 {p.PlayerId}: {playerTransform.position} -> {targetPos}");
 
             if (playerRb != null)
             {
