@@ -35,8 +35,10 @@ namespace Character.Components
 
         [Header("防御")]
         [ReadOnly][SerializeField] private Stat _armor = new(0f);
-
         [ReadOnly][SerializeField][Range(0f, 1f)] private Stat _dodge = new(0f);//闪避
+
+        [Header("技能冷却速率")]
+        [ReadOnly][SerializeField] private Stat _skillCooldownReductionRate = new(1f);
 
         // ========== 属性访问器 ==========
         public Stat MaxHP => _maxHP;
@@ -50,6 +52,7 @@ namespace Character.Components
         // public Stat CritDamage => _critDamage;
         public Stat Armor => _armor;
         public Stat Dodge => _dodge;
+        public Stat SkillCooldownReductionRate => _skillCooldownReductionRate;
 
         /// <summary>
         /// 当前生命值
@@ -122,6 +125,7 @@ namespace Character.Components
             // _critDamage.BaseValue = so.critDamage;
             _armor.BaseValue = so.armor;
             _dodge.BaseValue = so.dodge;
+            _skillCooldownReductionRate.BaseValue = so.skillCooldownReductionRate;
         }
 
         private void SubscribeToStatChanges()

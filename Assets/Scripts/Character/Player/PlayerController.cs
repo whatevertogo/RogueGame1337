@@ -5,12 +5,14 @@ using Character;
 [RequireComponent(typeof(PlayerAnimator))]
 [RequireComponent(typeof(Collider2D))]
 [RequireComponent(typeof(Rigidbody2D))]
+[RequireComponent(typeof(PlayerSkillComponent))]
 public class PlayerController : CharacterBase
 {
 	// private Vector2 lastFacingDirection = Vector2.down;  // 记录上次朝向
 
 	private PlayerAnimator playerAnim;
 	private AutoPickupComponent autoPickup;
+	private PlayerSkillComponent skillComponent;
 
 	// // 在 PlayerController 内部维护的转发器类型，负责把技能事件转发给 PlayerManager
 	// private class PlayerSkillEventForwarder
@@ -35,6 +37,8 @@ public class PlayerController : CharacterBase
 			Combat.OnAttack += OnAttackPerformed;
 		}
 
+
+
 		// 向 PlayerManager 注册自己（支持未来多人）
 		var pm = PlayerManager.Instance;
 		if (pm != null)
@@ -47,6 +51,13 @@ public class PlayerController : CharacterBase
 		var col = GetComponent<Collider2D>();
 		playerAnim = GetComponent<PlayerAnimator>();
 		autoPickup = GetComponent<AutoPickupComponent>();
+		skillComponent = GetComponent<PlayerSkillComponent>();
+
+		if(GameInput.Instance != null)
+		{
+			GameInput.Instance.OnSkillQPressed += () => TryActivateSkill(0); // 0 = Q技能槽
+			GameInput.Instance.OnSkillEPressed += () => TryActivateSkill(1); // 1 = E技能槽
+		}
 
 		Debug.Log($"[PlayerController] Awake: {gameObject.name}, tag={gameObject.tag}, layer={LayerMask.LayerToName(gameObject.layer)}, Rigidbody2D={(rb != null ? "Yes" : "No")}, Collider2D={(col != null ? "Yes" : "No")}");
 	}
@@ -118,29 +129,17 @@ public class PlayerController : CharacterBase
 			// 	Debug.Log($"攻击失败 - CanAttack: {Combat.CanAttack}, IsOnCooldown: {Combat.IsOnCooldown}, IsDisabled: {Combat.IsDisabled}");
 			// }
 		}
-
-		// 处理技能输入
-		HandleSkillInput();
 	}
 
-	private void HandleSkillInput()
-	{
-		// Q技能 (槽位 0)
-		if (GameInput.Instance.SkillQPressedThisFrame)
-		{
-			TryActivateSkill(0); // 0 = Q技能槽
-		}
-
-		// E技能 (槽位 1) 
-		if (GameInput.Instance.SkillEPressedThisFrame)
-		{
-			TryActivateSkill(1); // 1 = E技能槽
-		}
-	}
 
 	public void TryActivateSkill(int slotIndex)
 	{
-		//todo--通过技能组件激活技能
+		// 计算鼠标世界坐标作为瞄点，尝试找到显式目标（2D 优先），否则把瞄点传给技能
+		Vector3 aimWorld = Camera.main.ScreenToWorldPoint(UnityEngine.InputSystem.Mouse.current.position.ReadValue());
+		aimWorld.z = 0f;
+		// 我们使用范围伤害（AOE），不需要显式目标检测，直接把瞄点传给技能
+		skillComponent.UseSkill(slotIndex, aimWorld);
+
 	}
 
 	/// <summary>

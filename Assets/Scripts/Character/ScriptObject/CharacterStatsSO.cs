@@ -30,4 +30,7 @@ public class CharacterStatsSO : ScriptableObject
     [Header("防御")]
     [Min(0)] public float armor = 0f;
     [Range(0, 1)] public float dodge = 0f;
+
+    [Header("技能冷却速率")]
+    [Min(0)] public float skillCooldownReductionRate = 0f;
 }

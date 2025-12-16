@@ -18,15 +18,16 @@ public sealed class GameInput : Singleton<GameInput>
     public bool InteractReleasedThisFrame => playerInput != null && playerInput.PlayerControl.Interact.WasReleasedThisFrame();
     public bool InteractIsPressed => playerInput != null && playerInput.PlayerControl.Interact.IsPressed();
 
-    public bool SkillQPressedThisFrame => playerInput != null && playerInput.PlayerControl.SkillQ.WasPerformedThisFrame();
-    public bool SkillQReleasedThisFrame => playerInput != null && playerInput.PlayerControl.SkillQ.WasReleasedThisFrame();
-    public bool SkillQIsPressed => playerInput != null && playerInput.PlayerControl.SkillQ.IsPressed();
+    // public bool SkillQPressedThisFrame => playerInput != null && playerInput.PlayerControl.SkillQ.WasPerformedThisFrame();
+    // public bool SkillQReleasedThisFrame => playerInput != null && playerInput.PlayerControl.SkillQ.WasReleasedThisFrame();
+    // public bool SkillQIsPressed => playerInput != null && playerInput.PlayerControl.SkillQ.IsPressed();
 
-    public bool SkillEPressedThisFrame => playerInput != null && playerInput.PlayerControl.SkillE.WasPerformedThisFrame();
-    public bool SkillEReleasedThisFrame => playerInput != null && playerInput.PlayerControl.SkillE.WasReleasedThisFrame();
-    public bool SkillEIsPressed => playerInput != null && playerInput.PlayerControl.SkillE.IsPressed(); 
+    // public bool SkillEPressedThisFrame => playerInput != null && playerInput.PlayerControl.SkillE.WasPerformedThisFrame();
+    // public bool SkillEReleasedThisFrame => playerInput != null && playerInput.PlayerControl.SkillE.WasReleasedThisFrame();
+    // public bool SkillEIsPressed => playerInput != null && playerInput.PlayerControl.SkillE.IsPressed(); 
 
-
+    public event Action OnSkillQPressed;
+    public event Action OnSkillEPressed;
 
     protected override void Awake()
     {
@@ -55,7 +56,15 @@ public sealed class GameInput : Singleton<GameInput>
     {
         playerInput ??= new PlayerInputSystem();
         playerInput.Enable();
+        playerInput.PlayerControl.SkillQ.performed += ctx => OnSkillQPressed?.Invoke();
+        playerInput.PlayerControl.SkillE.performed += ctx => OnSkillEPressed?.Invoke();
     }
-    private void OnDisable() { playerInput?.Disable(); }
+    private void OnDisable()
+    {
+        playerInput?.Disable();
+
+        playerInput.PlayerControl.SkillQ.performed -= ctx => OnSkillQPressed?.Invoke();
+        playerInput.PlayerControl.SkillE.performed -= ctx => OnSkillEPressed?.Invoke();
+    }
     private void OnDestroy() { playerInput?.Dispose(); }
 }

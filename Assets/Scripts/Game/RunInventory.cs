@@ -103,7 +103,7 @@ public sealed class RunInventory : Singleton<RunInventory>
     /// <summary>
     /// 尝试将主动卡装备给玩家（仅当卡存在于池中时生效）
     /// </summary>
-    public bool TryEquipActiveCard(string cardId, string playerId)
+    public bool TryEquipActiveCard(string cardId, string playerId,int slotIndex)
     {
         if (string.IsNullOrEmpty(cardId) || string.IsNullOrEmpty(playerId)) return false;
         if (!_activeSkillCards.Contains(cardId)) return false;
@@ -131,7 +131,7 @@ public sealed class RunInventory : Singleton<RunInventory>
         if (added)
         {
             // 通知 PlayerManager 为 playerId 装备技能
-            PlayerManager.Instance.EquipSkillToPlayer(playerId, data.skill);
+            PlayerManager.Instance.EquipSkillToPlayer(playerId, data.skill, slotIndex);
         }
         return added;
     }
@@ -139,7 +139,7 @@ public sealed class RunInventory : Singleton<RunInventory>
     /// <summary>
     /// 取消装备主动卡
     /// </summary>
-    public bool UnequipActiveCard(string cardId, string playerId)
+    public bool UnequipActiveCard(string cardId, string playerId,int slotIndex)
     {
         if (string.IsNullOrEmpty(cardId) || string.IsNullOrEmpty(playerId)) return false;
         if (!_activeCardEquippedBy.TryGetValue(cardId, out var set)) return false;
@@ -151,7 +151,7 @@ public sealed class RunInventory : Singleton<RunInventory>
         }
         if(removed)
         {
-            PlayerManager.Instance.UnequipSkillFromPlayer(playerId, cardId);
+            PlayerManager.Instance.UnequipSkillFromPlayer(playerId, cardId, slotIndex);
         }
         return removed;
     }

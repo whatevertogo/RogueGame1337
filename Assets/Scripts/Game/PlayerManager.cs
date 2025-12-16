@@ -23,8 +23,8 @@ public class PlayerManager : Singleton<PlayerManager>
     public event Action<int> OnCoinsChanged;
     public event Action<string, int> OnPassiveCardChanged; // (cardId, count)
     public event Action<string, int> OnActiveCardPoolChanged; // (cardId, count)
-    
-    
+
+
     // 玩家注册事件
     public event Action<PlayerRuntimeState> OnPlayerRegistered;
     public event Action<PlayerRuntimeState> OnPlayerUnregistered;
@@ -32,7 +32,7 @@ public class PlayerManager : Singleton<PlayerManager>
     protected override void Awake()
     {
         base.Awake();
-        
+
         // 订阅共享库存事件
         var ri = RunInventory.Instance;
         if (ri != null)
@@ -41,7 +41,7 @@ public class PlayerManager : Singleton<PlayerManager>
             ri.OnPassiveCardChanged += OnRunInventoryPassiveCardChanged;
             ri.OnActiveCardPoolChanged += OnRunInventoryActiveCardPoolChanged;
         }
-        
+
         // 订阅房间进入事件
         EventBus.Subscribe<RoomEnteredEvent>(HandleRoomEnteredEvent);
     }
@@ -78,10 +78,10 @@ public class PlayerManager : Singleton<PlayerManager>
         if (controller == null) return null;
         if (string.IsNullOrEmpty(id)) id = Guid.NewGuid().ToString();
         if (_players.ContainsKey(id)) return _players[id];
-        
+
         var state = new PlayerRuntimeState { PlayerId = id, Controller = controller, IsLocal = isLocal };
         _players[id] = state;
-        
+
         OnPlayerRegistered?.Invoke(state);
         return state;
     }
@@ -89,15 +89,15 @@ public class PlayerManager : Singleton<PlayerManager>
     public void UnregisterPlayer(PlayerController controller)
     {
         if (controller == null) return;
-        
+
         string key = null;
         foreach (var kv in _players)
             if (kv.Value.Controller == controller) { key = kv.Key; break; }
-        
+
         if (key == null) return;
         var state = _players[key];
-        
-        
+
+
         _players.Remove(key);
         OnPlayerUnregistered?.Invoke(state);
     }
@@ -133,20 +133,59 @@ public class PlayerManager : Singleton<PlayerManager>
 
     #region 技能事件占位（待实现）
 
-    public void EquipSkillToPlayer(string playerId, SkillDefinition skill)
+    public void EquipSkillToPlayer(string playerId, SkillDefinition skill, int slotIndex)
     {
         // TODO-实现为玩家装备技能的逻辑
+        var playerRuntimeState = GetPlayerRuntimeStateById(playerId);
+        if (playerRuntimeState == null)
+        {
+            Debug.LogWarning($"Player with ID {playerId} not found.");
+            return;
+        }
+        var go = playerRuntimeState.Controller.gameObject;
+
+        // 优先查找具体的 PlayerSkillComponent（有 EquipSkill/UnequipSkill）
+        var playerSkillComp = go.GetComponent<PlayerSkillComponent>();
+        if (playerSkillComp != null)
+        {
+            playerSkillComp.EquipSkill(skill, slotIndex);
+            return;
+        }
+        else
+        {
+            //TODO-没问题了记得删掉
+            CDTU.Utils.Logger.LogError($"No PlayerSkillComponent found on player {playerId}");
+        }
+
     }
 
-    public void UnequipSkillFromPlayer(string playerId, string cardId)
+    public void UnequipSkillFromPlayer(string playerId, string cardId, int slotIndex)
     {
-        // TODO-实现为玩家卸下技能的逻辑
+        var playerRuntimeState = GetPlayerRuntimeStateById(playerId);
+        if (playerRuntimeState == null)
+        {
+            Debug.LogWarning($"Player with ID {playerId} not found.");
+            return;
+        }
+
+        var go = playerRuntimeState.Controller.gameObject;
+        var playerSkillComp = go.GetComponent<PlayerSkillComponent>();
+        if (playerSkillComp != null)
+        {
+            playerSkillComp.UnequipSkill(slotIndex);
+            return;
+        }
+        else
+        {
+            //TODO-没问题了记得删掉
+            CDTU.Utils.Logger.LogError($"No PlayerSkillComponent found on player {playerId}");
+        }
     }
-    
+
     #endregion
 
     #region 共享库存转发器
-    
+
     private void OnRunInventoryCoinsChanged(int coins) => OnCoinsChanged?.Invoke(coins);
     private void OnRunInventoryPassiveCardChanged(string cardId, int count) => OnPassiveCardChanged?.Invoke(cardId, count);
     private void OnRunInventoryActiveCardPoolChanged(string cardId, int avail) => OnActiveCardPoolChanged?.Invoke(cardId, avail);
@@ -161,11 +200,11 @@ public class PlayerManager : Singleton<PlayerManager>
         return RunInventory.Instance?.SpendCoins(amount) ?? false;
     }
 
-    
+
     #endregion
 
     #region 通知 / 辅助方法
-    
+
     /// <summary>
     /// 当敌人被击杀时通知，为击杀者添加能量
     /// </summary>
@@ -186,17 +225,18 @@ public class PlayerManager : Singleton<PlayerManager>
         }
 
         if (playerKiller == null) return;
-        
+
         // 根据房间类型给予不同能量奖励
-        float energy = roomType switch { 
-            RoomType.Elite => 30f, 
-            RoomType.Boss => 50f, 
-            _ => 10f 
+        float energy = roomType switch
+        {
+            RoomType.Elite => 30f,
+            RoomType.Boss => 50f,
+            _ => 10f
         };
-        
+
         //TODO-给当前玩家添加能量逻辑
         // AddSkillEnergy(playerKiller, energy);
     }
-    
+
     #endregion
 }
