@@ -16,8 +16,17 @@ namespace Character.Components
         private CharacterStats stats;
         private bool _isUpdating;
 
+        /// <summary>
+        /// 是否处于眩晕状态
+        /// </summary>
         public bool IsStunned { get; private set; }
+        /// <summary>
+        /// 是否处于沉默状态
+        /// </summary>
         public bool IsSilenced { get; private set; }
+        /// <summary>
+        /// 是否处于定身状态
+        /// </summary>
         public bool IsRooted { get; private set; }
 
         private void Awake()

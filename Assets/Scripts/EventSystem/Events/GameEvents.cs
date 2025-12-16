@@ -1,3 +1,4 @@
+using CardSystem;
 using RogueGame.Map;
 
 namespace RogueGame.Events
@@ -74,6 +75,12 @@ namespace RogueGame.Events
     {
         public string Message;
         public bool Show;
+    }
+
+    public class CardAcquiredEvent
+    {
+        public string PlayerId;
+        public CardAcquisitionSource Source;
     }
 
     public class BossUnlockedEvent

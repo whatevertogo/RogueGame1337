@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using CDTU.Utils;
+using CardSystem;
 
 /// <summary>
 /// RunInventory: 运行时（单局）共享资源管理（金币、卡牌池）
@@ -15,9 +16,10 @@ public sealed class RunInventory : Singleton<RunInventory>
     // 被动卡池（全队共享）
     private readonly Dictionary<string, int> _passiveCards = new();
     // 主动卡池：默认为唯一卡（1 张），重复获取会转金币
-    private readonly HashSet<string> _activeCards = new();
+    private readonly HashSet<string> _activeSkillCards = new();
     // 已装备主动卡：cardId -> set of playerIds
     private readonly Dictionary<string, HashSet<string>> _activeCardEquippedBy = new();
+    // 库存以 cardId 为主保持轻量（便于序列化/网络）
 
     public event Action<int> OnCoinsChanged;
     public event Action<string, int> OnPassiveCardChanged; // (cardId, count)
@@ -39,84 +41,111 @@ public sealed class RunInventory : Singleton<RunInventory>
         return true;
     }
 
+    /// <summary>
+    /// 通过 cardId 添加卡牌到库存（推荐）。库存以 cardId 为主，CardRegistry 提供元数据解析。
+    /// </summary>
+    public void AddCardById(string cardId)
+    {
+        if (string.IsNullOrEmpty(cardId)) return;
+
+        var data = CardSystem.CardRegistry.Resolve(cardId);
+        if (data != null)
+        {
+            if (data.type == CardType.Passive) AddPassiveCard(cardId);
+            else AddActiveSkillCard(cardId);
+        }
+        else
+        {
+            Debug.LogWarning($"[RunInventory] AddCardById: unknown cardId '{cardId}'");
+            AddActiveSkillCard(cardId);
+        }
+    }
+
     public void AddPassiveCard(string cardId)
     {
         if (string.IsNullOrEmpty(cardId)) return;
-        if (!_passiveCards.TryGetValue(cardId, out int count)) count = 0;
-        count++;
-        _passiveCards[cardId] = count;
-        OnPassiveCardChanged?.Invoke(cardId, count);
-    }
 
-    /// <summary>
-    /// 添加主动卡：若已有相同卡，则自动转换为金币（默认15）并返回 false
-    /// 返回 true 表示卡牌已加入池中（可被装备）
-    /// </summary>
-    public bool AddActiveCard(string cardId, int duplicateConversionValue = 15)
-    {
-        if (string.IsNullOrEmpty(cardId)) return false;
-        if (_activeCards.Contains(cardId))
+        if (_passiveCards.ContainsKey(cardId))
         {
-            AddCoins(duplicateConversionValue);
-            return false;
+            _passiveCards[cardId]++;
         }
-        _activeCards.Add(cardId);
-        _activeCardEquippedBy[cardId] = new HashSet<string>();
-        OnActiveCardPoolChanged?.Invoke(cardId, 1);
-        return true;
-    }
-
-    /// <summary>
-    /// 尝试装备主动卡：成功返回 true，失败（卡不存在/已被装备）返回 false
-    /// </summary>
-    /// <param name="playerId"></param>
-    /// <param name="cardId"></param>
-    /// <returns></returns>
-    public bool TryEquipActive(string playerId, string cardId)
-    {
-        if (string.IsNullOrEmpty(playerId) || string.IsNullOrEmpty(cardId)) return false;
-        if (!_activeCards.Contains(cardId)) return false;
-        var set = _activeCardEquippedBy.ContainsKey(cardId) ? _activeCardEquippedBy[cardId] : null;
-        if (set == null) return false;
-        // active card pool is unique -> allow only one equip
-        if (set.Count >= 1) return false;
-        set.Add(playerId);
-        OnActiveCardPoolChanged?.Invoke(cardId, 1 - set.Count);
-        return true;
-    }
-
-    /// <summary>
-    /// 卸下主动卡
-    /// </summary>
-    /// <param name="playerId"></param>
-    /// <param name="cardId"></param>
-    public void UnequipActive(string playerId, string cardId)
-    {
-        if (string.IsNullOrEmpty(playerId) || string.IsNullOrEmpty(cardId)) return;
-        if (!_activeCards.Contains(cardId)) return;
-        if (!_activeCardEquippedBy.TryGetValue(cardId, out var set)) return;
-        if (set.Remove(playerId))
+        else
         {
-            OnActiveCardPoolChanged?.Invoke(cardId, 1 - set.Count);
+            _passiveCards[cardId] = 1;
+        }
+
+        OnPassiveCardChanged?.Invoke(cardId, _passiveCards[cardId]);
+    }
+
+    public void AddActiveSkillCard(string cardId)
+    {
+        if (string.IsNullOrEmpty(cardId)) return;
+
+        // 如果池中没有该主动卡，则加入池并通知
+        if (_activeSkillCards.Add(cardId))
+        {
+            OnActiveCardPoolChanged?.Invoke(cardId, 1);
+        }
+        else
+        {
+            // 已存在的重复主动卡：转换为金币（简单策略：+1 金币）
+            AddCoins(1);
         }
     }
 
     /// <summary>
-    /// 移除某玩家的所有已装备主动卡
+    /// 将主动卡装备给玩家（仅当卡存在于池中时生效）
     /// </summary>
-    /// <param name="playerId"></param>
-    public void RemoveAllEquipsForPlayer(string playerId)
+    public bool EquipActiveCard(string cardId, string playerId)
     {
-        if (string.IsNullOrEmpty(playerId)) return;
-        foreach (var kv in _activeCardEquippedBy)
+        if (string.IsNullOrEmpty(cardId) || string.IsNullOrEmpty(playerId)) return false;
+        if (!_activeSkillCards.Contains(cardId)) return false;
+
+        if (!_activeCardEquippedBy.TryGetValue(cardId, out var set))
         {
-            if (kv.Value.Remove(playerId))
-            {
-                OnActiveCardPoolChanged?.Invoke(kv.Key, 1 - kv.Value.Count);
-            }
+            set = new HashSet<string>();
+            _activeCardEquippedBy[cardId] = set;
         }
+
+        var added = set.Add(playerId);
+        return added;
     }
+
+    /// <summary>
+    /// 取消装备主动卡
+    /// </summary>
+    public bool UnequipActiveCard(string cardId, string playerId)
+    {
+        if (string.IsNullOrEmpty(cardId) || string.IsNullOrEmpty(playerId)) return false;
+        if (!_activeCardEquippedBy.TryGetValue(cardId, out var set)) return false;
+
+        var removed = set.Remove(playerId);
+        if (set.Count == 0)
+        {
+            _activeCardEquippedBy.Remove(cardId);
+        }
+        return removed;
+    }
+
+    /// <summary>
+    /// 获取已装备该主动卡的玩家 id 列表（只读副本）
+    /// </summary>
+    public IReadOnlyCollection<string> GetEquippedPlayers(string cardId)
+    {
+        if (string.IsNullOrEmpty(cardId)) return Array.Empty<string>();
+        if (_activeCardEquippedBy.TryGetValue(cardId, out var set))
+        {
+            return new List<string>(set).AsReadOnly();
+        }
+        return Array.Empty<string>();
+    }
+
+    /// <summary>
+    /// 获取主动卡在池中的数量（目前为 0/1）
+    /// </summary>
+    public int GetActiveCardPoolCount(string cardId) => _activeSkillCards.Contains(cardId) ? 1 : 0;
+
 
     public int GetPassiveCardCount(string cardId) => _passiveCards.TryGetValue(cardId, out var c) ? c : 0;
-    public bool HasActiveCard(string cardId) => _activeCards.Contains(cardId);
+    public bool HasActiveCard(string cardId) => _activeSkillCards.Contains(cardId);
 }

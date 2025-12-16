@@ -1,20 +1,30 @@
 using UnityEngine;
 using Character;
-using Character.Core;
 
 [RequireComponent(typeof(AutoPickupComponent))]
 [RequireComponent(typeof(PlayerAnimator))]
 [RequireComponent(typeof(Collider2D))]
 [RequireComponent(typeof(Rigidbody2D))]
-[RequireComponent(typeof(PlayerSkillComponent))]
 public class PlayerController : CharacterBase
 {
 	// private Vector2 lastFacingDirection = Vector2.down;  // 记录上次朝向
 
-	private PlayerAnimator playerAnim => GetComponent<PlayerAnimator>();
+	private PlayerAnimator playerAnim;
+	private AutoPickupComponent autoPickup;
 
-	private AutoPickupComponent autoPickup => GetComponent<AutoPickupComponent>();
-
+	// // 在 PlayerController 内部维护的转发器类型，负责把技能事件转发给 PlayerManager
+	// private class PlayerSkillEventForwarder
+	// {
+	// 	private readonly PlayerManager owner;
+	// 	private readonly PlayerRuntimeState playerRuntimeState;
+	// 	public PlayerSkillEventForwarder(PlayerManager playerManagerowner, PlayerRuntimeState playerRuntimeState)
+	// 	{
+	// 		this.owner = playerManagerowner;
+	// 		this.playerRuntimeState = playerRuntimeState;
+	// 	}
+	// 	public void OnEnergyChanged(int slotIndex, float energy) => owner.ForwardSkillEnergyChanged(this.playerRuntimeState, slotIndex, energy);
+	// 	public void OnSkillUsed(int slotIndex) => owner.ForwardSkillUsed(this.playerRuntimeState, slotIndex);
+	// }
 	protected override void Awake()
 	{
 		base.Awake();
@@ -32,82 +42,18 @@ public class PlayerController : CharacterBase
 			pm.RegisterPlayer(this, true);
 		}
 
+		//初始化组件
 		var rb = GetComponent<Rigidbody2D>();
 		var col = GetComponent<Collider2D>();
+		playerAnim = GetComponent<PlayerAnimator>();
+		autoPickup = GetComponent<AutoPickupComponent>();
+
 		Debug.Log($"[PlayerController] Awake: {gameObject.name}, tag={gameObject.tag}, layer={LayerMask.LayerToName(gameObject.layer)}, Rigidbody2D={(rb != null ? "Yes" : "No")}, Collider2D={(col != null ? "Yes" : "No")}");
 	}
 
 	//绑定到技能组件事件的处理程序（存储在控制器上，因此生命周期跟随游戏对象
 	private System.Action<int, float> _boundEnergyChangedHandler;
 	private System.Action<int> _boundSkillUsedHandler;
-
-	/// <summary>
-	/// 将外部处理器绑定到本玩家的技能组件，并在控制器中保存引用以便解除绑定。
-	/// </summary>
-	public void BindSkillHandlers(System.Action<int, float> energyHandler, System.Action<int> skillUsedHandler)
-	{
-		var skillComp = GetComponent<PlayerSkillComponent>();
-		if (skillComp == null) return;
-
-		// 先解除已有绑定以避免重复
-		UnbindSkillHandlers();
-
-		if (energyHandler != null)
-		{
-			skillComp.OnEnergyChanged += energyHandler;
-			_boundEnergyChangedHandler = energyHandler;
-		}
-		if (skillUsedHandler != null)
-		{
-			skillComp.OnSkillUsed += skillUsedHandler;
-			_boundSkillUsedHandler = skillUsedHandler;
-		}
-	}
-
-	/// <summary>
-	/// 解除插件绑定（安全可重入）。
-	/// </summary>
-	public void UnbindSkillHandlers()
-	{
-		var skillComp = GetComponent<PlayerSkillComponent>();
-		if (skillComp == null) return;
-
-		if (_boundEnergyChangedHandler != null)
-		{
-			skillComp.OnEnergyChanged -= _boundEnergyChangedHandler;
-			_boundEnergyChangedHandler = null;
-		}
-
-		if (_boundSkillUsedHandler != null)
-		{
-			skillComp.OnSkillUsed -= _boundSkillUsedHandler;
-			_boundSkillUsedHandler = null;
-		}
-	}
-
-	// 在 PlayerController 内部维护的转发器类型，负责把技能事件转发给 PlayerManager
-	private class PlayerSkillEventForwarder
-	{
-		private readonly PlayerManager owner;
-		private readonly PlayerRuntimeState playerRuntimeState;
-		public PlayerSkillEventForwarder(PlayerManager owner, PlayerRuntimeState playerRuntimeState)
-		{
-			this.owner = owner;
-			this.playerRuntimeState = playerRuntimeState;
-		}
-		public void OnEnergyChanged(int slotIndex, float energy) => owner.ForwardSkillEnergyChanged(playerRuntimeState, slotIndex, energy);
-		public void OnSkillUsed(int slotIndex) => owner.ForwardSkillUsed(playerRuntimeState, slotIndex);
-	}
-
-	/// <summary>
-	/// 创建并绑定一个 PlayerSkillEventForwarder，以便 PlayerManager 将按玩家转发的事件接收并处理。
-	/// </summary>
-	public void BindSkillForwarder(PlayerManager owner, PlayerRuntimeState data)
-	{
-		if (owner == null || data == null) return;
-		var forwarder = new PlayerSkillEventForwarder(owner, data);
-		BindSkillHandlers(forwarder.OnEnergyChanged, forwarder.OnSkillUsed);
-	}
 
 	protected override void OnDestroy()
 	{
@@ -192,25 +138,9 @@ public class PlayerController : CharacterBase
 		}
 	}
 
-	/// <summary>
-	/// 尝试激活指定技能槽
-	/// </summary>
-	/// <param name="slotIndex">技能槽索引 (0=Q, 1=E)</param>
-	private void TryActivateSkill(int slotIndex)
+	public void TryActivateSkill(int slotIndex)
 	{
-		if (PlayerManager.Instance == null) return;
-
-		bool success = PlayerManager.Instance.TryUseSkill(this, slotIndex);
-		if (success)
-		{
-			Debug.Log($"[PlayerController] 技能激活成功 - 槽位: {slotIndex} ({(slotIndex == 0 ? "Q" : "E")})");
-			// 这里可以播放技能动画或特效
-			OnSkillActivated(slotIndex);
-		}
-		else
-		{
-			Debug.Log($"[PlayerController] 技能激活失败 - 槽位: {slotIndex} ({(slotIndex == 0 ? "Q" : "E")})");
-		}
+		//todo--通过技能组件激活技能
 	}
 
 	/// <summary>
@@ -252,17 +182,6 @@ public class PlayerController : CharacterBase
 		// 播放攻击动画
 		var playerAnim = GetComponent<PlayerAnimator>();
 		playerAnim?.PlayAttack();
-	}
-
-	/// <summary>
-	/// 处理技能激活通知
-	/// slotIndex: 0 => Q, 1 => E
-	/// </summary>
-	/// <param name="slotIndex"></param>
-	public void OnSkillActivated(int slotIndex)
-	{
-		Debug.Log($"[PlayerController] Skill activated request from PlayerManager: slot {slotIndex}");
-		// TODO: 在这里触发技能系统（如果已实现）或播放技能动画
 	}
 
 	protected override void OnDeath()

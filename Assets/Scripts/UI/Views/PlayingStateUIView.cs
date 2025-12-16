@@ -15,9 +15,7 @@ namespace Game.UI
         [SerializeField] private Image bloorBarBackGround;
         [SerializeField] private Image bloorBar;
         [SerializeField] private TMP_Text nowLevel;
-        [SerializeField] private Image skillSlote1BackGround;
         [SerializeField] private Image skillSlote1Image;
-        [SerializeField] private Image skillSlote2BackGround;
         [SerializeField] private Image skillSlote2Image;
         [SerializeField] private Image skillSlot1Energy;
         [SerializeField] private Image skillSlot2Energy;
@@ -51,23 +49,11 @@ namespace Game.UI
                 if (t != null) nowLevel = t.GetComponent<TMP_Text>();
                 if (nowLevel == null) Debug.LogWarning("[PlayingStateUIView] nowLevel (TMP_Text) 未绑定");
             }
-            if (skillSlote1BackGround == null)
-            {
-                var t = transform.Find("SkillSlotes/SkillSlote1/SkillSlote1BackGround");
-                if (t != null) skillSlote1BackGround = t.GetComponent<Image>();
-                if (skillSlote1BackGround == null) Debug.LogWarning("[PlayingStateUIView] skillSlote1BackGround (Image) 未绑定");
-            }
             if (skillSlote1Image == null)
             {
                 var t = transform.Find("SkillSlotes/SkillSlote1/SkillSlote1Image");
                 if (t != null) skillSlote1Image = t.GetComponent<Image>();
                 if (skillSlote1Image == null) Debug.LogWarning("[PlayingStateUIView] skillSlote1Image (Image) 未绑定");
-            }
-            if (skillSlote2BackGround == null)
-            {
-                var t = transform.Find("SkillSlotes/SkillSlote2/SkillSlote2BackGround");
-                if (t != null) skillSlote2BackGround = t.GetComponent<Image>();
-                if (skillSlote2BackGround == null) Debug.LogWarning("[PlayingStateUIView] skillSlote2BackGround (Image) 未绑定");
             }
             if (skillSlote2Image == null)
             {

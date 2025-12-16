@@ -55,7 +55,7 @@ public sealed class CardPickup : MonoBehaviour, IPickup
         if (string.IsNullOrEmpty(CardId)) return;
         if (IsActive)
         {
-            RunInventory.Instance?.AddActiveCard(CardId);
+            RunInventory.Instance?.AddActiveSkillCard(CardId);
         }
         else
         {
