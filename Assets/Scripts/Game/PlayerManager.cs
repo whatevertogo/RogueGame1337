@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using CDTU.Utils;
 using RogueGame.Map;
+using RogueGame.Events;
 
 /// <summary>
 /// PlayerManager: registry and forwarder for shared inventory; handles per-player skill slots.
@@ -39,6 +40,17 @@ public sealed class PlayerManager : Singleton<PlayerManager>
             OnSharedPassiveCardChanged += SharedPassiveCardChanged;
             OnSharedActiveCardPoolChanged += SharedActiveCardPoolChanged;
         }
+
+        // 订阅房间进入事件以在玩家进入新房间时重置本房间使用状态
+        try
+        {
+            EventBus.Subscribe<RoomEnteredEvent>(HandleRoomEnteredEvent);
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning("[PlayerManager] 订阅 RoomEnteredEvent 失败: " + ex.Message);
+        }
+
     }
 
     // 注意方法签名必须匹配事件
@@ -87,11 +99,23 @@ public sealed class PlayerManager : Singleton<PlayerManager>
         OnSharedCoinsChanged -= SharedCoinsChanged;
         OnSharedPassiveCardChanged -= SharedPassiveCardChanged;
         OnSharedActiveCardPoolChanged -= SharedActiveCardPoolChanged;
+
+        try
+        {
+            EventBus.Unsubscribe<RoomEnteredEvent>(HandleRoomEnteredEvent);
+        }
+        catch { }
+    }
+
+    private void HandleRoomEnteredEvent(RoomEnteredEvent evt)
+    {
+        // 当房间被进入时，重置所有玩家的技能使用状态（仅本房间标记）
+        ResetSkillUsageForAllPlayers();
     }
 
 
     #region 人物注册相关
-    
+
 
     public PlayerRuntimeState RegisterPlayer(PlayerController controller, bool isLocal = true, string id = null)
     {

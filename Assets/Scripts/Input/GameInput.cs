@@ -6,7 +6,7 @@ using CDTU.Utils;
 public sealed class GameInput : Singleton<GameInput>
 {
     private PlayerInputSystem playerInput;
-    private bool hasLoggedZero = false; // 调试标志
+    private readonly bool hasLoggedZero = false; // 调试标志
 
     public Vector2 MoveDir { get; private set; }
     // 仅保留 Attack
@@ -53,10 +53,7 @@ public sealed class GameInput : Singleton<GameInput>
 
     private void OnEnable()
     {
-        if (playerInput == null)
-        {
-            playerInput = new PlayerInputSystem();
-        }
+        playerInput ??= new PlayerInputSystem();
         playerInput.Enable();
     }
     private void OnDisable() { playerInput?.Disable(); }

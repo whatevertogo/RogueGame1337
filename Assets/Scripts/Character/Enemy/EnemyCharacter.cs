@@ -7,6 +7,7 @@ using Character.Core;
 using UnityEngine;
 using System.Collections;
 
+[RequireComponent(typeof(EnemyAnimator))]
 public class EnemyCharacter : CharacterBase
 {
 
@@ -17,7 +18,7 @@ public class EnemyCharacter : CharacterBase
     [SerializeField, ReadOnly]
     private EnemyConfigStats enemyConfigStats;
 
-    private EnemyAnimator enemyAnim => GetComponent<EnemyAnimator>();
+    private EnemyAnimator EnemyAnim => GetComponent<EnemyAnimator>();
     private bool _deathHandled = false;
 
 
@@ -120,7 +121,7 @@ public class EnemyCharacter : CharacterBase
         // 播放攻击动画
         try
         {
-            enemyAnim?.PlayAttackAnim();
+            EnemyAnim?.PlayAttackAnim();
             Debug.Log($"[EnemyCharacter] {gameObject.name} 播放攻击动画");
         }
         catch (Exception ex)
@@ -180,7 +181,7 @@ public class EnemyCharacter : CharacterBase
         // 播放死亡动画
         try
         {
-            enemyAnim?.PlayDeathAnim();
+            EnemyAnim?.PlayDeathAnim();
         }
         catch (Exception ex)
         {

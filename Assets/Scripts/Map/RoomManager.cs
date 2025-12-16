@@ -360,8 +360,9 @@ namespace RogueGame.Map
         private void HandleRoomActivated(RoomController controller)
         {
             // 房间进入时重置技能使用标记，以便玩家在新房间可以再次使用技能
-            var pm = PlayerManager.Instance;
-            pm?.ResetSkillUsageForAllPlayers();
+            // 改为由 PlayerManager 订阅 RoomEnteredEvent 负责重置，避免职责重复
+            // 保持此处仅做日志/扩展点
+            Log("[RoomManager] HandleRoomActivated: room activated");
         }
 
         private void HandleRoomEnteredEvent(RoomEnteredEvent evt)

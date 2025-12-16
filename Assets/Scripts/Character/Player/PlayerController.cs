@@ -4,6 +4,9 @@ using Character.Core;
 
 [RequireComponent(typeof(AutoPickupComponent))]
 [RequireComponent(typeof(PlayerAnimator))]
+[RequireComponent(typeof(Collider2D))]
+[RequireComponent(typeof(Rigidbody2D))]
+[RequireComponent(typeof(PlayerSkillComponent))]
 public class PlayerController : CharacterBase
 {
 	// private Vector2 lastFacingDirection = Vector2.down;  // 记录上次朝向

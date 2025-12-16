@@ -8,15 +8,16 @@ using Character.Core;
 /// 支持状态管理、玩家检测、死亡处理等核心功能
 /// </summary>
 [RequireComponent(typeof(MovementComponent))]
-[RequireComponent(typeof(Character.Components.CombatComponent))]
+[RequireComponent(typeof(CombatComponent))]
 [RequireComponent(typeof(HealthComponent))]
 [RequireComponent(typeof(EnemyAnimator))]
 [RequireComponent(typeof(CharacterStats))]
 public class EnemyAI : MonoBehaviour
 {
+    private static readonly WaitForSeconds _waitForSeconds0_1 = new WaitForSeconds(0.1f);
     protected MovementComponent movement;
-    protected Character.Components.CombatComponent combat;
-    protected Character.Components.CharacterStats stats;
+    protected CombatComponent combat;
+    protected CharacterStats stats;
     protected Transform target;
     protected HealthComponent health;
     protected EnemyAnimator enemyAnimator;
@@ -286,7 +287,7 @@ public class EnemyAI : MonoBehaviour
     protected virtual IEnumerator HitStunRoutine()
     {
         isStunned = true;
-        yield return new WaitForSeconds(0.1f); // 100ms硬直
+        yield return _waitForSeconds0_1; // 100ms硬直
         isStunned = false;
     }
 

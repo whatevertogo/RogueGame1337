@@ -12,7 +12,7 @@ namespace UI
     public class UIManager : Singleton<UIManager>
     {
         private Dictionary<Type, UIViewBase> _openViews = new();
-        private Dictionary<UILayer, Transform> _layerRoots = new();
+        private readonly Dictionary<UILayer, Transform> _layerRoots = new();
 
         protected override void Awake()
         {
