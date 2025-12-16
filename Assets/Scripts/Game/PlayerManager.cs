@@ -7,7 +7,7 @@ using RogueGame.Map;
 /// <summary>
 /// PlayerManager: registry and forwarder for shared inventory; handles per-player skill slots.
 /// </summary>
-public class PlayerManager : Singleton<PlayerManager>
+public sealed class PlayerManager : Singleton<PlayerManager>
 {
     private readonly Dictionary<string, PlayerRuntimeState> _players = new();
 
@@ -75,7 +75,7 @@ public class PlayerManager : Singleton<PlayerManager>
 
     void OnDestroy()
     {
-        var ri = RunInventory.Instance;
+        var ri = RunInventory.GetExistingInstance();
         if (ri != null)
         {
             ri.OnCoinsChanged -= OnRunInventoryCoinsChanged;

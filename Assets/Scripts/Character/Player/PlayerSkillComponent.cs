@@ -41,9 +41,10 @@ public class PlayerSkillComponent : CharacterSkillComponent
 
     private void OnDestroy()
     {
-        if (PlayerManager.Instance != null)
+        var pm = PlayerManager.GetExistingInstance();
+        if (pm != null)
         {
-            PlayerManager.Instance.OnPlayerRegistered -= OnPlayerRegistered;
+            pm.OnPlayerRegistered -= OnPlayerRegistered;
         }
     }
 

@@ -113,7 +113,7 @@ public class PlayerController : CharacterBase
 			Combat.OnAttack -= OnAttackPerformed;
 		}
 		// 注销
-		var pm = PlayerManager.Instance;
+		var pm = PlayerManager.GetExistingInstance();
 		if (pm != null)
 		{
 			pm.UnregisterPlayer(this);

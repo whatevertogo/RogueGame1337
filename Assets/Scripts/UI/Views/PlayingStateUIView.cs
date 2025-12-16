@@ -19,6 +19,10 @@ namespace Game.UI
         [SerializeField] private Image skillSlote1Image;
         [SerializeField] private Image skillSlote2BackGround;
         [SerializeField] private Image skillSlote2Image;
+        [SerializeField] private Image skillSlot1Energy;
+        [SerializeField] private Image skillSlot2Energy;
+        [SerializeField] private GameObject skillSlot1UsedMark;
+        [SerializeField] private GameObject skillSlot2UsedMark;
 
         // 在运行时创建阶段进行自动绑定（UIManager 会调用 OnCreate）
         public override void OnCreate()
@@ -71,6 +75,26 @@ namespace Game.UI
                 if (t != null) skillSlote2Image = t.GetComponent<Image>();
                 if (skillSlote2Image == null) Debug.LogWarning("[PlayingStateUIView] skillSlote2Image (Image) 未绑定");
             }
+            if (skillSlot1Energy == null)
+            {
+                var t = transform.Find("SkillSlotes/SkillSlote1/SkillSlot1Energy");
+                if (t != null) skillSlot1Energy = t.GetComponent<Image>();
+            }
+            if (skillSlot2Energy == null)
+            {
+                var t = transform.Find("SkillSlotes/SkillSlote2/SkillSlot2Energy");
+                if (t != null) skillSlot2Energy = t.GetComponent<Image>();
+            }
+            if (skillSlot1UsedMark == null)
+            {
+                var t = transform.Find("SkillSlotes/SkillSlote1/UsedMark");
+                if (t != null) skillSlot1UsedMark = t.gameObject;
+            }
+            if (skillSlot2UsedMark == null)
+            {
+                var t = transform.Find("SkillSlotes/SkillSlote2/UsedMark");
+                if (t != null) skillSlot2UsedMark = t.gameObject;
+            }
         }
 
         /// <summary>更新文本内容</summary>
@@ -113,6 +137,31 @@ namespace Game.UI
             {
                 skillSlote2Image.sprite = icon;
                 skillSlote2Image.enabled = icon != null;
+            }
+        }
+
+        public void SetSkillSlotEnergy(int slotIndex, float normalized)
+        {
+            normalized = Mathf.Clamp01(normalized);
+            if (slotIndex == 0 && skillSlot1Energy != null)
+            {
+                skillSlot1Energy.fillAmount = normalized;
+            }
+            else if (slotIndex == 1 && skillSlot2Energy != null)
+            {
+                skillSlot2Energy.fillAmount = normalized;
+            }
+        }
+
+        public void SetSkillSlotUsed(int slotIndex, bool used)
+        {
+            if (slotIndex == 0 && skillSlot1UsedMark != null)
+            {
+                skillSlot1UsedMark.SetActive(used);
+            }
+            else if (slotIndex == 1 && skillSlot2UsedMark != null)
+            {
+                skillSlot2UsedMark.SetActive(used);
             }
         }
 

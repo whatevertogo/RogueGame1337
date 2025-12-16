@@ -11,7 +11,7 @@ namespace RogueGame.Map
     /// 房间状态机 + 流程编排者
     /// </summary>
     [RequireComponent(typeof(RoomPrefab))]
-    public class RoomController : MonoBehaviour
+    public sealed class RoomController : MonoBehaviour
     {
         [Header("敌人配置"), InlineEditor]
         [SerializeField] private EnemySpawnConfig enemySpawnConfig;
@@ -27,6 +27,7 @@ namespace RogueGame.Map
         [SerializeField][ReadOnly] private RoomState currentState = RoomState.Inactive;
         [SerializeField][ReadOnly] private RoomType roomType = RoomType.Normal;
         [SerializeField][ReadOnly] private int enemyCount = 0;
+        [SerializeField][ReadOnly] private int initialEnemyCount = 0;
 
         private RoomPrefab roomPrefab;
         private RoomMeta roomMeta;
@@ -210,6 +211,9 @@ namespace RogueGame.Map
             Log("[RoomController] 生成敌人");
             SpawnEnemies();
 
+            // 记录初始敌人数，供房间清理时统计
+            initialEnemyCount = activeEnemies.Count;
+
             // 发布战斗开始事件到 EventBus
             try
             {
@@ -287,12 +291,18 @@ namespace RogueGame.Map
             Log("[RoomController] 战斗结束：开启所有门（入口门保持关闭）");
             roomPrefab?.OpenAllExcept(lastEntryDirection);
 
-            // SpawnRewards() 保留为本地工具，如需迁移可实现独立的 RewardManager。
-
-            // 发布房间清理事件到 EventBus
+            // 生成房间奖励（简单实现）
             try
             {
-                EventBus.Publish(new RoomClearedEvent { RoomId = roomMeta?.Index ?? 0, InstanceId = instanceId, RoomType = roomType, ClearedEnemyCount = 0 });
+                SpawnRewards();
+            }
+            catch { }
+
+            // 发布房间清理事件到 EventBus，并传递清理的敌人数量
+            int cleared = initialEnemyCount;
+            try
+            {
+                EventBus.Publish(new RoomClearedEvent { RoomId = roomMeta?.Index ?? 0, InstanceId = instanceId, RoomType = roomType, ClearedEnemyCount = cleared });
             }
             catch (Exception ex)
             {
@@ -508,17 +518,29 @@ namespace RogueGame.Map
 
         private void SpawnRewards()
         {
+            // 简单奖励实现：基于房间类型掉落固定金币
+            int min = 0, max = 0;
             switch (roomType)
             {
                 case RoomType.Normal:
-                    Log("[RoomController] 生成金币奖励");
-                    break;
+                    min = 5; max = 10; break;
                 case RoomType.Elite:
-                    Log("[RoomController] 生成金币 + 主动技能卡");
-                    break;
+                    min = 15; max = 20; break;
                 case RoomType.Boss:
-                    Log("[RoomController] 生成 Boss 奖励");
-                    break;
+                    min = 20; max = 30; break;
+                default:
+                    return;
+            }
+
+            int amount = UnityEngine.Random.Range(min, max + 1);
+            try
+            {
+                LootDropper.Instance?.DropCoins(transform.position, amount);
+                Log($"[RoomController] 掉落金币: {amount}");
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogWarning($"[RoomController] SpawnRewards failed: {ex.Message}");
             }
         }
 

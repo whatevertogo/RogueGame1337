@@ -6,7 +6,7 @@ namespace RogueGame.Map
     /// <summary>
     /// 门控制器 - 出口锚点 + 交互触发器
     /// </summary>
-    public class DoorController : MonoBehaviour
+    public sealed class DoorController : MonoBehaviour
     {
         [Header("方向")]
         [SerializeField] private Direction direction;
@@ -15,7 +15,7 @@ namespace RogueGame.Map
         [Tooltip("玩家从此门进入后的出生位置")]
         [SerializeField] private Transform exitPoint;
 
-        [Tooltip("Stub 放置位置（门外侧）")]
+        [Tooltip("stub 放置位置（门外侧）")]
         [SerializeField] private Transform stubPoint;
 
         [Header("视觉组件")]
@@ -33,7 +33,7 @@ namespace RogueGame.Map
         [SerializeField] private DoorState currentState = DoorState.Closed;
 
         [Header("调试")]
-        [SerializeField] private bool enableDebugLog = true;
+        [SerializeField] private bool enableDebugLog = false;
 
         [Header("交互设置")]
         [Tooltip("是否在玩家靠近时发布交互提示事件（由 UI 层订阅显示）")]

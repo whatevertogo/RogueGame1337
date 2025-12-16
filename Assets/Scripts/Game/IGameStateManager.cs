@@ -1,4 +1,5 @@
 using RogueGame.Map;
+using UI;
 
 /// <summary>
 /// GameStateManager 的抽象接口（最小），方便其它系统通过接口与之交互。
@@ -14,5 +15,5 @@ public interface IGameStateManager
     /// <summary>
     /// 初始化注入依赖（由组合根 GameManager 调用）。
     /// </summary>
-    void Initialize(RogueGame.Map.IReadOnlyRoomRepository roomRepository, RogueGame.Map.IRoomManager roomManager, TransitionController transitionController);
+    void Initialize(IReadOnlyRoomRepository roomRepository, IRoomManager roomManager, TransitionController transitionController,UIManager uiManager);
 }

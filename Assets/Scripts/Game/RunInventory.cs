@@ -7,7 +7,7 @@ using CDTU.Utils;
 /// RunInventory: 运行时（单局）共享资源管理（金币、卡牌池）
 /// 单例，供 UI/逻辑查询与 PlayerManager 转发
 /// </summary>
-public class RunInventory : Singleton<RunInventory>
+public sealed class RunInventory : Singleton<RunInventory>
 {
     private int _coins = 0;
     public int Coins => _coins;

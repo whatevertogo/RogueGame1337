@@ -12,7 +12,7 @@ namespace RogueGame.Map
     /// <summary>
     /// 房间管理器 - 房间生成后永久保留，不使用对象池
     /// </summary>
-    public class RoomManager : MonoBehaviour, IRoomManager
+    public sealed class RoomManager : MonoBehaviour, IRoomManager
     {
         #region 配置
 
@@ -212,7 +212,6 @@ namespace RogueGame.Map
                 var nextMeta = _selector.NextRoom(_current.Meta.RoomType);
                 var entryDir = DirectionUtils.Opposite(exitDir);
 
-                ClearStubs();
                 UnsubscribeCurrentRoomDoors();
 
                 // 不销毁旧房间，只是不再是当前房间
@@ -299,8 +298,6 @@ namespace RogueGame.Map
             // 订阅门事件
             SubscribeToRoomDoors(roomPrefab);
 
-            // 生成 Stub
-            GenerateStubs(_current, entryDir);
 
             // 移动相机（由 TransitionController 承担）
             if (_transitionController != null)
@@ -395,66 +392,6 @@ namespace RogueGame.Map
 
         #endregion
 
-        #region Stub 管理
-
-        private void GenerateStubs(RoomInstanceState state, Direction excludeDir)
-        {
-            ClearStubs();
-
-            if (stubPrefab == null) return;
-
-            var roomPrefab = state.Instance?.GetComponent<RoomPrefab>();
-            var availableExits = state.Meta.AvailableExits & ~excludeDir;
-
-            foreach (Direction dir in GetDirections(availableExits))
-            {
-                if (state.IsVisited(dir)) continue;
-
-                var stub = Instantiate(stubPrefab, roomsRoot);
-                stub.name = $"Stub_{dir}";
-
-                var stubComp = stub.GetComponent<RoomStub>();
-                if (stubComp != null)
-                {
-                    stubComp.Direction = dir;
-                }
-
-                stub.transform.position = GetStubPosition(state, roomPrefab, dir);
-                _activeStubs.Add(stub);
-            }
-        }
-
-        private Vector3 GetStubPosition(RoomInstanceState state, RoomPrefab roomPrefab, Direction dir)
-        {
-            if (roomPrefab != null)
-            {
-                return roomPrefab.GetDoorPosition(dir);
-            }
-
-            var size = state.CachedSize;
-            return state.WorldPosition + dir switch
-            {
-                Direction.North => new Vector3(0, size.y / 2f, 0),
-                Direction.South => new Vector3(0, -size.y / 2f, 0),
-                Direction.East => new Vector3(size.x / 2f, 0, 0),
-                Direction.West => new Vector3(-size.x / 2f, 0, 0),
-                _ => Vector3.zero
-            };
-        }
-
-        private void ClearStubs()
-        {
-            foreach (var stub in _activeStubs)
-            {
-                if (stub != null)
-                {
-                    Destroy(stub);
-                }
-            }
-            _activeStubs.Clear();
-        }
-
-        #endregion
 
         #region 房间事件处理
 
@@ -479,7 +416,6 @@ namespace RogueGame.Map
 
         private void ClearAll()
         {
-            ClearStubs();
             UnsubscribeCurrentRoomDoors();
 
             // 销毁所有房间

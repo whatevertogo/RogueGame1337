@@ -6,7 +6,7 @@ namespace RogueGame.Map.Loading
     /// 开发阶段默认使用 Resources 加载房间 prefab。
     /// 期待路径：Resources/Rooms/Room_<Type>_<Index>
     /// </summary>
-    public class ResourcesRoomLoader : IRoomLoader
+    public sealed class ResourcesRoomLoader : IRoomLoader
     {
         private const string DefaultPathPrefix = "Rooms";
 

@@ -24,7 +24,7 @@ namespace UI
         /// <summary>
         /// 打开 UI 并绑定逻辑模块
         /// </summary>
-        public T Open<T>(UIArgs args = null, UILayer layer = UILayer.Normal, params UI.IUILogic[] logics)
+        public T Open<T>(UIArgs args = null, UILayer layer = UILayer.Normal, params IUILogic[] logics)
             where T : UIViewBase
         {
             Type viewType = typeof(T);
@@ -37,7 +37,16 @@ namespace UI
 
             // 假设资源路径 = T.Name
             GameObject prefab = UIAssetProvider.Load<T>();
-            if (prefab == null) return null;
+            if (prefab == null)
+            {
+                Debug.LogError($"无法加载 UI 预制体：{viewType},是否路径或名称错误？");
+                return null;
+            }
+            else
+            {
+                Debug.Log($"加载 UI 预制体：{viewType}");
+            }
+            Debug.Log("实施了Open方法");    
 
             GameObject instance = Instantiate(prefab, _layerRoots[layer], false);
             T view = instance.GetComponent<T>();

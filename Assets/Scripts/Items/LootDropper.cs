@@ -6,7 +6,7 @@ using CDTU.Utils;
 /// LootDropper：负责在地图上实例化拾取预制体（硬币/卡牌）
 /// 单例——在场景中放置一个并为其分配预制体。
 /// </summary>
-public class LootDropper : Singleton<LootDropper>
+public sealed class LootDropper : Singleton<LootDropper>
 {
     [Header("Prefabs")]
     public GameObject CoinPickupPrefab;

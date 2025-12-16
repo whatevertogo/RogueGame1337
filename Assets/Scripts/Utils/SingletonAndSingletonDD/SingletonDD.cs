@@ -40,6 +40,15 @@ namespace CDTU.Utils
             set => _instance = value;
         }
 
+        /// <summary>
+        /// 尝试获取已存在的实例，但不会在找不到时自动创建新 GameObject（用于析构/清理阶段避免重新生成实例）
+        /// </summary>
+        public static T GetExistingInstance()
+        {
+            if (_instance != null) return _instance;
+            return FindFirstObjectByType<T>();
+        }
+
         protected virtual void Awake()
         {
             // 检测多个实例的情况

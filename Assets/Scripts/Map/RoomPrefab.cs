@@ -7,7 +7,7 @@ namespace RogueGame.Map
     /// <summary>
     /// 房间预制体组件 - 管理房间结构和门
     /// </summary>
-    public class RoomPrefab : MonoBehaviour
+    public sealed class RoomPrefab : MonoBehaviour
     {
         [Header("出生点")]
         public Transform PlayerSpawn;

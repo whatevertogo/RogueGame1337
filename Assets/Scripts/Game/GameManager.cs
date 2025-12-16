@@ -2,15 +2,18 @@ using System;
 using System.Collections;
 using CDTU.Utils;
 using RogueGame.Map;
+using UI;
 using UnityEngine;
 
 public class GameManager : Singleton<GameManager>
 {
     [Header("References (optional, will auto-find if null)")]
     [SerializeField] private MonoBehaviour roomManagerTarget;
-    public IRoomManager roomManager => roomManagerTarget as IRoomManager;
+    public IRoomManager RoomManager => roomManagerTarget as IRoomManager;
     [SerializeField] private MonoBehaviour gameStateManagerTarget;
-    public IGameStateManager gameStateManager => gameStateManagerTarget as IGameStateManager;
+    public IGameStateManager GameStateManager => gameStateManagerTarget as IGameStateManager;
+
+    [SerializeField] private UIManager UIManager;
 
     public TransitionController transitionController;
 
@@ -25,58 +28,26 @@ public class GameManager : Singleton<GameManager>
     /// </summary>
     private void CheckReferences()
     {
-        if (roomManager == null)
+        if (RoomManager == null)
         {
             CDTU.Utils.Logger.LogWarning("[GameManager] 房间管理器引用为空");
+            return;
         }
         if (transitionController == null)
         {
             CDTU.Utils.Logger.LogWarning("[GameManager] TransitionController 引用为空，尝试在场景中查找。");
-            transitionController = FindObjectOfType<TransitionController>();
+            return;
         }
-        if (gameStateManager == null)
+        if (GameStateManager == null)
         {
             CDTU.Utils.Logger.LogWarning("[GameManager] GameStateManager 引用为空");
-        }
+            return;
 
-        // 将 RoomManager 注入到 GameStateManager，确保 GameStateManager 能够委托 RoomManager 启动 Run
-        if (gameStateManager != null && roomManager != null)
-        {
-            // 使用只读仓库与可写接口初始化 GameStateManager 的依赖
-            gameStateManager.Initialize(roomManager, roomManager, transitionController);
         }
-
-        // 若场景中仍无 TransitionController，则自动创建并初始化（保证 RoomManager 能够依赖它）
-        if (transitionController == null)
-        {
-            var go = new GameObject("TransitionController");
-            transitionController = go.AddComponent<TransitionController>();
-            // 尝试设置主相机引用
-            if (transitionController.mainCamera == null && Camera.main != null)
-            {
-                transitionController.mainCamera = Camera.main;
-            }
-            // 设置合理默认值（若未在 Inspector 调整）
-            if (transitionController.cameraSwitchDuration <= 0f) transitionController.cameraSwitchDuration = 0.5f;
-            if (transitionController.teleportMovementDisableTime <= 0f) transitionController.teleportMovementDisableTime = 0.15f;
-            Debug.Log("[GameManager] 自动创建 TransitionController 并注入到 GameManager");
-        }
-        else
-        {
-            // 如果找到 TransitionController，确保其 mainCamera 被设置（降低配置错误概率）
-            if (transitionController.mainCamera == null && Camera.main != null)
-            {
-                transitionController.mainCamera = Camera.main;
-            }
-        }
-
-        // 确保如果刚刚创建或找到 TransitionController，注入到 GameStateManager
-        if (gameStateManager != null)
-        {
-            // 通过 Initialize 保证 GameStateManager 收到最新注入（roomManager 可为空，Initialize 会处理）
-            gameStateManager.Initialize(roomManager, roomManager, transitionController);
-        }
+        // 使用只读仓库与可写接口初始化 GameStateManager 的依赖
+        GameStateManager.Initialize(RoomManager, RoomManager, transitionController, UIManager);
     }
+
 
     private void OnEnable()
     {
@@ -87,9 +58,12 @@ public class GameManager : Singleton<GameManager>
     {
         // 通过 GameStateManager 启动 Run（GameStateManager 负责委托给 RoomManager）
         var startMeta = new RoomMeta { RoomType = RoomType.Start, Index = 0, BundleName = "Room_Start_0" };
-        if (gameStateManager != null)
+        // 调试日志：帮助定位为何 StartRun 未被调用
+        CDTU.Utils.Logger.Log($"[GameManager] Start: GameStateManager={(GameStateManager == null ? "null" : "present")}, RoomManager={(RoomManager == null ? "null" : "present")}, TransitionController={(transitionController == null ? "null" : "present")}");
+        if (GameStateManager != null)
         {
-            gameStateManager.StartRun(startMeta);
+            CDTU.Utils.Logger.Log("[GameManager] 调用 GameStateManager.StartRun(...)");
+            GameStateManager.StartRun(startMeta);
         }
         else
         {
@@ -107,8 +81,8 @@ public class GameManager : Singleton<GameManager>
     /// </summary>
     public bool TryEnterDoor(Direction dir)
     {
-        if (roomManager == null) return false;
-        return roomManager.TryEnterDoor(dir);
+        if (RoomManager == null) return false;
+        return RoomManager.TryEnterDoor(dir);
     }
 
     // Door transition orchestration moved to GameStateManager

@@ -6,7 +6,7 @@ namespace RogueGame.Map
     /// <summary>
     /// 按权重与 Boss 阈值选择下一房间类型与索引。
     /// </summary>
-    public class RoomSelector
+    public sealed class RoomSelector
     {
         private readonly RoomWeightTable _weightTable;
         private readonly Dictionary<RoomType, RoomVariantSet> _variantSets;

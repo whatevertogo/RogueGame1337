@@ -8,7 +8,7 @@ using Character.Interfaces;
 /// 负责过渡期间的通用逻辑：锁定玩家移动、执行切换动作、解锁。
 /// 这是一个轻量级实现，后续可以扩展为相机淡入/淡出或动效。
 /// </summary>
-public class TransitionController : MonoBehaviour
+public sealed class TransitionController : MonoBehaviour
 {
     [Tooltip("过渡完成后等待的缓冲时间（秒）")]
     public float postSwitchDelay = 0.25f;

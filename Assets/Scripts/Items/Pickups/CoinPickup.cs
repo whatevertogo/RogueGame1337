@@ -5,7 +5,7 @@ using UnityEngine;
 /// <summary>
 /// 金币拾取：支持自动拾取范围（磁吸）与直接拾取
 /// </summary>
-public class CoinPickup : MonoBehaviour, IPickup
+public sealed class CoinPickup : MonoBehaviour, IPickup
 {
     public int Amount = 1;
     public float FlySpeed = 10f;

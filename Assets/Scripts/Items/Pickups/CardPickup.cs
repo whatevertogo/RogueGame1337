@@ -5,7 +5,7 @@ using UnityEngine;
 /// <summary>
 /// Card pickup: supports auto-pickup magnet and direct collision
 /// </summary>
-public class CardPickup : MonoBehaviour, IPickup
+public sealed class CardPickup : MonoBehaviour, IPickup
 {
     public string CardId;
     public bool IsActive = false;

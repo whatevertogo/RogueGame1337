@@ -7,7 +7,7 @@ namespace RogueGame.Map
     /// 敌人生成条目
     /// </summary>
     [System.Serializable]
-    public class EnemySpawnEntry
+    public sealed class EnemySpawnEntry
     {
         public GameObject prefab;
         

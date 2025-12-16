@@ -3,12 +3,14 @@ using RogueGame.Map;
 using CDTU.Utils;
 using RogueGame.Events;
 using System.Collections;
+using UI;
+using Game.UI;
 
 /// <summary>
 /// 轻量级 GameStateManager：负责发布状态变更事件，保持最小实现以便快速验证流程。
 /// 使用已有的 EventBus 进行解耦。用于替代/补充现有的 GameFlowController。
 /// </summary>
-public class GameStateManager : MonoBehaviour, IGameStateManager
+public sealed class GameStateManager : MonoBehaviour, IGameStateManager
 {
     public GameFlowState CurrentState { get; private set; } = GameFlowState.None;
 
@@ -22,12 +24,14 @@ public class GameStateManager : MonoBehaviour, IGameStateManager
     public IRoomManager RoomManager { get; private set; }
     // 可注入的 TransitionController（用于执行过渡协程）
     public TransitionController TransitionController { get; set; }
+    public UIManager UIManager { get; private set; }
 
-    public void Initialize(IReadOnlyRoomRepository roomRepository, IRoomManager roomManager, TransitionController transitionController)
+    public void Initialize(IReadOnlyRoomRepository roomRepository, IRoomManager roomManager, TransitionController transitionController, UIManager uiManager)
     {
         this.RoomRepository = roomRepository;
         this.RoomManager = roomManager;
         this.TransitionController = transitionController;
+        this.UIManager = uiManager;
     }
 
     private bool _isTransitioning = false;
@@ -66,6 +70,16 @@ public class GameStateManager : MonoBehaviour, IGameStateManager
         _roomsClearedThisLayer = 0;
         _bossUnlockedThisLayer = false;
         RoomManager.StartFloor(CurrentLayer, meta);
+        CDTU.Utils.Logger.Log("GameStateManager: StartRun called for Layer " + CurrentLayer);
+
+        // 初始化 UI（诊断）：打印 UIManager 状态以排查为何未执行 Open
+        try
+        {
+            CDTU.Utils.Logger.Log($"GameStateManager: UIManager is {(UIManager==null?"null":UIManager.GetType().ToString())}");
+        }
+        catch { }
+        // 初始化UI，由prefab自动注入Logic
+        UIManager?.Open<PlayingStateUIView>();
 
         // 不再主动 EnterRoom：依赖低层发布的 RoomEnteredEvent 来驱动状态机以保持单一事实源。
         // 仍保留对 CurrentRoom 的一次性同步检查（通过只读仓库查询最新实例）

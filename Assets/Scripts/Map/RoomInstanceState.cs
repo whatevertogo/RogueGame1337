@@ -5,7 +5,7 @@ using UnityEngine;
 /// 用于运行时的房间实例状态。
 /// 现在包含实例引用与缓存的尺寸信息，便于精确管理生命周期。
 /// </summary>
-public class RoomInstanceState
+public sealed class RoomInstanceState
     {
         public int InstanceId;
         // 所属楼层（运行时注入），用于只读查询按楼层过滤

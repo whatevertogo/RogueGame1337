@@ -3,7 +3,7 @@ using UnityEngine.InputSystem;
 using System;
 using CDTU.Utils;
 
-public class GameInput : Singleton<GameInput>
+public sealed class GameInput : Singleton<GameInput>
 {
     private PlayerInputSystem playerInput;
     private bool hasLoggedZero = false; // 调试标志
