@@ -292,6 +292,7 @@ namespace RogueGame.Map
             roomPrefab?.OpenAllExcept(lastEntryDirection);
 
             // 生成房间奖励（简单实现）
+            // TODO-完善奖励系统
             try
             {
                 SpawnRewards();

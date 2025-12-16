@@ -9,6 +9,9 @@ using Character.Core;
 /// </summary>
 [RequireComponent(typeof(MovementComponent))]
 [RequireComponent(typeof(Character.Components.CombatComponent))]
+[RequireComponent(typeof(HealthComponent))]
+[RequireComponent(typeof(EnemyAnimator))]
+[RequireComponent(typeof(CharacterStats))]
 public class EnemyAI : MonoBehaviour
 {
     protected MovementComponent movement;
@@ -55,8 +58,8 @@ public class EnemyAI : MonoBehaviour
     protected virtual void Awake()
     {
         movement = GetComponent<MovementComponent>();
-        combat = GetComponent<Character.Components.CombatComponent>();
-        stats = GetComponent<Character.Components.CharacterStats>();
+        combat = GetComponent<CombatComponent>();
+        stats = GetComponent<CharacterStats>();
         health = GetComponent<HealthComponent>();
         enemyAnimator = GetComponent<EnemyAnimator>();
 
