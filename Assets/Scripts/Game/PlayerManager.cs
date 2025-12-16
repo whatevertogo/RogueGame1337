@@ -5,6 +5,7 @@ using UnityEngine;
 using RogueGame.Map;
 using RogueGame.Events;
 using CDTU.Utils;
+using CardSystem.SkillSystem;
 
 /// <summary>
 /// 玩家管理器：负责玩家注册、共享库存转发、技能管理
@@ -132,6 +133,15 @@ public class PlayerManager : Singleton<PlayerManager>
 
     #region 技能事件占位（待实现）
 
+    public void EquipSkillToPlayer(string playerId, SkillDefinition skill)
+    {
+        // TODO-实现为玩家装备技能的逻辑
+    }
+
+    public void UnequipSkillFromPlayer(string playerId, string cardId)
+    {
+        // TODO-实现为玩家卸下技能的逻辑
+    }
     
     #endregion
 

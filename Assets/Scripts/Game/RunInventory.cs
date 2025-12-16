@@ -61,6 +61,9 @@ public sealed class RunInventory : Singleton<RunInventory>
         }
     }
 
+    /// <summary>
+    /// 添加被动卡到库存
+    /// </summary>
     public void AddPassiveCard(string cardId)
     {
         if (string.IsNullOrEmpty(cardId)) return;
@@ -77,6 +80,10 @@ public sealed class RunInventory : Singleton<RunInventory>
         OnPassiveCardChanged?.Invoke(cardId, _passiveCards[cardId]);
     }
 
+    /// <summary>
+    /// 添加主动卡到库存
+    /// </summary>
+    /// <param name="cardId"></param>
     public void AddActiveSkillCard(string cardId)
     {
         if (string.IsNullOrEmpty(cardId)) return;
@@ -94,12 +101,25 @@ public sealed class RunInventory : Singleton<RunInventory>
     }
 
     /// <summary>
-    /// 将主动卡装备给玩家（仅当卡存在于池中时生效）
+    /// 尝试将主动卡装备给玩家（仅当卡存在于池中时生效）
     /// </summary>
-    public bool EquipActiveCard(string cardId, string playerId)
+    public bool TryEquipActiveCard(string cardId, string playerId)
     {
         if (string.IsNullOrEmpty(cardId) || string.IsNullOrEmpty(playerId)) return false;
         if (!_activeSkillCards.Contains(cardId)) return false;
+
+        // 解析并校验
+        var data = CardRegistry.Resolve(cardId);
+        if (data == null)
+        {
+            Debug.LogWarning($"Unknown cardId {cardId}");
+            return false;
+        }
+        if (data.type != CardType.Active)
+        {
+            Debug.LogWarning($"Card {cardId} is not Active");
+            return false;
+        }
 
         if (!_activeCardEquippedBy.TryGetValue(cardId, out var set))
         {
@@ -108,6 +128,11 @@ public sealed class RunInventory : Singleton<RunInventory>
         }
 
         var added = set.Add(playerId);
+        if (added)
+        {
+            // 通知 PlayerManager 为 playerId 装备技能
+            PlayerManager.Instance.EquipSkillToPlayer(playerId, data.skill);
+        }
         return added;
     }
 
@@ -123,6 +148,10 @@ public sealed class RunInventory : Singleton<RunInventory>
         if (set.Count == 0)
         {
             _activeCardEquippedBy.Remove(cardId);
+        }
+        if(removed)
+        {
+            PlayerManager.Instance.UnequipSkillFromPlayer(playerId, cardId);
         }
         return removed;
     }
