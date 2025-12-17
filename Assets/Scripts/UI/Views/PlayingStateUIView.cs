@@ -131,6 +131,7 @@ namespace Game.UI
             }
             else if (slotIndex == 1 && skillSlot2Energy != null)
             {
+                //TODO-或许有更好duration的值,现在默认0.05f
                 skillSlot2Energy.DOFillAmount(Mathf.Clamp01(normalized), 0.05f).SetEase(Ease.OutCirc).SetUpdate(true);
             }
         }
@@ -139,11 +140,13 @@ namespace Game.UI
         {
             if(slotIndex == 0 && skillSlot1Energy != null)
             {
-                skillSlot1Energy.fillAmount = 0f;
+                //TODO-或许有更好duration的值,现在默认0.04f
+                skillSlot1Energy.DOFillAmount(0f, 0.04f).SetEase(Ease.OutCirc).SetUpdate(true);
             }
             else if (slotIndex == 1 && skillSlot2Energy != null)
             {
-                skillSlot2Energy.fillAmount = 0f;
+                //TODO-或许有更好duration的值,现在默认0.04f
+                skillSlot2Energy.DOFillAmount(0f, 0.04f).SetEase(Ease.OutCirc).SetUpdate(true);
             }
 
         }

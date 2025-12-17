@@ -27,22 +27,45 @@ namespace Character.Components
             yield return new WaitForSeconds(def.detectionDelay);
 
             var execCtx = new SkillContext(transform);
-            if (def.targetingMode == CardSystem.SkillSystem.Enum.SkillTargetingMode.AOE)
+
+            // 两阶段行为：优先尝试 module（如果配置了 targetingModuleSO），否则回退到 legacy 枚举逻辑
+            bool handledByModule = false;
+            if (def != null && def.targetingModuleSO != null)
             {
-                var centre = aimPoint.HasValue ? aimPoint.Value : transform.position;
-                execCtx.Position = centre;
-                var pred = CardSystem.SkillSystem.Targeting.TargetingHelper.BuildTeamPredicate(execCtx.OwnerTeam, def.targetTeam, gameObject, false);
-                CardSystem.SkillSystem.Targeting.TargetingHelper.GetAoeTargets(centre, def.radius, def.targetMask, execCtx.Targets, pred);
-            }
-            else if (def.targetingMode == CardSystem.SkillSystem.Enum.SkillTargetingMode.SelfTarget)
-            {
-                var centre = transform.position;
-                execCtx.Position = centre;
-                var pred2 = CardSystem.SkillSystem.Targeting.TargetingHelper.BuildTeamPredicate(execCtx.OwnerTeam, def.targetTeam, gameObject, true);
-                CardSystem.SkillSystem.Targeting.TargetingHelper.GetAoeTargets(centre, def.radius, def.targetMask, execCtx.Targets, pred2);
+                var mod = def.targetingModuleSO;
+                var modType = mod.GetType();
+
+                // 尝试通过反射调用 AcquireTargets(ctx, aimPoint)
+                var acquireMethod = modType.GetMethod("AcquireTargets", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic);
+                if (acquireMethod != null)
+                {
+                    try
+                    {
+                        acquireMethod.Invoke(mod, new object[] { execCtx, aimPoint });
+                        handledByModule = true;
+                    }
+                    catch (System.Exception ex)
+                    {
+                        Debug.LogWarning($"[EnemySkillComponent] AcquireTargets invoke failed: {ex.Message}");
+                    }
+                }
+                // 注意：如果模块仅实现 ManualSelectionCoroutine（交互式），敌人作为 AI 无法执行交互，这里只尝试 AcquireTargets；没有实现时回退到 legacy。
             }
 
-            def.Execute(execCtx);
+            if (!handledByModule)
+            {
+
+                execCtx.Position = centre;
+                var pred = CardSystem.SkillSystem.Targeting.TargetingHelper.BuildTeamPredicate(execCtx.OwnerTeam, def.targetTeam, gameObject, false);
+
+                execCtx.Position = centre;
+                var pred2 = CardSystem.SkillSystem.Targeting.TargetingHelper.BuildTeamPredicate(execCtx.OwnerTeam, def.targetTeam, gameObject, true);
+
+            }
+
+
+            // 最终执行（模块化执行器或 legacy Effect）
+            def.Execute(execCtx, aimPoint);
             yield break;
         }
 
@@ -76,35 +99,23 @@ namespace Character.Components
             var slot = skillSlots[slotIndex];
             if (slot == null || slot.skill == null) return;
 
-            var ctx = new SkillContext(this.transform);
 
-            if (slot.skill.targetingMode == CardSystem.SkillSystem.Enum.SkillTargetingMode.AOE)
-            {
-                var centre = aimPoint.HasValue ? aimPoint.Value : transform.position;
-                ctx.Position = centre;
-                var pred = CardSystem.SkillSystem.Targeting.TargetingHelper.BuildTeamPredicate(ctx.OwnerTeam, slot.skill.targetTeam, gameObject, false);
-                CardSystem.SkillSystem.Targeting.TargetingHelper.GetAoeTargets(centre, slot.skill.radius, slot.skill.targetMask, ctx.Targets, pred);
-            }
-            else if (slot.skill.targetingMode == CardSystem.SkillSystem.Enum.SkillTargetingMode.SelfTarget)
-            {
-                // SelfTarget: 以自身为中心的 AOE，但排除自身（用于治疗/增益盟友）
-                var centre = transform.position;
-                ctx.Position = centre;
-                var pred2 = CardSystem.SkillSystem.Targeting.TargetingHelper.BuildTeamPredicate(ctx.OwnerTeam, slot.skill.targetTeam, gameObject, true);
-                CardSystem.SkillSystem.Targeting.TargetingHelper.GetAoeTargets(centre, slot.skill.radius, slot.skill.targetMask, ctx.Targets, pred2);
-            }
-            else if(slot.skill.targetingMode == CardSystem.SkillSystem.Enum.SkillTargetingMode.Self)
-            {
-                // 默认把自己放进 Targets
-                ctx.Targets.Add(gameObject);
-            }
+            ctx.Position = centre;
+            var pred = CardSystem.SkillSystem.Targeting.TargetingHelper.BuildTeamPredicate(ctx.OwnerTeam, slot.skill.targetTeam, gameObject, false);
+
+            var centre = transform.position;
+            ctx.Position = centre;
+            var pred2 = CardSystem.SkillSystem.Targeting.TargetingHelper.BuildTeamPredicate(ctx.OwnerTeam, slot.skill.targetTeam, gameObject, true);
+
+            ctx.Targets.Add(gameObject);
+
 
             // 标记冷却并触发（立即开始冷却）
             slot.lastUseTime = Time.time;
 
             if (slot.skill.detectionDelay <= 0f)
             {
-                slot.skill.Execute(ctx);
+                slot.skill.Execute(ctx, aimPoint);
             }
             else
             {

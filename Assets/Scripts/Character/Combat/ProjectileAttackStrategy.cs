@@ -27,49 +27,38 @@ namespace Character.Combat
                 return;
             }
 
-            // 计算旋转
+            // 计算旋转（用于视觉/朝向展示）
             float angle = Mathf.Atan2(context.AimDirection.y, context.AimDirection.x) * Mathf.Rad2Deg - 90f;
             Quaternion rotation = Quaternion.Euler(0, 0, angle);
 
-            // 获取投射物（优先使用对象池）
-            ProjectileBase projectile = GetProjectile(config.projectilePrefab, context.FirePosition, rotation);
+            // 生成投射物（统一委托给 ProjectileSpawner，由其处理对象池/实例化与初始化）
+            var projectile = ProjectileSpawner.Spawn(
+                config,
+                context.FirePosition,
+                context.AimDirection.normalized,
+                context.DamageInfo.Amount,
+                context.OwnerTeam,
+                context.Owner,
+                context.HitMask
+            );
 
-            if (projectile != null)
-            {
-                projectile.Init(
-                    config,
-                    context.AimDirection,
-                    context.DamageInfo.Amount,
-                    context.OwnerTeam,
-                    context.Owner,
-                    context.HitMask
-                );
-            }
+            if (projectile == null) return;
         }
 
         /// <summary>
-        /// 获取投射物（对象池或实例化）
+        /// （弃用）投射物获取：现在建议使用 ProjectileSpawner.Spawn(...) 来统一处理池/实例化/初始化。
+        /// 若仍需兼容旧逻辑，此方法作为退路仍保持可用。
         /// </summary>
         private ProjectileBase GetProjectile(GameObject prefab, Vector3 position, Quaternion rotation)
         {
-            // 优先使用对象池
+            Debug.LogWarning("[ProjectileAttackStrategy] GetProjectile 已弃用，请使用 ProjectileSpawner.Spawn(...)");
             if (ProjectilePool.Instance != null)
             {
                 return ProjectilePool.Instance.Get(prefab, position, rotation);
             }
 
-            // 回退：直接实例化
             var go = Instantiate(prefab, position, rotation);
-            var projectile = go.GetComponent<ProjectileBase>();
-
-            if (projectile == null)
-            {
-                Debug.LogError($"[ProjectileAttackStrategy] 预制体 {prefab.name} 缺少 ProjectileBase！");
-                Destroy(go);
-                return null;
-            }
-
-            return projectile;
+            return go.GetComponent<ProjectileBase>();
         }
 
         public override void DrawGizmos(Vector3 position, Vector2 direction)

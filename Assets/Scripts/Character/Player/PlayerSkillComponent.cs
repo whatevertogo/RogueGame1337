@@ -1,4 +1,5 @@
 using System;
+using System.Reflection;
 using UnityEngine;
 using Character.Components;
 using Character.Components.Interface;
@@ -8,8 +9,7 @@ using CardSystem.SkillSystem.Enum;
 using System.Collections;
 
 /// <summary>
-/// 当用户选择删除/重写技能逻辑时，保留此组件以避免 Prefab/引用崩溃。
-/// 该实现不包含任何业务逻辑——所有方法均为安全的 no-op 或返回默认值。
+/// 技能系统
 /// </summary>
 public class PlayerSkillComponent : MonoBehaviour, ISkillComponent
 {
@@ -56,29 +56,39 @@ public class PlayerSkillComponent : MonoBehaviour, ISkillComponent
     {
         yield return new WaitForSeconds(def.detectionDelay);
 
-        // 重新构建上下文并按照当前位置/目标重新采集
+        // 重新构建上下文并按照当前位置/目标重新采集（传入 aimPoint 以兼容新的 TargetingModule）
         var execCtx = new SkillContext(transform);
-        if (def.targetingMode == SkillTargetingMode.Self)
+
+        if (def.targetingModuleSO != null)
         {
-            execCtx.Targets.Add(gameObject);
-        }
-        else if (def.targetingMode == SkillTargetingMode.AOE)
-        {
-            var centre = aimPoint.HasValue ? aimPoint.Value : transform.position;
-            execCtx.Position = centre;
-            var pred = CardSystem.SkillSystem.Targeting.TargetingHelper.BuildTeamPredicate(execCtx.OwnerTeam, def.targetTeam, gameObject, false);
-            CardSystem.SkillSystem.Targeting.TargetingHelper.GetAoeTargets(centre, def.radius, def.targetMask, execCtx.Targets, pred);
-        }
-        else if (def.targetingMode == SkillTargetingMode.SelfTarget)
-        {
-            var centre = transform.position;
-            execCtx.Position = centre;
-            var pred2 = CardSystem.SkillSystem.Targeting.TargetingHelper.BuildTeamPredicate(execCtx.OwnerTeam, def.targetTeam, gameObject, true);
-            CardSystem.SkillSystem.Targeting.TargetingHelper.GetAoeTargets(centre, def.radius, def.targetMask, execCtx.Targets, pred2);
+            var mod = def.targetingModuleSO;
+            var modType = mod.GetType();
+            var requiresProp = modType.GetProperty("RequiresManualSelection", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            bool requiresManual = false;
+            if (requiresProp != null && requiresProp.PropertyType == typeof(bool))
+            {
+                var v = requiresProp.GetValue(mod);
+                if (v is bool b) requiresManual = b;
+            }
+            if (!requiresManual)
+            {
+                var acquireMethod = modType.GetMethod("AcquireTargets", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                if (acquireMethod != null)
+                {
+                    try
+                    {
+                        acquireMethod.Invoke(mod, new object[] { execCtx, aimPoint });
+                    }
+                    catch (System.Exception ex)
+                    {
+                        Debug.LogWarning($"[PlayerSkillComponent] AcquireTargets invoke failed: {ex.Message}");
+                    }
+                }
+            }
         }
 
-        // 最终执行
-        def.Execute(execCtx);
+        // 最终执行，传入 aimPoint 以便 executionModule 使用（或 fallback）
+        def.Execute(execCtx, aimPoint);
         yield break;
     }
 
@@ -92,29 +102,44 @@ public class PlayerSkillComponent : MonoBehaviour, ISkillComponent
         var def = slot.skill;
         var ctx = new SkillContext(this.transform);
 
-        // 解析目标
-        if (def.targetingMode == SkillTargetingMode.Self)
+        // 解析目标：若模块需要交互选择，则通过反射检查模块并在需要时启动专用协程处理交互与最终执行（包括消耗充能）
+        if (def.targetingModuleSO != null)
         {
-            ctx.Targets.Add(gameObject);
-        }
-        else if (def.targetingMode == SkillTargetingMode.AOE)
-        {
-            var centre = aimPoint.HasValue ? aimPoint.Value : transform.position; ;
-            ctx.Position = centre;
-            // 使用 TargetingHelper 获取目标并按配置的 TargetTeam 过滤（立即采集，仅用于 preview；若 detectionDelay>0 会在执行时重新采集）
-            var pred = CardSystem.SkillSystem.Targeting.TargetingHelper.BuildTeamPredicate(ctx.OwnerTeam, def.targetTeam, gameObject, false);
-            CardSystem.SkillSystem.Targeting.TargetingHelper.GetAoeTargets(centre, def.radius, def.targetMask, ctx.Targets, pred);
-        }
-        else if (def.targetingMode == SkillTargetingMode.SelfTarget)
-        {
-            // SelfTarget: 以自身为中心的 AOE，但排除自身（可能用于治疗/增益盟友）
-            var centre = transform.position;
-            ctx.Position = centre;
-            var pred2 = CardSystem.SkillSystem.Targeting.TargetingHelper.BuildTeamPredicate(ctx.OwnerTeam, def.targetTeam, gameObject, true);
-            CardSystem.SkillSystem.Targeting.TargetingHelper.GetAoeTargets(centre, def.radius, def.targetMask, ctx.Targets, pred2);
-        }
+            var mod = def.targetingModuleSO;
+            var modType = mod.GetType();
 
-        // 若此槽位关联了需要消耗充能的主动卡，先尝试消耗（以防止没有充能时仍然使用）
+            // 检查 RequiresManualSelection（通过反射访问属性）
+            bool requiresManual = false;
+            var requiresProp = modType.GetProperty("RequiresManualSelection", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic);
+            if (requiresProp != null && requiresProp.PropertyType == typeof(bool))
+            {
+                var val = requiresProp.GetValue(mod);
+                if (val is bool b) requiresManual = b;
+            }
+
+            if (requiresManual)
+            {
+                // 交互式目标选择/确认由协程 ManualSelectAndExecute 负责（包括最终消耗与执行）
+                StartCoroutine(ManualSelectAndExecute(def, ctx, slotIndex, aimPoint));
+                return;
+            }
+            else
+            {
+                var acquireMethod = modType.GetMethod("AcquireTargets", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic);
+                if (acquireMethod != null)
+                {
+                    try
+                    {
+                        acquireMethod.Invoke(mod, new object[] { ctx, aimPoint });
+                    }
+                    catch (System.Exception ex)
+                    {
+                        Debug.LogWarning($"[PlayerSkillComponent] AcquireTargets invoke failed: {ex.Message}");
+                    }
+                }
+            }
+        }
+        // 非交互式流程：若槽位关联需要消耗充能的主动卡，则在此尝试消耗（交互式流程将在协程中再做消耗）
         if (!string.IsNullOrEmpty(slot.cardId))
         {
             var cdata = CardRegistry.Resolve(slot.cardId);
@@ -135,8 +160,8 @@ public class PlayerSkillComponent : MonoBehaviour, ISkillComponent
 
         if (def.detectionDelay <= 0f)
         {
-            // 立即执行
-            def.Execute(ctx);
+            // 立即执行（传入瞄点以便模块化目标选择使用）
+            def.Execute(ctx, aimPoint);
         }
         else
         {
@@ -209,5 +234,87 @@ public class PlayerSkillComponent : MonoBehaviour, ISkillComponent
         return null;
     }
 
+    /// <summary>
+    /// 协程化的交互选择 + 执行流程：
+    /// - 运行 targetingModule.ManualSelectionCoroutine(ctx)（供模块显示 UI / 高亮 / 等待点击）
+    /// - 手动选择完成后尝试消耗卡牌充能（若卡片需要）
+    /// - 标记冷却并执行技能（立即或延迟）
+    /// </summary>
+    private System.Collections.IEnumerator ManualSelectAndExecute(SkillDefinition def, SkillContext ctx, int slotIndex, Vector3? aimPoint)
+    {
+        if (def == null || def.targetingModuleSO == null) yield break;
 
+        // 运行模块自带的交互协程（通过反射调用 ManualSelectionCoroutine，如果存在则等待它完成）
+        if (def.targetingModuleSO != null)
+        {
+            var mod = def.targetingModuleSO;
+            var method = mod.GetType().GetMethod("ManualSelectionCoroutine", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            if (method != null)
+            {
+                object obj = null;
+                try
+                {
+                    obj = method.Invoke(mod, new object[] { ctx });
+                }
+                catch (System.Exception ex)
+                {
+                    Debug.LogWarning($"[PlayerSkillComponent] ManualSelectionCoroutine invoke failed: {ex.Message}");
+                }
+
+                var enumerator = obj as System.Collections.IEnumerator;
+                if (enumerator != null)
+                {
+                    yield return StartCoroutine(enumerator);
+                }
+            }
+        }
+
+        // 验证槽位与技能仍然有效
+        if (slotIndex < 0 || slotIndex >= _playerSkillSlots.Length) yield break;
+        var slot = _playerSkillSlots[slotIndex];
+        if (slot == null || slot.skill == null) yield break;
+
+        // 交互完成后再尝试消耗充能（若需要）
+        if (!string.IsNullOrEmpty(slot.cardId))
+        {
+            var cdata = CardRegistry.Resolve(slot.cardId);
+            if (cdata != null && cdata.requiresCharge)
+            {
+                var pm = PlayerManager.Instance;
+                var pc = GetComponentInParent<PlayerController>();
+                var pr = pm != null && pc != null ? pm.GetPlayerRuntimeStateByController(pc) : null;
+                if (pr == null) yield break;
+                var consumed = RunInventory.Instance?.TryConsumeCharge(slot.cardId, pr.PlayerId) ?? false;
+                if (!consumed) yield break;
+            }
+        }
+
+        // 标记冷却与事件
+        slot.lastUseTime = Time.time;
+        OnSkillUsed?.Invoke(slotIndex);
+
+        // 若有延迟：对手动选择的技能，不要调用 DelayedExecute（因为它会重新采集目标），
+        // 而是使用已经选定的 ctx 并在等待后直接执行
+        if (def.detectionDelay <= 0f)
+        {
+            def.Execute(ctx, aimPoint);
+        }
+        else
+        {
+            if (def.vfxPrefab != null)
+            {
+                // 若手动选择了显式目标，优先在该目标位置播放提示特效
+                Vector3 spawnPos = ctx.Position;
+                if (ctx.ExplicitTarget != null) spawnPos = ctx.ExplicitTarget.transform.position;
+                var tv = Instantiate(def.vfxPrefab, spawnPos, Quaternion.identity);
+                Destroy(tv, def.detectionDelay + 0.5f);
+            }
+
+            // 等待检测延迟后，再使用当前 ctx 直接执行技能（不重新采集目标）
+            yield return new WaitForSeconds(def.detectionDelay);
+            def.Execute(ctx, aimPoint);
+        }
+
+        yield break;
+    }
 }

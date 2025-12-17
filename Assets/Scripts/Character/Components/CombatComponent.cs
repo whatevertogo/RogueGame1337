@@ -23,7 +23,7 @@ namespace Character.Components
 
         [Header("攻击设置")]
         [Tooltip("发射点/攻击原点")]
-        public Transform firePoint;
+        public Transform FirePoint;
 
         [Tooltip("可命中的图层")]
         public LayerMask hitMask;
@@ -251,7 +251,7 @@ namespace Character.Components
                 Owner = transform,
                 OwnerTeam = characterBase != null ? characterBase.Team : TeamType.Neutral,
                 AimDirection = aimDirection,
-                FirePosition = firePoint != null ? firePoint.position : transform.position,
+                FirePosition = FirePoint != null ? FirePoint.position : transform.position,
                 DamageInfo = damageInfo,
                 HitMask = hitMask,
                 ProjectileConfig = projectileConfig
@@ -265,7 +265,7 @@ namespace Character.Components
         {
             if (!drawGizmos) return;
 
-            Vector3 pos = firePoint != null ? firePoint.position : transform.position;
+            Vector3 pos = FirePoint != null ? FirePoint.position : transform.position;
 
             // 绘制发射点
             Gizmos.color = Color.green;

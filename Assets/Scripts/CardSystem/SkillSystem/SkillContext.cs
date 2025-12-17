@@ -23,6 +23,12 @@ namespace CardSystem.SkillSystem
         /// </summary>
         public List<GameObject> Targets { get; } = new();
 
+        /// <summary>
+        /// 可选的显式目标（由交互式 TargetingModule 在选择完成后填充）。
+        /// 如果 Targets 为空但 ExplicitTarget 非空，执行阶段会把 ExplicitTarget 当作单体目标处理。
+        /// </summary>
+        public GameObject ExplicitTarget { get; set; }
+
         public SkillContext(Transform owner)
         {
             Owner = owner;
