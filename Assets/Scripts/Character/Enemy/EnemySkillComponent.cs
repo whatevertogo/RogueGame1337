@@ -31,15 +31,15 @@ namespace Character.Components
             {
                 var centre = aimPoint.HasValue ? aimPoint.Value : transform.position;
                 execCtx.Position = centre;
-                CardSystem.SkillSystem.Targeting.TargetingHelper.GetAoeTargets(centre, def.radius, def.targetMask, execCtx.Targets,
-                    go => CardSystem.SkillSystem.Targeting.TargetingHelper.IsHostileTo(execCtx.OwnerTeam, go));
+                var pred = CardSystem.SkillSystem.Targeting.TargetingHelper.BuildTeamPredicate(execCtx.OwnerTeam, def.targetTeam, gameObject, false);
+                CardSystem.SkillSystem.Targeting.TargetingHelper.GetAoeTargets(centre, def.radius, def.targetMask, execCtx.Targets, pred);
             }
             else if (def.targetingMode == CardSystem.SkillSystem.Enum.SkillTargetingMode.SelfTarget)
             {
                 var centre = transform.position;
                 execCtx.Position = centre;
-                CardSystem.SkillSystem.Targeting.TargetingHelper.GetAoeTargets(centre, def.radius, def.targetMask, execCtx.Targets,
-                    go => go != gameObject);
+                var pred2 = CardSystem.SkillSystem.Targeting.TargetingHelper.BuildTeamPredicate(execCtx.OwnerTeam, def.targetTeam, gameObject, true);
+                CardSystem.SkillSystem.Targeting.TargetingHelper.GetAoeTargets(centre, def.radius, def.targetMask, execCtx.Targets, pred2);
             }
 
             def.Execute(execCtx);

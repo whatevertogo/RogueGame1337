@@ -5,7 +5,6 @@ using Character.Components.Interface;
 using CardSystem.SkillSystem;
 using CardSystem;
 using CardSystem.SkillSystem.Enum;
-using Character;
 using System.Collections;
 
 /// <summary>
@@ -15,6 +14,8 @@ using System.Collections;
 /// </summary>
 public class PlayerSkillComponent : MonoBehaviour, ISkillComponent
 {
+	[ReadOnly]
+	[SerializeField]
 	private SkillSlot[] _playerSkillSlots = new SkillSlot[2];
 
 	public SkillSlot[] PlayerSkillSlots => _playerSkillSlots;
@@ -23,7 +24,6 @@ public class PlayerSkillComponent : MonoBehaviour, ISkillComponent
 	public event Action<int> OnSkillUsed;
 	public event Action<int, string> OnSkillEquipped;
 	public event Action<int> OnSkillUnequipped;
-
 
 	public bool CanUseSkill(int slotIndex)
 	{
@@ -34,7 +34,7 @@ public class PlayerSkillComponent : MonoBehaviour, ISkillComponent
 		var last = slot.lastUseTime;
 		var baseCd = slot.skill != null ? slot.skill.cooldown : 0f;
 		// 从角色属性获取冷却减速率（例如 0.2 表示冷却减少 20% -> 实际冷却 80%）
-		var stats = GetComponent<Character.Components.CharacterStats>();
+		var stats = GetComponent<CharacterStats>();
 		var reduction = stats != null ? stats.SkillCooldownReductionRate.Value : 0f;
 		var effectiveCd = Mathf.Max(0f, baseCd * (1f - reduction));
 		return Time.time - last >= effectiveCd;
@@ -54,15 +54,15 @@ public class PlayerSkillComponent : MonoBehaviour, ISkillComponent
 		{
 			var centre = aimPoint.HasValue ? aimPoint.Value : transform.position;
 			execCtx.Position = centre;
-			CardSystem.SkillSystem.Targeting.TargetingHelper.GetAoeTargets(centre, def.radius, def.targetMask, execCtx.Targets,
-				go => CardSystem.SkillSystem.Targeting.TargetingHelper.IsHostileTo(execCtx.OwnerTeam, go));
+			var pred = CardSystem.SkillSystem.Targeting.TargetingHelper.BuildTeamPredicate(execCtx.OwnerTeam, def.targetTeam, gameObject, false);
+			CardSystem.SkillSystem.Targeting.TargetingHelper.GetAoeTargets(centre, def.radius, def.targetMask, execCtx.Targets, pred);
 		}
 		else if (def.targetingMode == SkillTargetingMode.SelfTarget)
 		{
 			var centre = transform.position;
 			execCtx.Position = centre;
-			CardSystem.SkillSystem.Targeting.TargetingHelper.GetAoeTargets(centre, def.radius, def.targetMask, execCtx.Targets,
-				go => go != gameObject);
+			var pred2 = CardSystem.SkillSystem.Targeting.TargetingHelper.BuildTeamPredicate(execCtx.OwnerTeam, def.targetTeam, gameObject, true);
+			CardSystem.SkillSystem.Targeting.TargetingHelper.GetAoeTargets(centre, def.radius, def.targetMask, execCtx.Targets, pred2);
 		}
 
 		// 最终执行
@@ -87,7 +87,7 @@ public class PlayerSkillComponent : MonoBehaviour, ISkillComponent
 		}
 		else if (def.targetingMode == SkillTargetingMode.AOE)
 		{
-			var centre = aimPoint.HasValue ? aimPoint.Value : transform.position;;
+			var centre = aimPoint.HasValue ? aimPoint.Value : transform.position; ;
 			ctx.Position = centre;
 			// 使用 TargetingHelper 获取目标并按配置的 TargetTeam 过滤（立即采集，仅用于 preview；若 detectionDelay>0 会在执行时重新采集）
 			var pred = CardSystem.SkillSystem.Targeting.TargetingHelper.BuildTeamPredicate(ctx.OwnerTeam, def.targetTeam, gameObject, false);

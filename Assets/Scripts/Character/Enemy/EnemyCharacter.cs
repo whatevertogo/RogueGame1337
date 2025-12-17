@@ -168,8 +168,6 @@ public class EnemyCharacter : CharacterBase
         if (killer != null)
         {
             var pm = PlayerManager.Instance;
-            //TODO-为击杀者添加能量
-            // pm?.AddSkillEnergy(killer, enemyConfigStats.KillEnergy);
         }
     }
 

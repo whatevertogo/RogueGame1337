@@ -13,20 +13,41 @@ public class PlayerController : CharacterBase
 	private PlayerAnimator playerAnim;
 	private AutoPickupComponent autoPickup;
 	private PlayerSkillComponent skillComponent;
+	// 转发器实现：在控制器内部维护一个小型转发器类以避免使用 lambda
+	private class PlayerSkillEventForwarder
+	{
+		private PlayerManager owner;
+		private readonly string _playerId;
 
-	// // 在 PlayerController 内部维护的转发器类型，负责把技能事件转发给 PlayerManager
-	// private class PlayerSkillEventForwarder
-	// {
-	// 	private readonly PlayerManager owner;
-	// 	private readonly PlayerRuntimeState playerRuntimeState;
-	// 	public PlayerSkillEventForwarder(PlayerManager playerManagerowner, PlayerRuntimeState playerRuntimeState)
-	// 	{
-	// 		this.owner = playerManagerowner;
-	// 		this.playerRuntimeState = playerRuntimeState;
-	// 	}
-	// 	public void OnEnergyChanged(int slotIndex, float energy) => owner.ForwardSkillEnergyChanged(this.playerRuntimeState, slotIndex, energy);
-	// 	public void OnSkillUsed(int slotIndex) => owner.ForwardSkillUsed(this.playerRuntimeState, slotIndex);
-	// }
+		public PlayerSkillEventForwarder(PlayerManager owner,string playerId)
+		{
+			_playerId = playerId;
+			this.owner = owner;
+		}
+
+		public void OnEnergyChanged(int slotIndex, float energy)
+		{
+			owner?.RaisePlayerSkillEnergyChanged(_playerId, slotIndex, energy);
+		}
+
+		public void OnSkillUsed(int slotIndex)
+		{
+			owner?.RaisePlayerSkillUsed(_playerId, slotIndex);
+		}
+
+		public void OnSkillEquipped(int slotIndex, string cardId)
+		{
+			owner?.RaisePlayerSkillEquipped(_playerId, slotIndex, cardId);
+		}
+
+		public void OnSkillUnequipped(int slotIndex)
+		{
+			owner?.RaisePlayerSkillUnequipped(_playerId, slotIndex);
+		}
+	}
+
+	private PlayerSkillEventForwarder _skillEventForwarder;
+	private bool _skillForwardingActive = false;
 	protected override void Awake()
 	{
 		base.Awake();
@@ -53,7 +74,7 @@ public class PlayerController : CharacterBase
 		autoPickup = GetComponent<AutoPickupComponent>();
 		skillComponent = GetComponent<PlayerSkillComponent>();
 
-		if(GameInput.Instance != null)
+		if (GameInput.Instance != null)
 		{
 			GameInput.Instance.OnSkillQPressed += () => TryActivateSkill(0); // 0 = Q技能槽
 			GameInput.Instance.OnSkillEPressed += () => TryActivateSkill(1); // 1 = E技能槽
@@ -61,10 +82,6 @@ public class PlayerController : CharacterBase
 
 		Debug.Log($"[PlayerController] Awake: {gameObject.name}, tag={gameObject.tag}, layer={LayerMask.LayerToName(gameObject.layer)}, Rigidbody2D={(rb != null ? "Yes" : "No")}, Collider2D={(col != null ? "Yes" : "No")}");
 	}
-
-	//绑定到技能组件事件的处理程序（存储在控制器上，因此生命周期跟随游戏对象
-	private System.Action<int, float> _boundEnergyChangedHandler;
-	private System.Action<int> _boundSkillUsedHandler;
 
 	protected override void OnDestroy()
 	{
@@ -79,6 +96,42 @@ public class PlayerController : CharacterBase
 			pm.UnregisterPlayer(this);
 		}
 		base.OnDestroy();
+	}
+
+	/// <summary>
+	/// Start forwarding PlayerSkillComponent events to PlayerManager using the given playerId.
+	/// Called by PlayerManager when the player is registered.
+	/// </summary>
+	public void StartSkillForwarding(PlayerManager owner, string playerId)
+	{
+		if (_skillForwardingActive) StopSkillForwarding();
+		if (skillComponent == null) skillComponent = GetComponent<PlayerSkillComponent>();
+		if (skillComponent == null) return;
+
+		// create nested forwarder and subscribe its instance methods (no lambdas)
+		_skillEventForwarder = new PlayerSkillEventForwarder(owner,playerId);
+		skillComponent.OnEnergyChanged += _skillEventForwarder.OnEnergyChanged;
+		skillComponent.OnSkillUsed += _skillEventForwarder.OnSkillUsed;
+		skillComponent.OnSkillEquipped += _skillEventForwarder.OnSkillEquipped;
+		skillComponent.OnSkillUnequipped += _skillEventForwarder.OnSkillUnequipped;
+		_skillForwardingActive = true;
+	}
+
+	/// <summary>
+	/// Stop forwarding skill events and unsubscribe handlers.
+	/// </summary>
+	public void StopSkillForwarding()
+	{
+		if (!_skillForwardingActive) return;
+		if (skillComponent != null && _skillEventForwarder != null)
+		{
+			skillComponent.OnEnergyChanged -= _skillEventForwarder.OnEnergyChanged;
+			skillComponent.OnSkillUsed -= _skillEventForwarder.OnSkillUsed;
+			skillComponent.OnSkillEquipped -= _skillEventForwarder.OnSkillEquipped;
+			skillComponent.OnSkillUnequipped -= _skillEventForwarder.OnSkillUnequipped;
+		}
+		_skillEventForwarder = null;
+		_skillForwardingActive = false;
 	}
 
 	private void Update()

@@ -29,6 +29,12 @@ public class PlayerManager : Singleton<PlayerManager>
     public event Action<PlayerRuntimeState> OnPlayerRegistered;
     public event Action<PlayerRuntimeState> OnPlayerUnregistered;
 
+    // 转发玩家技能事件（带 playerId）
+    public event Action<string, int, float> OnPlayerSkillEnergyChanged; // (playerId, slotIndex, energy)
+    public event Action<string, int> OnPlayerSkillUsed; // (playerId, slotIndex)
+    public event Action<string, int, string> OnPlayerSkillEquipped; // (playerId, slotIndex, cardId)
+    public event Action<string, int> OnPlayerSkillUnequipped; // (playerId, slotIndex)
+
     protected override void Awake()
     {
         base.Awake();
@@ -82,6 +88,9 @@ public class PlayerManager : Singleton<PlayerManager>
         var state = new PlayerRuntimeState { PlayerId = id, Controller = controller, IsLocal = isLocal };
         _players[id] = state;
 
+        // attach listeners for skill events
+        AttachSkillListeners(state);
+
         OnPlayerRegistered?.Invoke(state);
         return state;
     }
@@ -97,6 +106,9 @@ public class PlayerManager : Singleton<PlayerManager>
         if (key == null) return;
         var state = _players[key];
 
+
+        // detach listeners
+        DetachSkillListeners(state);
 
         _players.Remove(key);
         OnPlayerUnregistered?.Invoke(state);
@@ -131,7 +143,7 @@ public class PlayerManager : Singleton<PlayerManager>
 
     #endregion
 
-    #region 技能事件占位（待实现）
+    #region 技能事件占位
 
     public void EquipSkillToPlayer(string playerId, SkillDefinition skill, int slotIndex)
     {
@@ -151,12 +163,6 @@ public class PlayerManager : Singleton<PlayerManager>
             playerSkillComp.EquipSkill(skill, slotIndex);
             return;
         }
-        else
-        {
-            //TODO-没问题了记得删掉
-            CDTU.Utils.Logger.LogError($"No PlayerSkillComponent found on player {playerId}");
-        }
-
     }
 
     public void UnequipSkillFromPlayer(string playerId, string cardId, int slotIndex)
@@ -175,15 +181,28 @@ public class PlayerManager : Singleton<PlayerManager>
             playerSkillComp.UnequipSkill(slotIndex);
             return;
         }
-        else
-        {
-            //TODO-没问题了记得删掉
-            CDTU.Utils.Logger.LogError($"No PlayerSkillComponent found on player {playerId}");
-        }
     }
 
     #endregion
 
+    #region 技能转发事件
+    
+    private void AttachSkillListeners(PlayerRuntimeState state)
+    {
+        if (state == null || state.Controller == null) return;
+        // instruct the controller to start forwarding skill events with its playerId
+        state.Controller.StartSkillForwarding(this, state.PlayerId);
+    }
+
+    private void DetachSkillListeners(PlayerRuntimeState state)
+    {
+        if (state == null || state.Controller == null) return;
+        // instruct the controller to stop forwarding skill events
+        state.Controller.StopSkillForwarding();
+    }
+
+    #endregion
+    
     #region 共享库存转发器
 
     private void OnRunInventoryCoinsChanged(int coins) => OnCoinsChanged?.Invoke(coins);
@@ -204,6 +223,32 @@ public class PlayerManager : Singleton<PlayerManager>
     #endregion
 
     #region 通知 / 辅助方法
+
+    #region skill forward raises
+
+    // These methods allow other classes (e.g. PlayerSkillForwarder) to notify the manager
+    // which will in turn invoke the events. Events cannot be invoked from outside the declaring class.
+    internal void RaisePlayerSkillEnergyChanged(string playerId, int slotIndex, float energy)
+    {
+        OnPlayerSkillEnergyChanged?.Invoke(playerId, slotIndex, energy);
+    }
+
+    internal void RaisePlayerSkillUsed(string playerId, int slotIndex)
+    {
+        OnPlayerSkillUsed?.Invoke(playerId, slotIndex);
+    }
+
+    internal void RaisePlayerSkillEquipped(string playerId, int slotIndex, string cardId)
+    {
+        OnPlayerSkillEquipped?.Invoke(playerId, slotIndex, cardId);
+    }
+
+    internal void RaisePlayerSkillUnequipped(string playerId, int slotIndex)
+    {
+        OnPlayerSkillUnequipped?.Invoke(playerId, slotIndex);
+    }
+
+    #endregion
 
     /// <summary>
     /// 当敌人被击杀时通知，为击杀者添加能量

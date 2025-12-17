@@ -10,7 +10,7 @@ public sealed class LootDropper : Singleton<LootDropper>
 {
     [Header("Prefabs")]
     public GameObject CoinPickupPrefab;
-    // public GameObject CardPickupPrefab;
+    public GameObject CardPickupPrefab;
 
     /// <summary>
     /// 在指定位置掉落一个带有指定数量的硬币拾取物
@@ -46,32 +46,31 @@ public sealed class LootDropper : Singleton<LootDropper>
         }
     }
 
-    // /// <summary>
-    // /// 在指定位置掉落一个卡牌拾取物（主动或被动）
-    // /// </summary>
-    // public void DropCard(Vector3 position, string cardId, bool isActive)
-    // {
-    //     if (CardPickupPrefab == null)
-    //     {
-    //         Debug.LogWarning("LootDropper: CardPickupPrefab not assigned");
-    //         return;
-    //     }
-    //     if (string.IsNullOrEmpty(cardId)) return;
-    //     var go = Instantiate(CardPickupPrefab, position, Quaternion.identity);
-    //     SetPickupLayer(go);
-    //     var cp = go.GetComponent<CardPickup>();
-    //     if (cp != null)
-    //     {
-    //         cp.CardId = cardId;
-    //         cp.IsActive = isActive;
-    //     }
-    //     var rb = go.GetComponent<Rigidbody2D>();
-    //     if (rb != null)
-    //     {
-    //         var dir = UnityEngine.Random.insideUnitCircle.normalized * 1.2f;
-    //         rb.AddForce(dir, ForceMode2D.Impulse);
-    //     }
-    // }
+    /// <summary>
+    /// 在指定位置掉落一个卡牌拾取物（主动或被动）
+    /// </summary>
+    public void DropCard(Vector3 position, string cardId)
+    {
+        if (CardPickupPrefab == null)
+        {
+            Debug.LogWarning("LootDropper: CardPickupPrefab not assigned");
+            return;
+        }
+        if (string.IsNullOrEmpty(cardId)) return;
+        var go = Instantiate(CardPickupPrefab, position, Quaternion.identity);
+        SetPickupLayer(go);
+        var cp = go.GetComponent<CardPickup>();
+        if (cp != null)
+        {
+            cp.CardId = cardId;
+        }
+        var rb = go.GetComponent<Rigidbody2D>();
+        if (rb != null)
+        {
+            var dir = UnityEngine.Random.insideUnitCircle.normalized * 1.2f;
+            rb.AddForce(dir, ForceMode2D.Impulse);
+        }
+    }
 
     private void SetPickupLayer(GameObject go)
     {

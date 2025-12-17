@@ -19,8 +19,6 @@ namespace Game.UI
         [SerializeField] private Image skillSlote2Image;
         [SerializeField] private Image skillSlot1Energy;
         [SerializeField] private Image skillSlot2Energy;
-        [SerializeField] private GameObject skillSlot1UsedMark;
-        [SerializeField] private GameObject skillSlot2UsedMark;
 
         // 在运行时创建阶段进行自动绑定（UIManager 会调用 OnCreate）
         public override void OnCreate()
@@ -70,16 +68,6 @@ namespace Game.UI
             {
                 var t = transform.Find("SkillSlotes/SkillSlote2/SkillSlot2Energy");
                 if (t != null) skillSlot2Energy = t.GetComponent<Image>();
-            }
-            if (skillSlot1UsedMark == null)
-            {
-                var t = transform.Find("SkillSlotes/SkillSlote1/UsedMark");
-                if (t != null) skillSlot1UsedMark = t.gameObject;
-            }
-            if (skillSlot2UsedMark == null)
-            {
-                var t = transform.Find("SkillSlotes/SkillSlote2/UsedMark");
-                if (t != null) skillSlot2UsedMark = t.gameObject;
             }
         }
 
@@ -139,16 +127,17 @@ namespace Game.UI
             }
         }
 
-        public void SetSkillSlotUsed(int slotIndex, bool used)
+        public void SetSkillSlotUsed(int slotIndex)
         {
-            if (slotIndex == 0 && skillSlot1UsedMark != null)
+            if(slotIndex == 0 && skillSlot1Energy != null)
             {
-                skillSlot1UsedMark.SetActive(used);
+                skillSlot1Energy.fillAmount = 0f;
             }
-            else if (slotIndex == 1 && skillSlot2UsedMark != null)
+            else if (slotIndex == 1 && skillSlot2Energy != null)
             {
-                skillSlot2UsedMark.SetActive(used);
+                skillSlot2Energy.fillAmount = 0f;
             }
+
         }
 
         public void Close()

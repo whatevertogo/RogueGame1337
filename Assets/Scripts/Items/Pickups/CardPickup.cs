@@ -1,4 +1,5 @@
 using UnityEngine;
+using CardSystem;
 
 [RequireComponent(typeof(Collider2D))]
 
@@ -8,9 +9,8 @@ using UnityEngine;
 public sealed class CardPickup : MonoBehaviour, IPickup
 {
     public string CardId;
-    public bool IsActive = false;
-    public float FlySpeed = 10f;
-    public float PickupDistance = 0.2f;
+    public float FlySpeed = 6f;
+    public float PickupDistance = 0.03f;
 
     private Transform target;
     private bool isFlying = false;
@@ -52,7 +52,20 @@ public sealed class CardPickup : MonoBehaviour, IPickup
     {
         if (_collected) return;
         _collected = true;
-        if (string.IsNullOrEmpty(CardId)) return;
+        if (string.IsNullOrEmpty(CardId))
+        {
+            Debug.LogWarning($"[CardPickup] pickup with empty CardId on '{gameObject.name}'");
+            Destroy(gameObject);
+            return;
+        }
+
+        if (!CardRegistry.TryResolve(CardId, out var data))
+        {
+            Debug.LogWarning($"[CardPickup] unknown CardId '{CardId}' on '{gameObject.name}', discarding pickup.");
+            Destroy(gameObject);
+            return;
+        }
+
         RunInventory.Instance.AddCardById(CardId);
         Destroy(gameObject);
     }

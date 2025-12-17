@@ -8,8 +8,8 @@ using UnityEngine;
 public sealed class CoinPickup : MonoBehaviour, IPickup
 {
     public int Amount = 1;
-    public float FlySpeed = 10f;
-    public float PickupDistance = 0.02f;
+    public float FlySpeed = 6f;
+    public float PickupDistance = 0.03f;
 
     private Transform target;
     private bool isFlying = false;

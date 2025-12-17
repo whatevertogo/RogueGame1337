@@ -9,6 +9,7 @@ namespace CardSystem
     {
         public string cardId;
         public CardType type; // Passive / Active
+        [InlineEditor]
         public SkillDefinition skill;
         public Sprite icon;
 
