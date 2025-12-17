@@ -82,16 +82,16 @@ namespace Character.Components
             {
                 var centre = aimPoint.HasValue ? aimPoint.Value : transform.position;
                 ctx.Position = centre;
-                CardSystem.SkillSystem.Targeting.TargetingHelper.GetAoeTargets(centre, slot.skill.radius, slot.skill.targetMask, ctx.Targets,
-                    go => CardSystem.SkillSystem.Targeting.TargetingHelper.IsHostileTo(ctx.OwnerTeam, go));
+                var pred = CardSystem.SkillSystem.Targeting.TargetingHelper.BuildTeamPredicate(ctx.OwnerTeam, slot.skill.targetTeam, gameObject, false);
+                CardSystem.SkillSystem.Targeting.TargetingHelper.GetAoeTargets(centre, slot.skill.radius, slot.skill.targetMask, ctx.Targets, pred);
             }
             else if (slot.skill.targetingMode == CardSystem.SkillSystem.Enum.SkillTargetingMode.SelfTarget)
             {
                 // SelfTarget: 以自身为中心的 AOE，但排除自身（用于治疗/增益盟友）
                 var centre = transform.position;
                 ctx.Position = centre;
-                CardSystem.SkillSystem.Targeting.TargetingHelper.GetAoeTargets(centre, slot.skill.radius, slot.skill.targetMask, ctx.Targets,
-                    go => go != gameObject);
+                var pred2 = CardSystem.SkillSystem.Targeting.TargetingHelper.BuildTeamPredicate(ctx.OwnerTeam, slot.skill.targetTeam, gameObject, true);
+                CardSystem.SkillSystem.Targeting.TargetingHelper.GetAoeTargets(centre, slot.skill.radius, slot.skill.targetMask, ctx.Targets, pred2);
             }
             else if(slot.skill.targetingMode == CardSystem.SkillSystem.Enum.SkillTargetingMode.Self)
             {

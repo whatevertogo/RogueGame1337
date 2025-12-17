@@ -85,22 +85,21 @@ public class PlayerSkillComponent : MonoBehaviour, ISkillComponent
 		{
 			ctx.Targets.Add(gameObject);
 		}
-
 		else if (def.targetingMode == SkillTargetingMode.AOE)
 		{
 			var centre = aimPoint.HasValue ? aimPoint.Value : transform.position;;
 			ctx.Position = centre;
-			// 使用 TargetingHelper 获取目标并按阵营过滤（立即采集，仅用于 preview；若 detectionDelay>0 会在执行时重新采集）
-			CardSystem.SkillSystem.Targeting.TargetingHelper.GetAoeTargets(centre, def.radius, def.targetMask, ctx.Targets,
-				go => CardSystem.SkillSystem.Targeting.TargetingHelper.IsHostileTo(ctx.OwnerTeam, go));
+			// 使用 TargetingHelper 获取目标并按配置的 TargetTeam 过滤（立即采集，仅用于 preview；若 detectionDelay>0 会在执行时重新采集）
+			var pred = CardSystem.SkillSystem.Targeting.TargetingHelper.BuildTeamPredicate(ctx.OwnerTeam, def.targetTeam, gameObject, false);
+			CardSystem.SkillSystem.Targeting.TargetingHelper.GetAoeTargets(centre, def.radius, def.targetMask, ctx.Targets, pred);
 		}
 		else if (def.targetingMode == SkillTargetingMode.SelfTarget)
 		{
 			// SelfTarget: 以自身为中心的 AOE，但排除自身（可能用于治疗/增益盟友）
 			var centre = transform.position;
 			ctx.Position = centre;
-			CardSystem.SkillSystem.Targeting.TargetingHelper.GetAoeTargets(centre, def.radius, def.targetMask, ctx.Targets,
-				go => go != gameObject);
+			var pred2 = CardSystem.SkillSystem.Targeting.TargetingHelper.BuildTeamPredicate(ctx.OwnerTeam, def.targetTeam, gameObject, true);
+			CardSystem.SkillSystem.Targeting.TargetingHelper.GetAoeTargets(centre, def.radius, def.targetMask, ctx.Targets, pred2);
 		}
 
 		// 标记冷却与事件（立即开始冷却以防止延迟期间重复释放）

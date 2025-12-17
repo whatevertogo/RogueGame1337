@@ -4,6 +4,16 @@ namespace CardSystem.SkillSystem.Enum
     {
         Self,
         AOE,
-        SelfTarget,
+        SelfTarget
+    }
+
+    /// <summary>
+    /// 目标阵营选择
+    /// </summary>
+    public enum TargetTeam
+    {
+        Hostile,
+        Friendly,
+        All
     }
 }

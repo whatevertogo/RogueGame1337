@@ -15,11 +15,26 @@ namespace CardSystem
     {
         private static readonly Dictionary<string, CardData> _map = new Dictionary<string, CardData>();
         private static bool _initialized = false;
+        // 运行时从 Resources 中读取预构建缓存的资源名（编辑器工具会生成到 Resources 下以加速启动）
+        private const string CacheResourceName = "CardRegistryCache";
 
         public static void Initialize()
         {
             if (_initialized) return;
             _map.Clear();
+
+            // 1) 尝试从 Resources 加载预先构建的 CardRegistryAsset（快速）
+            var cached = Resources.Load<CardRegistryAsset>(CacheResourceName);
+            if (cached != null && cached.definitions != null && cached.definitions.Count > 0)
+            {
+                foreach (var d in cached.definitions)
+                {
+                    if (d == null || string.IsNullOrEmpty(d.cardId)) continue;
+                    if (!_map.ContainsKey(d.cardId)) _map[d.cardId] = d;
+                }
+                _initialized = true;
+                return;
+            }
 
 #if UNITY_EDITOR
             // 编辑器：使用 AssetDatabase 扫描所有 CardData 资源

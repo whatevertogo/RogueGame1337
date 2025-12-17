@@ -14,6 +14,7 @@ namespace CardSystem.SkillSystem
         [Tooltip("若大于0，技能触发后延迟检测目标并在延迟结束时应用效果（秒）")]
         public float detectionDelay = 0f;
         public SkillTargetingMode targetingMode = SkillTargetingMode.Self;
+        public TargetTeam targetTeam = TargetTeam.Hostile;
         public float range = 5f;      // 对单体/投射可用
         public float radius = 3f;     // AOE 半径
         public LayerMask targetMask;  // 哪些 layer 会被检测到

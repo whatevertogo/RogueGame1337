@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Character.Interfaces;
 using Character;
+using CardSystem.SkillSystem.Enum;
 
 namespace CardSystem.SkillSystem.Targeting
 {
@@ -48,6 +49,24 @@ namespace CardSystem.SkillSystem.Targeting
             var tm = target.GetComponent<ITeamMember>();
             if (tm == null) return false;
             return tm.Team != ownerTeam;
+        }
+
+        /// <summary>
+        /// 根据 TargetTeam 构建过滤器。owner 可为 null；excludeSelf 表示排除施法者自身。
+        /// </summary>
+        public static Func<GameObject, bool> BuildTeamPredicate(TeamType ownerTeam, TargetTeam targetTeam, GameObject owner = null, bool excludeSelf = false)
+        {
+            return go =>
+            {
+                if (go == null) return false;
+                if (excludeSelf && owner != null && go == owner) return false;
+                if (targetTeam == TargetTeam.All) return true;
+                var tm = go.GetComponent<ITeamMember>();
+                if (tm == null) return false;
+                if (targetTeam == TargetTeam.Hostile) return tm.Team != ownerTeam;
+                if (targetTeam == TargetTeam.Friendly) return tm.Team == ownerTeam;
+                return false;
+            };
         }
     }
 }

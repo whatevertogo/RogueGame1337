@@ -10,7 +10,8 @@ using CardSystem;
 /// </summary>
 public sealed class RunInventory : Singleton<RunInventory>
 {
-    private int _coins = 0;
+    [ReadOnly]
+    [SerializeField] private int _coins = 0;
     public int Coins => _coins;
 
     // 被动卡池（全队共享）
@@ -20,6 +21,12 @@ public sealed class RunInventory : Singleton<RunInventory>
     // 已装备主动卡：cardId -> set of playerIds
     private readonly Dictionary<string, HashSet<string>> _activeCardEquippedBy = new();
     // 库存以 cardId 为主保持轻量（便于序列化/网络）
+    // 编辑器模式下可编辑的序列化视图（Play Mode 下显示运行时实际集合）
+    [Tooltip("编辑模式下用于配置主动技能卡（会同步到运行时主动卡池）")]
+    [SerializeField] private List<CardIdReference> ActiveCards = new();
+
+    [Tooltip("编辑模式下用于配置被动卡（会同步到运行时被动卡池）")]
+    [SerializeField] private List<CardIdReference> PassiveCards = new();
 
     public event Action<int> OnCoinsChanged;
     public event Action<string, int> OnPassiveCardChanged; // (cardId, count)
@@ -103,7 +110,7 @@ public sealed class RunInventory : Singleton<RunInventory>
     /// <summary>
     /// 尝试将主动卡装备给玩家（仅当卡存在于池中时生效）
     /// </summary>
-    public bool TryEquipActiveCard(string cardId, string playerId,int slotIndex)
+    public bool TryEquipActiveCard(string cardId, string playerId, int slotIndex)
     {
         if (string.IsNullOrEmpty(cardId) || string.IsNullOrEmpty(playerId)) return false;
         if (!_activeSkillCards.Contains(cardId)) return false;
@@ -139,7 +146,7 @@ public sealed class RunInventory : Singleton<RunInventory>
     /// <summary>
     /// 取消装备主动卡
     /// </summary>
-    public bool UnequipActiveCard(string cardId, string playerId,int slotIndex)
+    public bool UnequipActiveCard(string cardId, string playerId, int slotIndex)
     {
         if (string.IsNullOrEmpty(cardId) || string.IsNullOrEmpty(playerId)) return false;
         if (!_activeCardEquippedBy.TryGetValue(cardId, out var set)) return false;
@@ -149,7 +156,7 @@ public sealed class RunInventory : Singleton<RunInventory>
         {
             _activeCardEquippedBy.Remove(cardId);
         }
-        if(removed)
+        if (removed)
         {
             PlayerManager.Instance.UnequipSkillFromPlayer(playerId, cardId, slotIndex);
         }
@@ -177,4 +184,44 @@ public sealed class RunInventory : Singleton<RunInventory>
 
     public int GetPassiveCardCount(string cardId) => _passiveCards.TryGetValue(cardId, out var c) ? c : 0;
     public bool HasActiveCard(string cardId) => _activeSkillCards.Contains(cardId);
+
+#if UNITY_EDITOR
+    private void OnValidate()
+    {
+        // Only sync in edit-mode
+        if (Application.isPlaying) return;
+
+        try
+        {
+            // sync active
+            _activeSkillCards.Clear();
+            if (ActiveCards != null)
+            {
+                foreach (var r in ActiveCards)
+                {
+                    if (r == null) continue;
+                    if (string.IsNullOrEmpty(r.Id)) continue;
+                    _activeSkillCards.Add(r.Id);
+                }
+            }
+
+            // sync passive (counts)
+            _passiveCards.Clear();
+            if (PassiveCards != null)
+            {
+                foreach (var r in PassiveCards)
+                {
+                    if (r == null) continue;
+                    if (string.IsNullOrEmpty(r.Id)) continue;
+                    if (_passiveCards.ContainsKey(r.Id)) _passiveCards[r.Id]++;
+                    else _passiveCards[r.Id] = 1;
+                }
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogWarning($"RunInventory OnValidate sync failed: {e.Message}");
+        }
+    }
+#endif
 }
