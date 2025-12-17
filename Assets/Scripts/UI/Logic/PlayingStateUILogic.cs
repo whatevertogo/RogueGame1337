@@ -1,7 +1,6 @@
 using System;
 using UnityEngine;
 using UI;
-using Character.Core;
 
 namespace Game.UI
 {

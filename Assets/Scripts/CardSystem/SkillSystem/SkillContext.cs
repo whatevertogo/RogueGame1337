@@ -36,7 +36,7 @@ namespace CardSystem.SkillSystem
         /// <summary>
         /// 对指定目标应用状态效果（封装 StatusEffectComponent.AddEffect）
         /// </summary>
-        public void ApplyStatusEffect(GameObject target,params IStatusEffect[] effects)
+        public void ApplyStatusEffect(GameObject target, params IStatusEffect[] effects)
         {
             if (target == null || effects == null || effects.Length == 0) return;
 

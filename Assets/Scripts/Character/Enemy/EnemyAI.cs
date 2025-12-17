@@ -242,8 +242,6 @@ public class EnemyAI : MonoBehaviour
     /// </summary>
     protected virtual void HandleDamaged(DamageResult damageResult)
     {
-        OnDamaged?.Invoke(damageResult.FinalDamage);
-
         // 播放受伤动画
         if (enemyAnimator != null)
         {
@@ -265,7 +263,6 @@ public class EnemyAI : MonoBehaviour
         if (isDead) return;
         
         isDead = true;
-        OnDeath?.Invoke();
         
         // 停止所有移动和攻击
         if (movement != null)

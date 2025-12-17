@@ -9,12 +9,12 @@ namespace CardSystem.SkillSystem.Targeting
 {
     /// <summary>
     /// 技能目标选择辅助工具。
-    /// - 使用 Physics.OverlapSphereNonAlloc 减少分配
+    /// - 使用 Physics2D.OverlapCircleNonAlloc 减少分配
     /// - 支持外部过滤回调（例如阵营/状态过滤）
     /// </summary>
     public static class TargetingHelper
     {
-        private static readonly Collider[] s_buffer = new Collider[64];
+        private static readonly Collider2D[] s_buffer = new Collider2D[128];
 
         /// <summary>
         /// 获取 AOE 目标并填充到 outTargets（会 Clear）
@@ -25,7 +25,15 @@ namespace CardSystem.SkillSystem.Targeting
             if (outTargets == null) throw new ArgumentNullException(nameof(outTargets));
             outTargets.Clear();
 
-            int count = Physics.OverlapSphereNonAlloc(centre, radius, s_buffer, mask);
+            // Use Physics2D to match the project's 2D colliders (Collider2D)
+            int layerMask = mask.value;
+            int count = Physics2D.OverlapCircleNonAlloc((Vector2)centre, radius, s_buffer, layerMask);
+
+            if (count == s_buffer.Length)
+            {
+                Debug.LogWarning("[TargetingHelper] Overlap buffer full - consider increasing buffer size.");
+            }
+
             for (int i = 0; i < count; i++)
             {
                 var col = s_buffer[i];
@@ -36,7 +44,7 @@ namespace CardSystem.SkillSystem.Targeting
                 outTargets.Add(go);
             }
 
-            return outTargets.Count;
+          return outTargets.Count;
         }
 
         /// <summary>

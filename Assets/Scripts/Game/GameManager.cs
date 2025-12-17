@@ -1,5 +1,3 @@
-using System;
-using System.Collections;
 using CDTU.Utils;
 using RogueGame.Map;
 using UI;

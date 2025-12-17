@@ -1,8 +1,6 @@
 using System.Collections.Generic;
 using Character.Components;
-using CDTU.Utils;
 using UnityEngine;
-using UnityEngine.Pool;
 
 public class WorldHpBarSystem : MonoBehaviour
 {

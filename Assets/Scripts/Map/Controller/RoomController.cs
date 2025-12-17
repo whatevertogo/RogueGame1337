@@ -264,6 +264,18 @@ namespace RogueGame.Map
 
             Log($"[RoomController] 敌人死亡（带击杀者）: {enemy.name}, 击杀者: {attacker?.name ?? "null"}, 剩余: {activeEnemies.Count}");
 
+            // 广播全局击杀事件（供卡牌充能 / 玩家能量分发 / 掉落逻辑订阅）
+            try
+            {
+                EventBus.Publish(new RogueGame.Events.EntityKilledEvent
+                {
+                    Victim = enemy,
+                    Attacker = attacker,
+                    RoomType = this.roomType
+                });
+            }
+            catch { }
+
             // 由 EnemyCharacter 自行处理（掉落/能量），避免重复分配
 
             if (activeEnemies.Count <= 0 && currentState == RoomState.Combat)
@@ -351,7 +363,7 @@ namespace RogueGame.Map
                 return;
             }
 
-            if(!IsCombatRoom) return;
+            if (!IsCombatRoom) return;
 
             int count = UnityEngine.Random.Range(minEnemies, maxEnemies + 1);
 
@@ -584,7 +596,7 @@ namespace RogueGame.Map
             }
         }
 
-        
+
 #endif
 
         #endregion

@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using TMPro;
 using System;
 using UI;
+using DG.Tweening;
 
 namespace Game.UI
 {
@@ -85,7 +86,13 @@ namespace Game.UI
         {
             if (bloorBar != null)
             {
-                bloorBar.fillAmount = Mathf.Clamp01(normalized);
+                var f = bloorBar.fillAmount;
+                // DOTween.To(() => f, x => f = x, Mathf.Clamp01(normalized), 0.1f)
+                //     .OnUpdate(() => bloorBar.fillAmount = f)
+                //     .SetEase(Ease.OutCubic);
+
+                //TODO-或许有更好duration的值,现在默认0.1f
+                bloorBar.DOFillAmount(Mathf.Clamp01(normalized), 0.08f).SetEase(Ease.OutCirc).SetUpdate(true);
             }
         }
 
@@ -119,11 +126,12 @@ namespace Game.UI
             normalized = Mathf.Clamp01(normalized);
             if (slotIndex == 0 && skillSlot1Energy != null)
             {
-                skillSlot1Energy.fillAmount = normalized;
+                //TODO-或许有更好duration的值,现在默认0.05f
+                skillSlot1Energy.DOFillAmount(Mathf.Clamp01(normalized), 0.05f).SetEase(Ease.OutCirc).SetUpdate(true);
             }
             else if (slotIndex == 1 && skillSlot2Energy != null)
             {
-                skillSlot2Energy.fillAmount = normalized;
+                skillSlot2Energy.DOFillAmount(Mathf.Clamp01(normalized), 0.05f).SetEase(Ease.OutCirc).SetUpdate(true);
             }
         }
 

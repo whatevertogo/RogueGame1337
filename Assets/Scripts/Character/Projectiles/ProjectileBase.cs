@@ -9,6 +9,7 @@ namespace Character.Projectiles
     /// 投射物基类 - 支持对象池
     /// </summary>
     [RequireComponent(typeof(Rigidbody2D))]
+    [RequireComponent(typeof(Collider2D))]
     public class ProjectileBase : MonoBehaviour
     {
         // ========== 缓存组件 ==========
