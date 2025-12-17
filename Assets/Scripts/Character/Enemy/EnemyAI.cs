@@ -27,10 +27,10 @@ public class EnemyAI : MonoBehaviour
     public float idleSpeed = 0f;
 
     [Tooltip("寻找玩家的最大距离，超过将不追逐（0 表示无限）")]
-    public float aggroRange = 0f;
+    public float aggroRange = 10f;
 
     [Tooltip("AI更新间隔（秒），0表示每帧更新")]
-    public float updateInterval = 0f;
+    public float updateInterval = 0.01f;
 
     [Header("战斗设置")]
     [Tooltip("攻击范围（如未设置则使用角色属性）")]

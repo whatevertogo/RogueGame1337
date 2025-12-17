@@ -13,6 +13,7 @@ namespace Game.UI
         protected PlayingStateUIView _view;
 
         private PlayerRuntimeState _myPlayerState;
+        private bool _skillEventsSubscribed = false;
         public virtual void Bind(UIViewBase view)
         {
             _view = view as PlayingStateUIView;
@@ -40,21 +41,28 @@ namespace Game.UI
         {
             var pm = PlayerManager.GetExistingInstance();
             if (pm == null) return;
+            if (_skillEventsSubscribed) return;
             pm.OnPlayerSkillEnergyChanged += this.OnPlayerSkillEnergyChanged;
             pm.OnPlayerSkillUsed += this.OnPlayerSkillUsed;
+            _skillEventsSubscribed = true;
         }
 
         private void UnsubscribeFromSkillEvents()
         {
             var pm = PlayerManager.GetExistingInstance();
             if (pm == null) return;
+            if (!_skillEventsSubscribed) return;
             pm.OnPlayerSkillEnergyChanged -= this.OnPlayerSkillEnergyChanged;
             pm.OnPlayerSkillUsed -= this.OnPlayerSkillUsed;
+            _skillEventsSubscribed = false;
         }
 
         private void PlayerRegistered(PlayerRuntimeState state)
         {
-            // 保存引用并订阅生命值相关事件
+            // 只响应本地玩家的注册（UI 只关注本地玩家）
+            if (state == null || !state.IsLocal) return;
+
+            // 保存引用并订阅生命值与技能事件
             _myPlayerState = state;
             Debug.Log("玩家注册：" + state.PlayerId);
             SubscribeToPlayerHealthEvents();
@@ -133,6 +141,7 @@ namespace Game.UI
             {
                 // 对应玩家被注销，清理订阅
                 UnsubscribeFromPlayerHealthEvents();
+                UnsubscribeFromSkillEvents();
                 _myPlayerState = null;
             }
         }
