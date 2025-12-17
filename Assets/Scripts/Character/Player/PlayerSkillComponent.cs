@@ -63,6 +63,7 @@ public class PlayerSkillComponent : MonoBehaviour, ISkillComponent
         {
             var mod = def.targetingModuleSO;
             var modType = mod.GetType();
+            
             var requiresProp = modType.GetProperty("RequiresManualSelection", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
             bool requiresManual = false;
             if (requiresProp != null && requiresProp.PropertyType == typeof(bool))

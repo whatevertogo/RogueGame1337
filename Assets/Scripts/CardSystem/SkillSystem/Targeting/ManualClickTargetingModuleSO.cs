@@ -48,6 +48,11 @@ namespace CardSystem.SkillSystem.Targeting
             return 0;
         }
 
+        /// <summary>
+        /// 手动选择协程：驱动玩家点击选择目标
+        /// </summary>
+        /// <param name="ctx"></param>
+        /// <returns></returns>
         public override IEnumerator ManualSelectionCoroutine(SkillContext ctx)
         {
             if (ctx == null) yield break;

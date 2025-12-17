@@ -54,18 +54,14 @@ namespace Character.Components
 
             if (!handledByModule)
             {
-
-                execCtx.Position = centre;
-                var pred = CardSystem.SkillSystem.Targeting.TargetingHelper.BuildTeamPredicate(execCtx.OwnerTeam, def.targetTeam, gameObject, false);
-
-                execCtx.Position = centre;
-                var pred2 = CardSystem.SkillSystem.Targeting.TargetingHelper.BuildTeamPredicate(execCtx.OwnerTeam, def.targetTeam, gameObject, true);
-
+                // 未配置或未能通过模块采集到目标：
+                // 记录警告并保持 Targets 为空，ExecutionModule 应能自行处理空目标情形或由技能逻辑决定行为
+                Debug.LogWarning($"[EnemySkillComponent] 技能 '{def.skillId}' 未配置可用的非交互式目标模块，执行时 Targets 为空。");
             }
 
 
-            // 最终执行（模块化执行器或 legacy Effect）
-            def.Execute(execCtx, aimPoint);
+            // 最终执行（模块化执行器或 legacy Eff
+        def.Execute(execCtx, aimPoint);
             yield break;
         }
 
@@ -99,15 +95,52 @@ namespace Character.Components
             var slot = skillSlots[slotIndex];
             if (slot == null || slot.skill == null) return;
 
+            var def = slot.skill;
+            var ctx = new SkillContext(this.transform);
 
-            ctx.Position = centre;
-            var pred = CardSystem.SkillSystem.Targeting.TargetingHelper.BuildTeamPredicate(ctx.OwnerTeam, slot.skill.targetTeam, gameObject, false);
+            // 优先使用模块化目标采集（非交互式）。
+            // 如果模块需要交互式选择（RequiresManualSelection == true），敌人无法执行交互式选择，
+            // 因此会记录警告并退回为“以自身为目标”的默认行为。
+            bool handled = false;
+            if (def.targetingModuleSO != null)
+            {
+                var mod = def.targetingModuleSO;
+                var modType = mod.GetType();
+                var requiresProp = modType.GetProperty("RequiresManualSelection", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic);
+                bool requiresManual = false;
+                if (requiresProp != null && requiresProp.PropertyType == typeof(bool))
+                {
+                    var v = requiresProp.GetValue(mod);
+                    if (v is bool b) requiresManual = b;
+                }
 
-            var centre = transform.position;
-            ctx.Position = centre;
-            var pred2 = CardSystem.SkillSystem.Targeting.TargetingHelper.BuildTeamPredicate(ctx.OwnerTeam, slot.skill.targetTeam, gameObject, true);
+                if (requiresManual)
+                {
+                    Debug.LogWarning($"[EnemySkillComponent] 技能 '{def.skillId}' 的目标模块需要玩家交互选择，敌人无法执行交互式目标选择，改为以自身为目标。");
+                }
+                else
+                {
+                    var acquireMethod = modType.GetMethod("AcquireTargets", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic);
+                    if (acquireMethod != null)
+                    {
+                        try
+                        {
+                            acquireMethod.Invoke(mod, new object[] { ctx, aimPoint });
+                            handled = true;
+                        }
+                        catch (System.Exception ex)
+                        {
+                            Debug.LogWarning($"[EnemySkillComponent] AcquireTargets 调用失败: {ex.Message}");
+                        }
+                    }
+                }
+            }
 
-            ctx.Targets.Add(gameObject);
+            if (!handled)
+            {
+                // 默认把自己放入 Targets（适用于自体技能，例如自愈/自增益）
+                ctx.Targets.Add(gameObject);
+            }
 
 
             // 标记冷却并触发（立即开始冷却）

@@ -23,8 +23,8 @@ namespace CardSystem.SkillSystem.Targeting
         public TargetTeam targetTeam = TargetTeam.Hostile;
 
         [Tooltip("在 AOE 模式下是否排除施法者自身（通常用于治疗/增益盟友时设置为 true）")]
-        public bool excludeSelf = true;
 
+        public bool excludeSelf = true;
         /// <summary>
         /// 非交互式采集：返回填充后的目标数量
         /// </summary>

@@ -16,11 +16,7 @@ namespace CardSystem.SkillSystem
         [Tooltip("若大于0，技能触发后延迟检测目标并在延迟结束时应用效果（秒）")]
         public float detectionDelay = 0f;
 
-        // Legacy fields kept for backward compatibility. New workflows should prefer modules (below).
-        public TargetTeam targetTeam = TargetTeam.Hostile;
-        public float range = 5f;      // 对单体/投射可用 (legacy)
-        public float radius = 3f;     // AOE 半径 (legacy)
-        public LayerMask targetMask;  // 哪些 layer 会被检测到 (legacy)
+        // 已移除旧的 legacy targeting 字段（请改用 `targetingModuleSO` 来定义目标选择策略）
         public GameObject vfxPrefab;  // 可选
 
         [Header("效果列表 (legacy)")]
@@ -28,7 +24,7 @@ namespace CardSystem.SkillSystem
         public List<SkillEffectSO> Effects;
 
         [Header("Modular (preferred)")]
-        [Tooltip("可选：目标选择模块（作为 ScriptableObject 引用）。若配置为 TargetingModuleSO 的实例，运行时会通过反射调用 AcquireTargets/ManualSelectionCoroutine；若留空则回退到 legacy 枚举逻辑。")]
+        [Tooltip("可选：目标选择模块（作为 ScriptableObject 引用）。若配置为 TargetingModuleSO 的实例，运行时会通过反射调用 AcquireTargets/ManualSelectionCoroutine")]
         public ScriptableObject targetingModuleSO;
         [Tooltip("可选：执行模块（作为 ScriptableObject 引用）。若配置为 ExecutionModuleSO 的实例，运行时会通过反射调用 Execute；若留空则回退至 Effects 行为。")]
         public ScriptableObject executionModuleSO;
@@ -44,22 +40,20 @@ namespace CardSystem.SkillSystem
         {
             if (context == null) return;
 
-            // Module-based targeting (runtime reflection):
-            // 如果提供了 targetingModuleSO 且它是非交互式（RequiresManualSelection==false），则通过反射调用 AcquireTargets(context, aimPoint) 填充 Targets。
-            // 若模块需要手动选择（RequiresManualSelection==true），调用方（例如 PlayerSkillComponent）应先跑模块的 ManualSelectionCoroutine 并把结果写入 context.ExplicitTarget/context.Targets。
-            bool targetsAcquiredByModule = false;
+            // 模块化目标采集（运行时反射）
+            // - 若配置了 targetingModuleSO 且模块为非交互式（RequiresManualSelection == false），则通过反射调用 AcquireTargets(context, aimPoint)
+            // - 若模块是交互式的（RequiresManualSelection == true），则应由调用方（如 PlayerSkillComponent）在交互完成后再调用 Execute（交互协程负责填充 context.ExplicitTarget / context.Targets）
             if (targetingModuleSO != null)
             {
                 var mod = targetingModuleSO;
                 var modType = mod.GetType();
 
-                // 检查 RequiresManualSelection 属性（若存在）
                 bool requiresManual = false;
                 var requiresProp = modType.GetProperty("RequiresManualSelection", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
                 if (requiresProp != null && requiresProp.PropertyType == typeof(bool))
                 {
-                    var val = requiresProp.GetValue(mod);
-                    if (val is bool b) requiresManual = b;
+                    var v = requiresProp.GetValue(mod);
+                    if (v is bool b) requiresManual = b;
                 }
 
                 if (!requiresManual)
@@ -69,41 +63,29 @@ namespace CardSystem.SkillSystem
                     {
                         try
                         {
-                            // 调用模块的 AcquireTargets(context, aimPoint)
                             acquireMethod.Invoke(mod, new object[] { context, aimPoint });
-                            targetsAcquiredByModule = true;
                         }
                         catch (System.Exception ex)
                         {
-                            Debug.LogWarning($"[SkillDefinition] AcquireTargets invoke failed: {ex.Message}");
+                            Debug.LogWarning($"[SkillDefinition] AcquireTargets 调用失败：{ex.Message}");
                         }
                     }
                 }
-                // 若 requiresManual==true，不在此处执行交互（由调用方负责）
+                // 若 requiresManual == true，则交互式选择应在调用方处理（PlayerSkillComponent）
             }
-
-            if (!targetsAcquiredByModule)
+            else
             {
-                // Legacy fallback: 使用原有的枚举逻辑（保持旧行为）
-                context.Targets.Clear();
-
-               
-                    context.Position = centre;
-                    var pred = CardSystem.SkillSystem.Targeting.TargetingHelper.BuildTeamPredicate(context.OwnerTeam, targetTeam, context.Owner != null ? context.Owner.gameObject : null, false);
-
-                    context.Position = centre;
-                    var pred2 = CardSystem.SkillSystem.Targeting.TargetingHelper.BuildTeamPredicate(context.OwnerTeam, targetTeam, context.Owner != null ? context.Owner.gameObject : null, true);
-                    CardSystem.SkillSystem.Targeting.TargetingHelper.GetAoeTargets(centre, radius, targetMask, context.Targets, pred2);
-                }
+                // 未配置目标模块时记录警告，目标留空（Execution 模块负责如何处理空 Targets）
+                Debug.LogWarning($"[SkillDefinition] 技能 '{skillId}' 未配置 targetingModuleSO，建议迁移到模块化目标选择。");
             }
 
-            // If targets remain empty but an explicit target exists, use it as single target
+            // 如果 Targets 为空但 explicit target 存在，则把显式目标作为单体目标
             if ((context.Targets == null || context.Targets.Count == 0) && context.ExplicitTarget != null)
             {
                 context.Targets.Add(context.ExplicitTarget);
             }
 
-            // 执行阶段：优先使用 executionModuleSO（ScriptableObject，运行时通过反射调用 Execute）；若未配置则回退到 legacy Effects（主要用于状态效果）
+            // 执行阶段：优先使用 executionModuleSO（通过反射调用 Execute），若未配置则回退到 Effects（仅对状态效果）
             if (executionModuleSO != null)
             {
                 var mod = executionModuleSO;
@@ -117,15 +99,15 @@ namespace CardSystem.SkillSystem
                     }
                     catch (System.Exception ex)
                     {
-                        Debug.LogWarning($"[SkillDefinition] Execution module invoke failed: {ex.Message}");
+                        Debug.LogWarning($"[SkillDefinition] Execute 调用失败：{ex.Message}");
                     }
                 }
             }
             else
             {
-                if (context == null || Effects == null) return;
+                if (Effects == null) return;
 
-                // 对所有目标应用所有效果，每次都生成新实例
+                // 对所有目标应用状态效果（保持原有 Effects 的兼容行为）
                 foreach (var target in context.Targets)
                 {
                     if (target == null) continue;
