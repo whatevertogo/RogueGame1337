@@ -151,6 +151,14 @@ namespace Character.Components
         // ========== 伤害系统 ==========
 
         /// <summary>
+        /// 简化版受伤
+        /// </summary>
+        public float TakeDamage(float amount)
+        {
+            var info = DamageInfo.Create(amount);
+            return TakeDamage(info).FinalDamage;
+        }
+        /// <summary>
         /// 受到伤害
         /// </summary>
         public DamageResult TakeDamage(DamageInfo info)
@@ -187,14 +195,6 @@ namespace Character.Components
             return result;
         }
 
-        /// <summary>
-        /// 简化版受伤
-        /// </summary>
-        public int TakeDamage(int amount)
-        {
-            var info = DamageInfo.Create(amount);
-            return TakeDamage(info).FinalDamage;
-        }
 
         /// <summary>
         /// 治疗

@@ -15,5 +15,5 @@ public interface IGameStateManager
     /// <summary>
     /// 初始化注入依赖（由组合根 GameManager 调用）。
     /// </summary>
-    void Initialize(IReadOnlyRoomRepository roomRepository, IRoomManager roomManager, TransitionController transitionController,UIManager uiManager);
+    void Initialize(RoomManager roomManager, TransitionController transitionController, UIManager uiManager);
 }

@@ -3,7 +3,7 @@ using CardSystem;
 
 public class CardView : MonoBehaviour
 {
-    public CardView(CardData data)
+    public CardView(CardDefinition data)
     {
     }
 

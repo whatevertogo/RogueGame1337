@@ -6,7 +6,7 @@ using Character.Interfaces;
 
 /// <summary>
 /// 负责过渡期间的通用逻辑：锁定玩家移动、执行切换动作、解锁。
-/// 这是一个轻量级实现，后续可以扩展为相机淡入/淡出或动效。
+/// 这是一个轻量级实现，后续可以扩展相机淡入/淡出或动效。
 /// </summary>
 public sealed class TransitionController : MonoBehaviour
 {

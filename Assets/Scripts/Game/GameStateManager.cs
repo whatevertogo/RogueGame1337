@@ -26,12 +26,17 @@ public sealed class GameStateManager : MonoBehaviour, IGameStateManager
     public TransitionController TransitionController { get; set; }
     public UIManager UIManager { get; private set; }
 
-    public void Initialize(IReadOnlyRoomRepository roomRepository, IRoomManager roomManager, TransitionController transitionController, UIManager uiManager)
+    public void Initialize( RoomManager roomManager, TransitionController transitionController, UIManager uiManager)
     {
-        this.RoomRepository = roomRepository;
         this.RoomManager = roomManager;
+        // 注入只读仓库接口，确保 StartRun 有可用的只读数据源
+        this.RoomRepository = roomManager;
         this.TransitionController = transitionController;
         this.UIManager = uiManager;
+        if (roomManager == null)
+        {
+            CDTU.Utils.Logger.LogWarning("[GameStateManager] Initialize called with null RoomManager");
+        }
     }
 
     private bool _isTransitioning = false;
@@ -42,6 +47,8 @@ public sealed class GameStateManager : MonoBehaviour, IGameStateManager
 
     private void Start()
     {
+        var startMeta = new RoomMeta { RoomType = RoomType.Start, Index = 0, BundleName = "Room_Start_0" };
+        StartRun(startMeta);
     }
 
     /// <summary>
@@ -75,7 +82,7 @@ public sealed class GameStateManager : MonoBehaviour, IGameStateManager
         // 初始化 UI（诊断）：打印 UIManager 状态以排查为何未执行 Open
         try
         {
-            CDTU.Utils.Logger.Log($"GameStateManager: UIManager is {(UIManager==null?"null":UIManager.GetType().ToString())}");
+            CDTU.Utils.Logger.Log($"GameStateManager: UIManager is {(UIManager == null ? "null" : UIManager.GetType().ToString())}");
         }
         catch { }
         // 初始化UI，由prefab自动注入Logic
@@ -236,13 +243,10 @@ public sealed class GameStateManager : MonoBehaviour, IGameStateManager
     private IEnumerator PerformRoomTransition(Direction dir)
     {
         _isTransitioning = true;
-        var tc = TransitionController ?? GameManager.Instance?.transitionController;
-
-
-        if (tc != null)
+        if (TransitionController != null)
         {
             // 在过渡过程中由 RoomManager 实际执行房间切换（通过接口调用）
-            yield return StartCoroutine(tc.DoRoomTransitionCoroutine(() =>
+            yield return StartCoroutine(TransitionController.DoRoomTransitionCoroutine(() =>
             {
                 RoomManager?.SwitchToNextRoom(dir);
             }));
@@ -283,4 +287,18 @@ public sealed class GameStateManager : MonoBehaviour, IGameStateManager
         var startMeta = new RoomMeta { RoomType = RoomType.Start, Index = 0, BundleName = "Room_Start_0" };
         RoomManager?.StartFloor(CurrentLayer, startMeta);
     }
+
+    #region 暂停与恢复游戏
+    public void PauseGame()
+    {
+        Time.timeScale = 0f;
+        // 额外逻辑：通知 UI/Audio
+    }
+
+    public void ResumeGame()
+    {
+        Time.timeScale = 1f;
+    }
+
+    #endregion
 }

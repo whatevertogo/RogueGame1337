@@ -55,35 +55,30 @@ namespace RogueGame.Map
         private bool _isSwitchingRoom;
 
         // 缓存 TransitionController 引用（由 GameManager 提供或场景中查找）
-        private TransitionController _transitionController;
+        private TransitionController TransitionController;
 
         #endregion
 
-        #region 事件
+        // 事件
 
         public event Action<RoomController> OnRoomCleared;
         public event Action<string> OnShowMessage;
         // 门触发请求已用 EventBus 发布
 
-        #endregion
-
-        #region 公共属性
-
+        // 只读属性
         public RoomInstanceState CurrentRoom => _current;
         public int CurrentFloor => _currentFloor;
         // 注意: 层级计数与 Boss 解锁由 GameStateManager 管理，RoomManager 仅保留当前层号作信息用途
         public Vector2 CurrentRoomSize => _current?.CachedSize ?? new Vector2(defaultRoomWidth, defaultRoomHeight);
         public RoomController CurrentRoomController => _current?.Instance?.GetComponent<RoomController>();
 
-        #endregion
 
         #region 生命周期
 
         private void Awake()
         {
             _loader = new ResourcesRoomLoader();
-            _transitionController = GameManager.Instance?.transitionController;
-            if (_transitionController == null)
+            if (TransitionController == null)
             {
                 CDTU.Utils.Logger.LogWarning("[RoomManager] TransitionController not found in scene.");
             }
@@ -103,8 +98,15 @@ namespace RogueGame.Map
 
         #endregion
 
+
+
         #region 公共 API
 
+        public void Initialize(TransitionController transitionController)
+        {
+            this.TransitionController = transitionController;
+        }
+        
         public int RandomSeed() => (int)(DateTime.UtcNow.Ticks & 0x7FFFFFFF);
         public void StartRun(RoomMeta startMeta)
         {
@@ -283,9 +285,9 @@ namespace RogueGame.Map
             _current = state;
 
             // 传送玩家（优先使用 TransitionController）
-            if (_transitionController != null)
+            if (TransitionController != null)
             {
-                _transitionController.TeleportPlayer(roomPrefab, entryDir);
+                TransitionController.TeleportPlayer(roomPrefab, entryDir);
             }
             else
             {
@@ -300,9 +302,9 @@ namespace RogueGame.Map
 
 
             // 移动相机（由 TransitionController 承担）
-            if (_transitionController != null)
+            if (TransitionController != null)
             {
-                _transitionController.MoveCameraTo(roomPos);
+                TransitionController.MoveCameraTo(roomPos);
             }
             else
             {

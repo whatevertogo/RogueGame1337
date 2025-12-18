@@ -40,33 +40,34 @@ public class PlayerManager : Singleton<PlayerManager>
         base.Awake();
 
         // 订阅共享库存事件
-        var ri = RunInventory.Instance;
-        if (ri != null)
+        var inventoryManager = InventoryManager.Instance;
+        if (inventoryManager != null)
         {
-            ri.OnCoinsChanged += OnRunInventoryCoinsChanged;
-            ri.OnPassiveCardChanged += OnRunInventoryPassiveCardChanged;
-            ri.OnActiveCardPoolChanged += OnRunInventoryActiveCardPoolChanged;
+            inventoryManager.OnCoinsChanged += OnRunInventoryCoinsChanged;
+            // ri.OnPassiveCardChanged += OnRunInventoryPassiveCardChanged;
+            // ri.OnActiveCardPoolChanged += OnRunInventoryActiveCardPoolChanged;
         }
 
         // 订阅房间进入事件
         EventBus.Subscribe<RoomEnteredEvent>(HandleRoomEnteredEvent);
+        // 订阅实体击杀事件，用于分发技能能量
+        EventBus.Subscribe<EntityKilledEvent>(HandleEntityKilledEvent);
     }
 
     private void OnDestroy()
     {
         // 取消订阅共享库存事件
-        var ri = RunInventory.GetExistingInstance();
-        if (ri != null)
+        var inventoryManager = InventoryManager.GetExistingInstance();
+        if (inventoryManager != null)
         {
-            ri.OnCoinsChanged -= OnRunInventoryCoinsChanged;
-            ri.OnPassiveCardChanged -= OnRunInventoryPassiveCardChanged;
-            ri.OnActiveCardPoolChanged -= OnRunInventoryActiveCardPoolChanged;
+            inventoryManager.OnCoinsChanged -= OnRunInventoryCoinsChanged;
+            // inventoryManager.OnPassiveCardChanged -= OnRunInventoryPassiveCardChanged;
+            // inventoryManager.OnActiveCardPoolChanged -= OnRunInventoryActiveCardPoolChanged;
         }
-
-
         try
         {
             EventBus.Unsubscribe<RoomEnteredEvent>(HandleRoomEnteredEvent);
+            EventBus.Unsubscribe<RogueGame.Events.EntityKilledEvent>(HandleEntityKilledEvent);
         }
         catch { }
     }
@@ -74,7 +75,27 @@ public class PlayerManager : Singleton<PlayerManager>
     private void HandleRoomEnteredEvent(RoomEnteredEvent evt)
     {
         // TODO-当房间被进入时，重置所有玩家的技能使用状态（仅本房间标记）
-        // ResetSkillUsageForAllPlayers();
+        ResetSkillUsageForAllPlayers();
+    }
+
+    private void HandleEntityKilledEvent(RogueGame.Events.EntityKilledEvent evt)
+    {
+        if (evt == null) return;
+        NotifyEnemyKilled(evt.Attacker, evt.Victim, evt.RoomType);
+    }
+
+    private void ResetSkillUsageForAllPlayers()
+    {
+        foreach (var kv in _players)
+        {
+            var state = kv.Value;
+            if (state?.Controller == null) continue;
+            var comp = state.Controller.GetComponent<PlayerSkillComponent>();
+            if (comp != null)
+            {
+                comp.OnRoomEnter();
+            }
+        }
     }
 
     #region 人物注册相关
@@ -211,12 +232,12 @@ public class PlayerManager : Singleton<PlayerManager>
 
     public void AddCoins(PlayerController controller, int amount)
     {
-        RunInventory.Instance?.AddCoins(amount);
+        InventoryManager.Instance?.AddCoins(amount);
     }
 
     public bool SpendCoins(PlayerController controller, int amount)
     {
-        return RunInventory.Instance?.SpendCoins(amount) ?? false;
+        return InventoryManager.Instance?.SpendCoins(amount) ?? false;
     }
 
 
@@ -271,7 +292,7 @@ public class PlayerManager : Singleton<PlayerManager>
 
         if (playerKiller == null) return;
 
-        // 根据房间类型给予不同能量奖励
+        // 根据房间类型给予不同能量奖励（数值可调整）
         float energy = roomType switch
         {
             RoomType.Elite => 30f,
@@ -279,8 +300,12 @@ public class PlayerManager : Singleton<PlayerManager>
             _ => 10f
         };
 
-        //TODO-给当前玩家添加能量逻辑
-        // AddSkillEnergy(playerKiller, energy);
+        // 给击杀者添加能量（通知其 PlayerSkillComponent）
+        var skillComp = playerKiller.GetComponent<PlayerSkillComponent>();
+        if (skillComp != null)
+        {
+            skillComp.AddEnergy(energy);
+        }
     }
 
     #endregion

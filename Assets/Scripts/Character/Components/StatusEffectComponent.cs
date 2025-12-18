@@ -52,19 +52,25 @@ namespace Character.Components
 
             _isUpdating = false;
 
-            // 处理待添加
-            foreach (var effect in _pendingAdd)
+            // 优先处理待移除，避免在刷新非叠加效果时出现先添加后移除导致刷新失效的问题
+            if (_pendingRemove.Count > 0)
             {
-                AddEffectInternal(effect);
+                foreach (var effect in _pendingRemove)
+                {
+                    RemoveEffectInternal(effect);
+                }
+                _pendingRemove.Clear();
             }
-            _pendingAdd.Clear();
 
-            // 处理待移除
-            foreach (var effect in _pendingRemove)
+            // 处理待添加（去重后添加）
+            if (_pendingAdd.Count > 0)
             {
-                RemoveEffectInternal(effect);
+                foreach (var effect in _pendingAdd)
+                {
+                    AddEffectInternal(effect);
+                }
+                _pendingAdd.Clear();
             }
-            _pendingRemove.Clear();
         }
 
         /// <summary>
@@ -74,7 +80,7 @@ namespace Character.Components
         {
             if (_isUpdating)
             {
-                _pendingAdd.Add(effect);
+                if (!_pendingAdd.Contains(effect)) _pendingAdd.Add(effect);
             }
             else
             {
@@ -93,7 +99,8 @@ namespace Character.Components
 
             if (existing != null)
             {
-                if (effect.IsStackable)
+                // 使用已存在实例的叠加语义（以现有实例为准）
+                if (existing.IsStackable)
                 {
                     // 可叠加：添加新效果
                     _effects.Add(effect);
@@ -101,11 +108,8 @@ namespace Character.Components
                 }
                 else
                 {
-                    // 不可叠加：刷新现有效果
-                    if (existing is StatusEffectBase baseEffect)
-                    {
-                        baseEffect.Refresh();
-                    }
+                    // 不可叠加：刷新现有效果（通过接口调用）
+                    existing.Refresh();
                 }
             }
             else
@@ -122,7 +126,7 @@ namespace Character.Components
         {
             if (_isUpdating)
             {
-                _pendingRemove.Add(effect);
+                if (!_pendingRemove.Contains(effect)) _pendingRemove.Add(effect);
             }
             else
             {

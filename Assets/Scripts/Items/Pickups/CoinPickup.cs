@@ -51,7 +51,7 @@ public sealed class CoinPickup : MonoBehaviour, IPickup
     {
         if (_collected) return;
         _collected = true;
-        RunInventory.Instance?.AddCoins(Amount);
+        InventoryManager.Instance?.AddCoins(Amount);
         Destroy(gameObject);
     }
 

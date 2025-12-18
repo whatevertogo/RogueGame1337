@@ -142,4 +142,5 @@ namespace RogueGame.Events
         /// </summary>
         public string AttackerPlayerId;
     }
+
 }

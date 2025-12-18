@@ -16,33 +16,33 @@ public class PlayerController : CharacterBase
 	// 转发器实现：在控制器内部维护一个小型转发器类以避免使用 lambda
 	private class PlayerSkillEventForwarder
 	{
-		private PlayerManager owner;
+		private PlayerManager PlayerManager;
 		private readonly string _playerId;
 
 		public PlayerSkillEventForwarder(PlayerManager owner,string playerId)
 		{
 			_playerId = playerId;
-			this.owner = owner;
+			this.PlayerManager = owner;
 		}
 
 		public void OnEnergyChanged(int slotIndex, float energy)
 		{
-			owner?.RaisePlayerSkillEnergyChanged(_playerId, slotIndex, energy);
+			PlayerManager?.RaisePlayerSkillEnergyChanged(_playerId, slotIndex, energy);
 		}
 
 		public void OnSkillUsed(int slotIndex)
 		{
-			owner?.RaisePlayerSkillUsed(_playerId, slotIndex);
+			PlayerManager?.RaisePlayerSkillUsed(_playerId, slotIndex);
 		}
 
 		public void OnSkillEquipped(int slotIndex, string cardId)
 		{
-			owner?.RaisePlayerSkillEquipped(_playerId, slotIndex, cardId);
+			PlayerManager?.RaisePlayerSkillEquipped(_playerId, slotIndex, cardId);
 		}
 
 		public void OnSkillUnequipped(int slotIndex)
 		{
-			owner?.RaisePlayerSkillUnequipped(_playerId, slotIndex);
+			PlayerManager?.RaisePlayerSkillUnequipped(_playerId, slotIndex);
 		}
 	}
 

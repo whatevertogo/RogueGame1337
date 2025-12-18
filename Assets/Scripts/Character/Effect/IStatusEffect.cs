@@ -21,5 +21,16 @@ namespace Character.Effects
         float ModifyOutgoingDamage(float damage) => damage;
         // 可选：修改受到伤害
         float ModifyIncomingDamage(float damage) => damage;
+
+        /// <summary>
+        /// 刷新效果（例如重置持续时间）。建议所有运行时实例实现此方法。
+        /// </summary>
+        void Refresh();
+
+        /// <summary>
+        /// 延长效果持续时间
+        /// </summary>
+        /// <param name="extraTime">额外时间（秒）</param>
+        void Extend(float extraTime);
     }
 }

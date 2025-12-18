@@ -59,14 +59,15 @@ public sealed class CardPickup : MonoBehaviour, IPickup
             return;
         }
 
-        if (!CardRegistry.TryResolve(CardId, out var data))
+        // 查找卡牌定义
+        if (!GameRoot.Instance.CardDataBase.TryResolve(CardId, out var data))
         {
             Debug.LogWarning($"[CardPickup] unknown CardId '{CardId}' on '{gameObject.name}', discarding pickup.");
             Destroy(gameObject);
             return;
         }
-
-        RunInventory.Instance.AddCardById(CardId);
+        //TODO -完善添加卡牌逻辑
+        // InventoryManager.Instance.AddCardById(CardId);
         Destroy(gameObject);
     }
 
