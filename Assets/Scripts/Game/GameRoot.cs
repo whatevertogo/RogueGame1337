@@ -19,6 +19,7 @@ public class GameRoot : Singleton<GameRoot>
     [SerializeField] private TransitionController transitionController;
     [SerializeField] private PlayerManager playerManager;
     [SerializeField] private InventoryManager inventoryManager;
+    [SerializeField] private LootDropper lootDropper;
 
     protected override void Awake()
     {

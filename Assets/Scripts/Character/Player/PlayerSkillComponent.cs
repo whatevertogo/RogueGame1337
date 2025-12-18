@@ -151,7 +151,7 @@ public class PlayerSkillComponent : MonoBehaviour, ISkillComponent
     }
 
 
-    public void Equip(int slotIndex, string cardId)
+    public void EquipActiveCardToSlotIndex(int slotIndex, string cardId)
     {
         // 不查 Inventory
         var cardDef = GameRoot.Instance.CardDatabase.Resolve(cardId);
@@ -164,7 +164,7 @@ public class PlayerSkillComponent : MonoBehaviour, ISkillComponent
         OnSkillEquipped?.Invoke(slotIndex, cardId);
     }
 
-    public void Unequip(int slotIndex)
+    public void UnequipActiveCardBySlotIndex(int slotIndex)
     {
         var slot = _playerSkillSlots[slotIndex];
         if (slot == null) return;
@@ -174,7 +174,7 @@ public class PlayerSkillComponent : MonoBehaviour, ISkillComponent
     }
 
     /// <summary>
-    /// 当进入新房间时调用：重置本房间使用标记（但保留能量值）
+    /// 当进入新房间时RoomManager激活事件PlayerManager接收事件调用：重置本房间使用标记（但保留能量值）
     /// </summary>
     public void OnRoomEnter()
     {

@@ -24,7 +24,6 @@ namespace RogueGame.Map
         [SerializeField] private int seed = 12345;
 
         [Header("预制体")]
-        [SerializeField] private GameObject stubPrefab;
         [SerializeField] private Transform roomsRoot;
 
         [Header("房间布局")]
