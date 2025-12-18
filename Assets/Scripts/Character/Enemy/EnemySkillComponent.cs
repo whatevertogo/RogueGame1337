@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using CardSystem.SkillSystem;
 using Character.Components.Interface;
+using CardSystem.SkillSystem.Runtime;
 
 namespace Character.Components
 {

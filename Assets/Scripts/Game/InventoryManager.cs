@@ -11,27 +11,27 @@ using RogueGame.Events;
 /// </summary>
 public sealed class InventoryManager : Singleton<InventoryManager>
 {
-    [ReadOnly]
-    [SerializeField] private int _coins = 0;
-    public int Coins => _coins;
+    public struct ActiveCardIdRuntimeInfo
+    {
+        public string cardId;
+    }
 
-
-    public class PassiveCardInfo
+    public struct PassiveCardIdRuntimeInfo
     {
         public string cardId;
         public int count;
     }
-    public class ActiveCardInfo
-    {
-        public string cardId;
-    }
 
-    private readonly List<ActiveCardInfo> _activeCardInfos = new();
-    private readonly List<PassiveCardInfo> _passiveCardInfos = new();
+    private List<ActiveCardIdRuntimeInfo> _ActiveCardIdInfos = new List<ActiveCardIdRuntimeInfo>();
+    private List<PassiveCardIdRuntimeInfo> _PassiveCardIdInfos = new List<PassiveCardIdRuntimeInfo>();
 
-    public IReadOnlyList<ActiveCardInfo> ActiveCardIds => _activeCardInfos;
-    public IReadOnlyList<PassiveCardInfo> PassiveCardIds => _passiveCardInfos;
 
+    public IReadOnlyList<ActiveCardIdRuntimeInfo> ActiveCardIdInfos => _ActiveCardIdInfos;
+    public IReadOnlyList<PassiveCardIdRuntimeInfo> PassiveCardIdInfos => _PassiveCardIdInfos;
+
+    [ReadOnly]
+    [SerializeField] private int _coins = 0;
+    public int Coins => _coins;
     public event Action<int> OnCoinsChanged;
     protected override void Awake()
     {
@@ -42,13 +42,23 @@ public sealed class InventoryManager : Singleton<InventoryManager>
     {
     }
 
+    #region 卡牌操作
+
+    public bool HasActiveCard(string cardId) => _ActiveCardIdInfos.Exists(info => info.cardId == cardId);
+
+
+
+
+    #endregion
+
+    #region 金币操作
     public void AddCoins(int amount)
     {
         if (amount <= 0) return;
         _coins += amount;
         OnCoinsChanged?.Invoke(_coins);
     }
-     public bool SpendCoins(int amount)
+    public bool SpendCoins(int amount)
     {
         if (amount <= 0) return true;
         if (_coins < amount) return false;
@@ -64,6 +74,7 @@ public sealed class InventoryManager : Singleton<InventoryManager>
         OnCoinsChanged?.Invoke(_coins);
     }
 
+    #endregion
 
 
 }

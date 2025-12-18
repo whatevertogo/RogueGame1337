@@ -164,47 +164,6 @@ public class PlayerManager : Singleton<PlayerManager>
 
     #endregion
 
-    #region 技能事件占位
-
-    public void EquipSkillToPlayer(string playerId, SkillDefinition skill, int slotIndex)
-    {
-        // TODO-实现为玩家装备技能的逻辑
-        var playerRuntimeState = GetPlayerRuntimeStateById(playerId);
-        if (playerRuntimeState == null)
-        {
-            Debug.LogWarning($"Player with ID {playerId} not found.");
-            return;
-        }
-        var go = playerRuntimeState.Controller.gameObject;
-
-        // 优先查找具体的 PlayerSkillComponent（有 EquipSkill/UnequipSkill）
-        var playerSkillComp = go.GetComponent<PlayerSkillComponent>();
-        if (playerSkillComp != null)
-        {
-            playerSkillComp.EquipSkill(skill, slotIndex);
-            return;
-        }
-    }
-
-    public void UnequipSkillFromPlayer(string playerId, string cardId, int slotIndex)
-    {
-        var playerRuntimeState = GetPlayerRuntimeStateById(playerId);
-        if (playerRuntimeState == null)
-        {
-            Debug.LogWarning($"Player with ID {playerId} not found.");
-            return;
-        }
-
-        var go = playerRuntimeState.Controller.gameObject;
-        var playerSkillComp = go.GetComponent<PlayerSkillComponent>();
-        if (playerSkillComp != null)
-        {
-            playerSkillComp.UnequipSkill(slotIndex);
-            return;
-        }
-    }
-
-    #endregion
 
     #region 技能转发事件
     

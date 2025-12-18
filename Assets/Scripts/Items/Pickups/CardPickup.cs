@@ -60,7 +60,7 @@ public sealed class CardPickup : MonoBehaviour, IPickup
         }
 
         // 查找卡牌定义
-        if (!GameRoot.Instance.CardDataBase.TryResolve(CardId, out var data))
+        if (!GameRoot.Instance.CardDatabase.TryResolve(CardId, out var data))
         {
             Debug.LogWarning($"[CardPickup] unknown CardId '{CardId}' on '{gameObject.name}', discarding pickup.");
             Destroy(gameObject);

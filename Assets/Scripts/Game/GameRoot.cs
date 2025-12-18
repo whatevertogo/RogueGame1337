@@ -7,9 +7,10 @@ using UnityEngine;
 public class GameRoot : Singleton<GameRoot>
 {
     [Header("Game DataBases")]
+    [InlineEditor]
     [SerializeField] private CardDataBase cardDatabase;
 
-    public CardDataBase CardDataBase => cardDatabase;
+    public CardDataBase CardDatabase => cardDatabase;
 
     [Header("Scene Managers")]
     [SerializeField] private GameStateManager gameStateManager;

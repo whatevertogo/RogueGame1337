@@ -1,6 +1,7 @@
 
 using CardSystem.SkillSystem;
 using UnityEngine;
+using CardSystem.Card;
 
 namespace CardSystem
 {
@@ -9,6 +10,9 @@ namespace CardSystem
     {
         public string cardId;
         public CardType type; // Passive / Active
+        public ActiveCardConfig activeCardConfig;
+        public PassiveCardConfig passiveCardConfig;
+
 
         [TextArea]
         public string Description;

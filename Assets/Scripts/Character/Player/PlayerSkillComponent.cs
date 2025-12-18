@@ -5,6 +5,7 @@ using Character.Components.Interface;
 using CardSystem.SkillSystem;
 using CardSystem;
 using System.Collections;
+using CardSystem.SkillSystem.Runtime;
 
 /// <summary>
 /// 技能系统
@@ -21,7 +22,18 @@ public class PlayerSkillComponent : MonoBehaviour, ISkillComponent
     public event Action<int> OnSkillUsed;
     public event Action<int, string> OnSkillEquipped;
     public event Action<int> OnSkillUnequipped;
-
+    private void Awake()
+    {
+        // 确保数组内的 SkillSlot 实例已初始化，避免 Inspector VS 运行期不一致
+        if (_playerSkillSlots != null)
+        {
+            for (int i = 0; i < _playerSkillSlots.Length; i++)
+            {
+                if (_playerSkillSlots[i] == null)
+                    _playerSkillSlots[i] = new SkillSlot();
+            }
+        }
+    }
     /// <summary>
     /// 为指定槽位增加能量（可被外部如 PlayerManager 调用）
     /// 增加会同时触发 OnEnergyChanged 事件
@@ -32,13 +44,16 @@ public class PlayerSkillComponent : MonoBehaviour, ISkillComponent
         if (_playerSkillSlots == null) return;
         for (int i = 0; i < _playerSkillSlots.Length; i++)
         {
-            var s = _playerSkillSlots[i];
-            if (s == null) continue;
-            float before = s.energy;
-            s.energy = Mathf.Clamp(s.energy + amount, 0f, 100f);
-            if (Mathf.Abs(before - s.energy) > 0.001f)
+            var slot = _playerSkillSlots[i];
+            var rt = slot?.Runtime;
+            if (rt == null) continue;
+
+            float before = rt.Energy;
+            rt.Energy = Mathf.Clamp(rt.Energy + amount, 0f, 100f);
+
+            if (!Mathf.Approximately(before, rt.Energy))
             {
-                OnEnergyChanged?.Invoke(i, s.energy);
+                OnEnergyChanged?.Invoke(i, rt.Energy);
             }
         }
     }
@@ -46,13 +61,13 @@ public class PlayerSkillComponent : MonoBehaviour, ISkillComponent
     public bool CanUseSkill(int slotIndex)
     {
         if (slotIndex < 0 || slotIndex >= _playerSkillSlots.Length) return false;
-        var slot = _playerSkillSlots[slotIndex];
-        if (slot == null || slot.skill == null) return false;
+        var rt = _playerSkillSlots[slotIndex]?.Runtime;
+        if (rt == null || rt.Skill == null) return false;
         // 房间内只能使用一次
-        if (slot.usedInCurrentRoom) return false;
+        if (rt.UsedInCurrentRoom) return false;
         // 冷却判断
-        var last = slot.lastUseTime;
-        var baseCd = slot.skill != null ? slot.skill.cooldown : 0f;
+        var last = rt.LastUseTime;
+        var baseCd = rt.Skill != null ? rt.Skill.cooldown : 0f;
         // 从角色属性获取冷却减速率（例如 0.2 表示冷却减少 20% -> 实际冷却 80%）
         var stats = GetComponent<CharacterStats>();
         var reduction = stats != null ? stats.SkillCooldownReductionRate.Value : 0f;
@@ -77,13 +92,15 @@ public class PlayerSkillComponent : MonoBehaviour, ISkillComponent
         Vector3 origin = aimPoint ?? transform.position;
 
         // 构建上下文 —— 目标检测/命中逻辑由 Executor 自行负责（Executor SO 包含其配置）
+        var cardId = _playerSkillSlots != null && slotIndex >= 0 && slotIndex < _playerSkillSlots.Length ? _playerSkillSlots[slotIndex]?.Runtime?.CardId : null;
+
         var ctx = new SkillContext
         {
             Caster = GetComponent<Character.CharacterBase>(),
             Targets = null,
             AimPoint = origin,
             SlotIndex = slotIndex,
-            CardId = _playerSkillSlots != null && slotIndex >= 0 && slotIndex < _playerSkillSlots.Length ? _playerSkillSlots[slotIndex].cardId : null
+            CardId = cardId
         };
 
         // 播放 VFX（如果有）
@@ -114,9 +131,10 @@ public class PlayerSkillComponent : MonoBehaviour, ISkillComponent
         if (!CanUseSkill(slotIndex)) return;
 
         var slot = _playerSkillSlots[slotIndex];
-        if (slot == null || slot.skill == null) return;
+        var rt = slot?.Runtime;
+        if (rt == null || rt.Skill == null) return;
 
-        var def = slot.skill;
+        var def = rt.Skill;
 
         // 创建上下文占位（Targets 在实际执行时计算）
         var ctx = new SkillContext
@@ -125,7 +143,7 @@ public class PlayerSkillComponent : MonoBehaviour, ISkillComponent
             Targets = null,
             AimPoint = aimPoint,
             SlotIndex = slotIndex,
-            CardId = slot.cardId
+            CardId = rt.CardId
         };
 
         // 启动协程处理（包含手动选择 / 消耗 / 冷却 / 延迟执行）
@@ -133,14 +151,25 @@ public class PlayerSkillComponent : MonoBehaviour, ISkillComponent
     }
 
 
-    public void EquipSkill(SkillDefinition skill, int slotIndex)
+    public void Equip(int slotIndex, string cardId)
     {
-        // OnSkillEquipped?.Invoke(slotIndex, newCardId);
+        // 不查 Inventory
+        var cardDef = GameRoot.Instance.CardDatabase.Resolve(cardId);
+        if (cardDef == null) return;
+
+        var skillDef = cardDef.activeCardConfig.skill;
+        if (_playerSkillSlots[slotIndex] == null)
+            _playerSkillSlots[slotIndex] = new SkillSlot();
+        _playerSkillSlots[slotIndex].Equip(new ActiveSkillRuntime(cardId, skillDef));
+        OnSkillEquipped?.Invoke(slotIndex, cardId);
     }
 
-    public void UnequipSkill(int slotIndex)
+    public void Unequip(int slotIndex)
     {
-        //TODO-完善
+        var slot = _playerSkillSlots[slotIndex];
+        if (slot == null) return;
+        var cardId = slot.Runtime?.CardId;
+        slot.Clear();
         OnSkillUnequipped?.Invoke(slotIndex);
     }
 
@@ -153,8 +182,9 @@ public class PlayerSkillComponent : MonoBehaviour, ISkillComponent
         for (int i = 0; i < _playerSkillSlots.Length; i++)
         {
             var s = _playerSkillSlots[i];
-            if (s == null) continue;
-            s.usedInCurrentRoom = false;
+            var rt = s?.Runtime;
+            if (rt == null) continue;
+            rt.UsedInCurrentRoom = false;
             // TODO-通知 UI 刷新（能量保留）
         }
     }
