@@ -12,18 +12,6 @@ namespace Character
     }
 
     /// <summary>
-    /// 角色状态
-    /// </summary>
-    public enum CharacterState
-    {
-        Idle,
-        Moving,
-        Attacking,
-        Stunned,
-        Dead
-    }
-
-    /// <summary>
     /// 属性类型
     /// </summary>
     public enum StatType
@@ -61,11 +49,31 @@ namespace Character
         PercentMult = 300   // 百分比独立乘：×1.1 ×1.2
     }
 
+    /// <summary>
+    /// 敌人AI类型
+    /// </summary>
     public enum EnemyAiType
     {
         None,
         MeleeAttack,
         ProjectileAttack,
     }
+
+    /// <summary>
+    /// 人物动画状态
+    /// </summary>
+    public enum CharacterState
+    {
+        Idle,
+        Move,
+        Attack,
+        Skill1,
+        Hurt,
+        Stunned,
+        Dead
+
+    }
+
+
 
 }

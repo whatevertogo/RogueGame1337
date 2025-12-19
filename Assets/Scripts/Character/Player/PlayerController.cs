@@ -20,7 +20,7 @@ public class PlayerController : CharacterBase
 		private PlayerManager PlayerManager;
 		private readonly string _playerId;
 
-		public PlayerSkillEventForwarder(PlayerManager owner,string playerId)
+		public PlayerSkillEventForwarder(PlayerManager owner, string playerId)
 		{
 			_playerId = playerId;
 			this.PlayerManager = owner;
@@ -98,8 +98,8 @@ public class PlayerController : CharacterBase
 	}
 
 	/// <summary>
-	/// Start forwarding PlayerSkillComponent events to PlayerManager using the given playerId.
-	/// Called by PlayerManager when the player is registered.
+	/// 将 PlayerSkillComponent 的事件转发到 PlayerManager，使用提供的 playerId。
+	/// 由 PlayerManager 在玩家注册时调用。
 	/// </summary>
 	public void StartSkillForwarding(PlayerManager owner, string playerId)
 	{
@@ -108,7 +108,7 @@ public class PlayerController : CharacterBase
 		if (skillComponent == null) return;
 
 		// create nested forwarder and subscribe its instance methods (no lambdas)
-		_skillEventForwarder = new PlayerSkillEventForwarder(owner,playerId);
+		_skillEventForwarder = new PlayerSkillEventForwarder(owner, playerId);
 		skillComponent.OnEnergyChanged += _skillEventForwarder.OnEnergyChanged;
 		skillComponent.OnSkillUsed += _skillEventForwarder.OnSkillUsed;
 		skillComponent.OnSkillEquipped += _skillEventForwarder.OnSkillEquipped;
@@ -147,6 +147,10 @@ public class PlayerController : CharacterBase
 
 		// 更新移动
 		Movement?.SetInput(moveDir);
+
+		//更新人物朝向
+		Vector3 mouseWorldPos = Camera.main.ScreenToWorldPoint(UnityEngine.InputSystem.Mouse.current.position.ReadValue());
+		transform.localScale = new Vector3(mouseWorldPos.x > transform.position.x ? 1f : -1f, transform.localScale.y, transform.localScale.z);
 
 		//BUG: 先注释掉，未用以撒的攻击方式
 		// // 记录朝向（用于攻击方向）
@@ -222,7 +226,7 @@ public class PlayerController : CharacterBase
 		if (playerAnim != null)
 		{
 			bool isMoving = Movement?.IsMoving ?? false;
-			playerAnim.SetMovement(moveDir, isMoving, false);
+			playerAnim.SetMovement(moveDir, isMoving);
 		}
 	}
 
@@ -239,6 +243,8 @@ public class PlayerController : CharacterBase
 	{
 		base.OnDeath();
 		Movement?.SetCanMove(false);
+		// 播放死亡动画
+		playerAnim.PlayDie();
 		Debug.Log("💀 玩家死亡");
 	}
 }

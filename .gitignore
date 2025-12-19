@@ -10,4 +10,4 @@
 # 4. 允许 Scripts 目录下的所有内容
 !Assets/Scripts/**
 
-.meta
+*.md
