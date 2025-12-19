@@ -26,7 +26,7 @@ namespace CardSystem.SkillSystem
         [InlineEditor]
         public SkillExecutorSO executor;
 
-        [Header("效果列表 (legacy)")]
+        [Header("效果列表")]
         [Tooltip("使用 StatusEffectDefinitionSO（ScriptableObject）来配置技能要应用的效果。运行时会从 Definition 创建实例。")]
         public List<StatusEffectDefinitionSO> Effects;
 

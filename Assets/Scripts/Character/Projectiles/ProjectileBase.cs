@@ -134,10 +134,10 @@ namespace Character.Projectiles
         //TODO-在这里添加暴击，但我不想有暴击后面可以更改如果需要
         /// </summary>
         public void Init(ProjectileConfig config, Vector2 direction, float damage,
-            TeamType ownerTeam, Transform owner, LayerMask hitMask, bool isCrit = false)
+            TeamType ownerTeam, Transform owner, LayerMask hitMask, StatusEffectDefinitionSO[] effects = null, bool isCrit = false)
         {
             var projectileData = ProjectileData.FromConfig(
-                config, direction, damage, ownerTeam, owner, hitMask);
+                config, direction, damage, ownerTeam, owner, hitMask, effects);
             Init(projectileData);
 
             if (enableDebugLog)
@@ -367,6 +367,22 @@ namespace Character.Projectiles
                     Debug.Log($"[ProjectileBase] DealDamage -> target={target.name}, healthExists=true, damage={data.Damage}");
                 }
                 DealDamage(health);
+            }
+
+            // 如果投射物携带状态效果定义，尝试将这些效果应用到目标（若目标有 StatusEffectComponent）
+            if (data.Effects != null && data.Effects.Length > 0)
+            {
+                var effectComp = target.GetComponent<Character.Components.StatusEffectComponent>();
+                if (effectComp != null)
+                {
+                    foreach (var def in data.Effects)
+                    {
+                        if (def == null) continue;
+                        var inst = def.CreateInstance();
+                        if (inst == null) continue;
+                        effectComp.AddEffect(inst);
+                    }
+                }
             }
 
             // 在探测后输出物理层忽略信息（仅调试）

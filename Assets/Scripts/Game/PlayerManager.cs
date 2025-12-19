@@ -6,6 +6,7 @@ using RogueGame.Map;
 using RogueGame.Events;
 using CDTU.Utils;
 using CardSystem.SkillSystem;
+using Character.Player;
 
 /// <summary>
 /// 玩家管理器：负责玩家注册、共享库存转发、技能管理

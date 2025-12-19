@@ -47,6 +47,7 @@ namespace CardSystem.SkillSystem
                     // 阵营过滤
                     if (targetTeam == TargetTeam.Hostile && ctx.Caster != null && cb.Team == ctx.Caster.Team) continue;
                     if (targetTeam == TargetTeam.Friendly && ctx.Caster != null && cb.Team != ctx.Caster.Team) continue;
+                    // Self 和 All 不在这里处理（Self 应该用 BuffExecutor）
 
                     foundTargets.Add(cb);
                 }

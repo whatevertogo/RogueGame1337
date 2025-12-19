@@ -1,4 +1,5 @@
 using UnityEngine;
+using Character.Effects;
 
 namespace Character.Projectiles
 {
@@ -31,6 +32,8 @@ namespace Character.Projectiles
 
         // 特效
         public GameObject HitEffect;
+        // 可随投射物携带的状态效果定义（在命中时创建实例并应用）
+        public StatusEffectDefinitionSO[] Effects;
 
         /// <summary>
         /// 从配置创建运行时数据
@@ -42,6 +45,7 @@ namespace Character.Projectiles
             TeamType ownerTeam,
             Transform owner,
             LayerMask hitMask,
+            StatusEffectDefinitionSO[] effects = null,
             bool isCrit = false)
         {
             return new ProjectileData
@@ -59,6 +63,8 @@ namespace Character.Projectiles
                 HomingStrength = config.homingStrength,
                 HomingRadius = config.homingRadius,
                 HitEffect = config.hitEffect
+                ,
+                Effects = effects
             };
         }
     }

@@ -40,4 +40,8 @@ public class ProjectileConfig : ScriptableObject
 
     [Tooltip("拖尾特效")]
     public GameObject trailEffect;
+
+    [Header("碰撞检测")]
+    [Tooltip("碰撞检测图层掩码")]
+    public LayerMask hitMask = -1; // 默认检测所有图层
 }

@@ -11,7 +11,7 @@ namespace Character.Projectiles
     /// </summary>
     public static class ProjectileSpawner
     {
-        public static ProjectileBase Spawn(ProjectileConfig config, Vector3 pos, Vector2 dir, float damage, TeamType ownerTeam, Transform owner, LayerMask hitMask)
+        public static ProjectileBase Spawn(ProjectileConfig config, Vector3 pos, Vector2 dir, float damage, TeamType ownerTeam, Transform owner, LayerMask hitMask, StatusEffectDefinitionSO[] effects = null)
         {
             if (config == null)
             {
@@ -64,7 +64,7 @@ namespace Character.Projectiles
             // 初始化投射物（若初始化失败，若来自池则归还，否则销毁）
             try
             {
-                projectile.Init(config, direction, damage, ownerTeam, owner, hitMask);
+                projectile.Init(config, direction, damage, ownerTeam, owner, hitMask, effects);
             }
             catch (Exception ex)
             {

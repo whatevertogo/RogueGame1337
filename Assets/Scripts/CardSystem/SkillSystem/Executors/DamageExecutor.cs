@@ -58,6 +58,8 @@ namespace CardSystem.SkillSystem
                     bool isSameTeam = ctx.Caster != null && cb.Team == ctx.Caster.Team;
                     if (targetTeam == TargetTeam.Hostile && isSameTeam) continue;
                     if (targetTeam == TargetTeam.Friendly && !isSameTeam) continue;
+                    if (targetTeam == TargetTeam.Self && cb != ctx.Caster) continue;
+                    // All 不过滤
 
                     targets.Add(cb);
                 }
@@ -97,6 +99,22 @@ namespace CardSystem.SkillSystem
 
                 // 应用伤害
                 stats.TakeDamage(damageInfo);
+               
+                   // 若 SkillDefinition 中包含 StatusEffectDefinitionSO 列表，则在命中后也应用这些效果（例如持续伤害或减速）
+                   if (skill != null && skill.Effects != null && skill.Effects.Count > 0)
+                   {
+                       var effectComp = target.GetComponent<Character.Components.StatusEffectComponent>();
+                       if (effectComp != null)
+                       {
+                           foreach (var def in skill.Effects)
+                           {
+                               if (def == null) continue;
+                               var inst = def.CreateInstance();
+                               if (inst == null) continue;
+                               effectComp.AddEffect(inst);
+                           }
+                       }
+                   }
             }
         }
     }

@@ -1,5 +1,6 @@
 using UnityEngine;
 using Character;
+using Character.Player;
 
 [RequireComponent(typeof(AutoPickupComponent))]
 [RequireComponent(typeof(PlayerAnimator))]

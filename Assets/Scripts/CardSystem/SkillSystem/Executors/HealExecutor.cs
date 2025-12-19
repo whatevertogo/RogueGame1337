@@ -60,6 +60,8 @@ namespace CardSystem.SkillSystem
                     // 阵营过滤
                     bool isSameTeam = ctx.Caster != null && cb.Team == ctx.Caster.Team;
                     if (targetTeam == TargetTeam.Friendly && !isSameTeam) continue;
+                    if (targetTeam == TargetTeam.Hostile && isSameTeam) continue;
+                    // All 不过滤
 
                     targets.Add(cb);
                 }

@@ -58,6 +58,7 @@ namespace CardSystem.SkillSystem
                     bool isSameTeam = ctx.Caster != null && cb.Team == ctx.Caster.Team;
                     if (targetTeam == TargetTeam.Hostile && isSameTeam) continue;
                     if (targetTeam == TargetTeam.Friendly && !isSameTeam) continue;
+                    // All 不过滤
                     
                     // 是否包含施法者
                     if (!includeCaster && cb == ctx.Caster) continue;

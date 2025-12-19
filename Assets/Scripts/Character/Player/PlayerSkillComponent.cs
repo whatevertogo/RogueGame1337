@@ -6,13 +6,15 @@ using CardSystem.SkillSystem;
 using System.Collections;
 using CardSystem.SkillSystem.Runtime;
 
-/// <summary>
-/// 技能系统
-/// </summary>
-public class PlayerSkillComponent : MonoBehaviour, ISkillComponent
+namespace Character.Player
 {
-    [SerializeField,ReadOnly]
-    private SkillSlot[] _playerSkillSlots = new SkillSlot[2];
+    /// <summary>
+    /// 玩家技能组件：管理技能槽位、冷却与触发
+    /// </summary>
+    public class PlayerSkillComponent : MonoBehaviour, ISkillComponent
+    {
+        [SerializeField,ReadOnly]
+        private SkillSlot[] _playerSkillSlots = new SkillSlot[2];
 
     public SkillSlot[] PlayerSkillSlots => _playerSkillSlots;
     // 保留事件签名以兼容现有绑定，但不触发任何事件
@@ -258,4 +260,5 @@ public class PlayerSkillComponent : MonoBehaviour, ISkillComponent
 
         yield break;
     }
+}
 }
