@@ -1,24 +1,31 @@
-
-using Character.Effects;
-using UnityEngine;
+using Character.Components;
 using Character.Core;
-public class BurnEffectInstance : StatusEffectInstanceBase
+
+namespace Character.Effects
 {
-    public override string EffectId => def.effectId;
-    
-    private readonly BurnEffectDefinitionSO def;
-
-    public BurnEffectInstance(BurnEffectDefinitionSO def)
-        : base(def.duration, def.isStackable)
+    /// <summary>
+    /// 灼烧效果实例（持续伤害型效果）
+    /// </summary>
+    public class BurnEffectInstance : StatusEffectInstanceBase
     {
-        this.def = def;
-    }
+        public override string EffectId => _def.effectId;
+        
+        private readonly BurnEffectDefinitionSO _def;
 
+        public BurnEffectInstance(BurnEffectDefinitionSO def)
+            : base(def.duration, def.isStackable)
+        {
+            _def = def;
+        }
 
-    public override void OnTick(float dt)
-    {
-        base.OnTick(dt);
-        // CharacterStats 没有接受 float 的 TakeDamage 重载，使用 DamageInfo.Create 来传递浮点伤害
-        stats.TakeDamage(DamageInfo.Create(def.damagePerSecond * dt));
+        public override void OnTick(float dt)
+        {
+            base.OnTick(dt);
+            // 每帧造成伤害
+            if (stats != null)
+            {
+                stats.TakeDamage(DamageInfo.Create(_def.damagePerSecond * dt));
+            }
+        }
     }
 }

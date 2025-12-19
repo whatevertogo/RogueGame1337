@@ -3,7 +3,6 @@ using UnityEngine;
 using Character.Components;
 using Character.Components.Interface;
 using CardSystem.SkillSystem;
-using CardSystem;
 using System.Collections;
 using CardSystem.SkillSystem.Runtime;
 
@@ -12,8 +11,7 @@ using CardSystem.SkillSystem.Runtime;
 /// </summary>
 public class PlayerSkillComponent : MonoBehaviour, ISkillComponent
 {
-    [ReadOnly]
-    [SerializeField]
+    [SerializeField,ReadOnly]
     private SkillSlot[] _playerSkillSlots = new SkillSlot[2];
 
     public SkillSlot[] PlayerSkillSlots => _playerSkillSlots;
@@ -31,29 +29,6 @@ public class PlayerSkillComponent : MonoBehaviour, ISkillComponent
             {
                 if (_playerSkillSlots[i] == null)
                     _playerSkillSlots[i] = new SkillSlot();
-            }
-        }
-    }
-    /// <summary>
-    /// 为指定槽位增加能量（可被外部如 PlayerManager 调用）
-    /// 增加会同时触发 OnEnergyChanged 事件
-    /// </summary>
-    /// <param name="amount">增加量（直接加到 0-100 的区间）</param>
-    public void AddEnergy(float amount)
-    {
-        if (_playerSkillSlots == null) return;
-        for (int i = 0; i < _playerSkillSlots.Length; i++)
-        {
-            var slot = _playerSkillSlots[i];
-            var rt = slot?.Runtime;
-            if (rt == null) continue;
-
-            float before = rt.Energy;
-            rt.Energy = Mathf.Clamp(rt.Energy + amount, 0f, 100f);
-
-            if (!Mathf.Approximately(before, rt.Energy))
-            {
-                OnEnergyChanged?.Invoke(i, rt.Energy);
             }
         }
     }
@@ -160,7 +135,35 @@ public class PlayerSkillComponent : MonoBehaviour, ISkillComponent
         var skillDef = cardDef.activeCardConfig.skill;
         if (_playerSkillSlots[slotIndex] == null)
             _playerSkillSlots[slotIndex] = new SkillSlot();
-        _playerSkillSlots[slotIndex].Equip(new ActiveSkillRuntime(cardId, skillDef));
+
+        // 获取或创建 Inventory 中的 ActiveCardState 实例，并把实例 id 关联到 runtime
+        var inv = InventoryManager.Instance;
+        string instanceId = null;
+        if (inv != null)
+        {
+            var existing = inv.GetFirstInstanceByCardId(cardId);
+            if (existing != null)
+            {
+                instanceId = existing.instanceId;
+            }
+            else
+            {
+                instanceId = inv.AddActiveCardInstance(cardId, 0);
+            }
+
+            // 尝试把实例标记为被此玩家装备（若能找到 playerId）
+            var pc = GetComponent<PlayerController>();
+            if (pc != null)
+            {
+                var pr = PlayerManager.Instance?.GetPlayerRuntimeStateByController(pc);
+                if (pr != null)
+                {
+                    inv.MarkInstanceEquipped(instanceId, pr.PlayerId);
+                }
+            }
+        }
+
+        _playerSkillSlots[slotIndex].Equip(new ActiveSkillRuntime(cardId, skillDef, instanceId));
         OnSkillEquipped?.Invoke(slotIndex, cardId);
     }
 
@@ -168,7 +171,13 @@ public class PlayerSkillComponent : MonoBehaviour, ISkillComponent
     {
         var slot = _playerSkillSlots[slotIndex];
         if (slot == null) return;
+        var instanceId = slot.Runtime?.InstanceId;
         var cardId = slot.Runtime?.CardId;
+        // 取消装备标记
+        if (!string.IsNullOrEmpty(instanceId))
+        {
+            InventoryManager.Instance?.MarkInstanceEquipped(instanceId, null);
+        }
         slot.Clear();
         OnSkillUnequipped?.Invoke(slotIndex);
     }
@@ -197,7 +206,54 @@ public class PlayerSkillComponent : MonoBehaviour, ISkillComponent
     /// </summary>
     private IEnumerator ManualSelectAndExecute(SkillDefinition def, SkillContext ctx, int slotIndex)
     {
-        // 开始延迟检测/执行协程（若 detectionDelay 为 0，也会立即执行）
+        if (def == null) yield break;
+
+        // 确保槽位与 runtime 可用（防御式）
+        if (slotIndex < 0 || slotIndex >= _playerSkillSlots.Length) yield break;
+        var slot = _playerSkillSlots[slotIndex];
+        var rt = slot?.Runtime;
+        if (rt == null || rt.Skill == null) yield break;
+
+        // 如果卡牌要求消耗能量（或充能），在这里检查并消耗
+        bool requiresCharge = false;
+        try
+        {
+            var cd = GameRoot.Instance?.CardDatabase?.Resolve(rt.CardId);
+            if (cd != null) requiresCharge = cd.activeCardConfig.requiresCharge;
+        }
+        catch { }
+
+        if (requiresCharge)
+        {
+            // 检查并消耗实例充能（由 InventoryManager 管理）
+            var inv = InventoryManager.Instance;
+            if (inv == null || string.IsNullOrEmpty(rt.InstanceId)) yield break;
+
+            // 试着消耗 1 个充能（用失败表示不可施法）
+            if (!inv.TryConsumeCharge(rt.InstanceId, 1, out int remaining))
+            {
+                yield break;
+            }
+
+            // 通知 UI 当前剩余充能（归一化到 0..1）
+            try
+            {
+                var cd = GameRoot.Instance?.CardDatabase?.Resolve(rt.CardId);
+                int max = cd != null ? cd.activeCardConfig.maxCharges : 1;
+                float norm = max > 0 ? (float)remaining / max : 0f;
+                OnEnergyChanged?.Invoke(slotIndex, norm);
+            }
+            catch { }
+        }
+
+        // 标记为本房间已使用（房间内一次性规则）并记录使用时间（用于冷却计算）
+        rt.UsedInCurrentRoom = true;
+        rt.LastUseTime = Time.time;
+
+        // 触发已使用事件（UI/上层监听）
+        OnSkillUsed?.Invoke(slotIndex);
+
+        // 开始执行（处理 detectionDelay 和 executor）
         StartCoroutine(DelayedExecute(def, ctx.AimPoint, slotIndex));
 
         yield break;

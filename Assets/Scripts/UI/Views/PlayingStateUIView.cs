@@ -20,6 +20,7 @@ namespace Game.UI
         [SerializeField] private Image skillSlote2Image;
         [SerializeField] private Image skillSlot1Energy;
         [SerializeField] private Image skillSlot2Energy;
+        [SerializeField] private Button BagButton;
 
         // 在运行时创建阶段进行自动绑定（UIManager 会调用 OnCreate）
         public override void OnCreate()
@@ -27,7 +28,7 @@ namespace Game.UI
             BindComponentsAtRuntime();
         }
 
-        private void BindComponents() { } // Editor-binding 占位（实际优先运行时绑定）
+        private void BindComponents() { } // 预留给自动绑定工具使用
         private void BindComponentsAtRuntime()
         {
             if (bloorBarBackGround == null)
@@ -69,6 +70,25 @@ namespace Game.UI
             {
                 var t = transform.Find("SkillSlotes/SkillSlote2/SkillSlot2Energy");
                 if (t != null) skillSlot2Energy = t.GetComponent<Image>();
+            }
+            
+            // 绑定 BagButton 点击事件
+            if (BagButton != null)
+            {
+                BagButton.onClick.RemoveAllListeners();
+            }
+        }
+        
+        /// <summary>
+        /// 绑定 BagButton 点击事件
+        /// </summary>
+        /// <param name="onClickAction">点击时触发的回调函数</param>
+        public void BindBagButton(Action onClickAction)
+        {
+            if (BagButton != null)
+            {
+                BagButton.onClick.RemoveAllListeners();
+                BagButton.onClick.AddListener(() => onClickAction?.Invoke());
             }
         }
 

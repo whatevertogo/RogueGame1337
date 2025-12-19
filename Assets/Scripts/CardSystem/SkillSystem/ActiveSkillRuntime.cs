@@ -10,15 +10,16 @@ namespace CardSystem.SkillSystem
         public string CardId;
         public SkillDefinition Skill;
 
-        public float Energy;
+        // 链接到 InventoryManager 中的 ActiveCardState.instanceId
+        public string InstanceId;
         public float LastUseTime;
         public bool UsedInCurrentRoom;
 
-        public ActiveSkillRuntime(string cardId, SkillDefinition skill)
+        public ActiveSkillRuntime(string cardId, SkillDefinition skill, string instanceId)
         {
             CardId = cardId;
             Skill = skill;
-            Energy = 0f;
+            InstanceId = instanceId;
             LastUseTime = -999f;
             UsedInCurrentRoom = false;
         }

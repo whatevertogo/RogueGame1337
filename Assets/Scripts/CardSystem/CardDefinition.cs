@@ -10,6 +10,7 @@ namespace CardSystem
     {
         public string cardId;
         public CardType type; // Passive / Active
+        public Sprite cardSprite;
         public ActiveCardConfig activeCardConfig;
         public PassiveCardConfig passiveCardConfig;
 
@@ -18,5 +19,7 @@ namespace CardSystem
         public string Description;
 
         public string GetDescription() => Description;
+
+        public Sprite GetSprite() => cardSprite;
     }
 }

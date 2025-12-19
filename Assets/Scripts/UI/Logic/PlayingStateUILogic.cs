@@ -33,9 +33,26 @@ namespace Game.UI
                 if (p.IsLocal) { existingState = p; break; }
             }
             if (existingState != null) PlayerRegistered(existingState);
-
+            
+            // 绑定 BagButton 点击事件
+            _view?.BindBagButton(OnBagButtonClicked);
         }
 
+        public virtual void OnClose()
+        {
+            // 关闭时清理
+            // 退订所有事件，避免内存泄漏或悬挂引用
+            var pm = PlayerManager.GetExistingInstance();
+            if (pm != null)
+            {
+                pm.OnPlayerRegistered -= PlayerRegistered;
+                pm.OnPlayerUnregistered -= PlayerUnregistered;
+            }
+            UnsubscribeFromPlayerHealthEvents();
+            UnsubscribeFromSkillEvents();
+            _myPlayerState = null;
+            _view = null;
+        }
         private void SubscribeToSkillEvents()
         {
             var pm = PlayerManager.GetExistingInstance();
@@ -101,21 +118,6 @@ namespace Game.UI
             _view?.SetHealthNormalized(currentHealth / Math.Max(1f, maxHealth));
         }
 
-        public virtual void OnClose()
-        {
-            // 关闭时清理
-            // 退订所有事件，避免内存泄漏或悬挂引用
-            var pm = PlayerManager.GetExistingInstance();
-            if (pm != null)
-            {
-                pm.OnPlayerRegistered -= PlayerRegistered;
-                pm.OnPlayerUnregistered -= PlayerUnregistered;
-            }
-            UnsubscribeFromPlayerHealthEvents();
-            UnsubscribeFromSkillEvents();
-            _myPlayerState = null;
-            _view = null;
-        }
 
         private void OnPlayerSkillEnergyChanged(string playerId, int slotIndex, float energy)
         {
@@ -143,6 +145,14 @@ namespace Game.UI
                 UnsubscribeFromSkillEvents();
                 _myPlayerState = null;
             }
+        }
+        
+        /// <summary>
+        /// BagButton 点击事件处理
+        /// </summary>
+        private void OnBagButtonClicked()
+        {
+            // UIManager.Instance.Open<BagUIView>(layer: UILayer.Normal);
         }
     }
 

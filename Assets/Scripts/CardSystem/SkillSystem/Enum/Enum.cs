@@ -6,8 +6,9 @@ namespace CardSystem.SkillSystem.Enum
     /// </summary>
     public enum TargetTeam
     {
-        Hostile,
-        Friendly,
-        All
+        Self,       // 自己
+        Hostile,    // 敌对
+        Friendly,   // 友方
+        All         // 所有
     }
 }

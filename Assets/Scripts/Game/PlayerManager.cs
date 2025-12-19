@@ -45,7 +45,7 @@ public class PlayerManager : Singleton<PlayerManager>
         {
             inventoryManager.OnCoinsChanged += OnRunInventoryCoinsChanged;
             // ri.OnPassiveCardChanged += OnRunInventoryPassiveCardChanged;
-            // ri.OnActiveCardPoolChanged += OnRunInventoryActiveCardPoolChanged;
+            inventoryManager.OnActiveCardChargesChanged += OnRunInventoryActiveCardChargesChanged;
         }
 
         // 订阅房间进入事件
@@ -62,7 +62,7 @@ public class PlayerManager : Singleton<PlayerManager>
         {
             inventoryManager.OnCoinsChanged -= OnRunInventoryCoinsChanged;
             // inventoryManager.OnPassiveCardChanged -= OnRunInventoryPassiveCardChanged;
-            // inventoryManager.OnActiveCardPoolChanged -= OnRunInventoryActiveCardPoolChanged;
+            inventoryManager.OnActiveCardChargesChanged -= OnRunInventoryActiveCardChargesChanged;
         }
         try
         {
@@ -196,6 +196,36 @@ public class PlayerManager : Singleton<PlayerManager>
     private void OnRunInventoryPassiveCardChanged(string cardId, int count) => OnPassiveCardChanged?.Invoke(cardId, count);
     private void OnRunInventoryActiveCardPoolChanged(string cardId, int avail) => OnActiveCardPoolChanged?.Invoke(cardId, avail);
 
+    // Inventory -> PlayerManager: active instance charges changed
+    private void OnRunInventoryActiveCardChargesChanged(string instanceId, int charges)
+    {
+        if (string.IsNullOrEmpty(instanceId)) return;
+
+        // 查找哪个玩家的哪个槽位正在使用该 instance
+        foreach (var kv in _players)
+        {
+            var state = kv.Value;
+            if (state?.Controller == null) continue;
+            var comp = state.Controller.GetComponent<PlayerSkillComponent>();
+            if (comp == null) continue;
+            var slots = comp.PlayerSkillSlots;
+            if (slots == null) continue;
+            for (int i = 0; i < slots.Length; i++)
+            {
+                var rt = slots[i]?.Runtime;
+                if (rt == null) continue;
+                if (rt.InstanceId == instanceId)
+                {
+                    // 计算归一化值
+                    var cd = GameRoot.Instance?.CardDatabase?.Resolve(rt.CardId);
+                    int max = cd != null ? cd.activeCardConfig.maxCharges : 1;
+                    float norm = max > 0 ? (float)charges / max : 0f;
+                    RaisePlayerSkillEnergyChanged(state.PlayerId, i, norm);
+                }
+            }
+        }
+    }
+
     public void AddCoins(PlayerController controller, int amount)
     {
         InventoryManager.Instance?.AddCoins(amount);
@@ -266,11 +296,15 @@ public class PlayerManager : Singleton<PlayerManager>
             _ => 10f
         };
 
-        // 给击杀者添加能量（通知其 PlayerSkillComponent）
-        var skillComp = playerKiller.GetComponent<PlayerSkillComponent>();
-        if (skillComp != null)
+        // 给击杀者的已装备主动卡添加充能（由 InventoryManager 管理）
+        var pr = GetPlayerRuntimeStateByController(playerKiller);
+        if (pr != null)
         {
-            skillComp.AddEnergy(energy);
+            var inv = InventoryManager.Instance;
+            if (inv != null)
+            {
+                inv.AddChargesForKill(pr.PlayerId, roomType);
+            }
         }
     }
 

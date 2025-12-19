@@ -58,8 +58,6 @@ public class PlayerController : CharacterBase
 			Combat.OnAttack += OnAttackPerformed;
 		}
 
-
-
 		// 向 PlayerManager 注册自己（支持未来多人）
 		var pm = PlayerManager.Instance;
 		if (pm != null)
