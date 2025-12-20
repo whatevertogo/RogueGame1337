@@ -46,13 +46,10 @@ namespace Character.Components
             var def = rt.Skill;
 
             // 构建上下文
-            var ctx = new SkillContext
+            var ctx = new SkillTargetContext
             {
                 Caster = GetComponent<CharacterBase>(),
-                Targets = null,
                 AimPoint = aimPoint ?? transform.position,
-                SlotIndex = slotIndex,
-                CardId = rt.CardId
             };
 
 

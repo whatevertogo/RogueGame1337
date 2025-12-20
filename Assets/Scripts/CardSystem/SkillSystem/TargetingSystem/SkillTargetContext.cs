@@ -1,11 +1,9 @@
 using System.Collections.Generic;
+using Character;
 using UnityEngine;
 
 public struct SkillTargetContext
 {
-    public Transform Caster;
+    public CharacterBase Caster;
     public Vector3 AimPoint;
-    public float Range;
-    public LayerMask TargetMask;
-
 }

@@ -15,9 +15,13 @@ using UnityEngine;
         public float detectionDelay = 0f;
         public GameObject vfxPrefab;  // 可选
 
+
         [Header("Executor")]
         [Tooltip("为该技能指定选择目标方法")]
-        public TargetAcquireSO TargetStrategy;
+        public TargetAcquireSO TargetAcquireSO;
+
+        [Header("过滤器")]
+        public TargetFilterGroupSO TargetFilters;
 
         [Header("效果列表")]
         [Tooltip("使用 StatusEffectDefinitionSO（ScriptableObject）来配置技能要应用的效果。运行时会从 Definition 创建实例。")]
