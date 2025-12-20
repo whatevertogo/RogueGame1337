@@ -1,8 +1,7 @@
 using Character.Effects;
 using UnityEngine;
 
-namespace Character.Effects
-{
+
     /// <summary>
     /// 眩晕效果定义（控制型效果，不基于 StatModifier）
     /// </summary>
@@ -14,4 +13,4 @@ namespace Character.Effects
             return new StunEffectInstance(this);
         }
     }
-}
+

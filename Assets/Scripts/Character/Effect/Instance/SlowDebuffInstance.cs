@@ -1,8 +1,7 @@
 using Character.Components;
 using Character.Core;
 
-namespace Character.Effects
-{
+
     /// <summary>
     /// 减速减益效果实例
     /// </summary>
@@ -32,4 +31,4 @@ namespace Character.Effects
             base.OnRemove(stats, comp);
         }
     }
-}
+

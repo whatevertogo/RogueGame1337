@@ -1,8 +1,7 @@
 using Character.Effects;
 using UnityEngine;
 
-namespace Character.Effects
-{
+
     /// <summary>
     /// 瞬时伤害效果定义
     /// 用于技能造成的即时伤害（非持续伤害）
@@ -25,4 +24,4 @@ namespace Character.Effects
             return new InstantDamageEffectInstance(this);
         }
     }
-}
+

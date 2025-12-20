@@ -8,7 +8,7 @@ namespace Character.Combat
     /// 投射物攻击策略 - 支持对象池
     /// </summary>
     [CreateAssetMenu(fileName = "ProjectileAttack", menuName = "RogueGame/Combat/Projectile Attack")]
-    public class ProjectileAttackStrategy : AttackStrategyBase
+    public class ProjectileAttackStrategy : AttackStrategyBaseSO
     {
         [Header("投射物配置")]
         [Tooltip("是否使用 Context 中的 ProjectileConfig")]
@@ -43,22 +43,6 @@ namespace Character.Combat
             );
 
             if (projectile == null) return;
-        }
-
-        /// <summary>
-        /// （弃用）投射物获取：现在建议使用 ProjectileSpawner.Spawn(...) 来统一处理池/实例化/初始化。
-        /// 若仍需兼容旧逻辑，此方法作为退路仍保持可用。
-        /// </summary>
-        private ProjectileBase GetProjectile(GameObject prefab, Vector3 position, Quaternion rotation)
-        {
-            Debug.LogWarning("[ProjectileAttackStrategy] GetProjectile 已弃用，请使用 ProjectileSpawner.Spawn(...)");
-            if (ProjectilePool.Instance != null)
-            {
-                return ProjectilePool.Instance.Get(prefab, position, rotation);
-            }
-
-            var go = Instantiate(prefab, position, rotation);
-            return go.GetComponent<ProjectileBase>();
         }
 
         public override void DrawGizmos(Vector3 position, Vector2 direction)

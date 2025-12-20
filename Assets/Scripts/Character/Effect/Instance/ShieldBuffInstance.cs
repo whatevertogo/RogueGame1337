@@ -1,8 +1,7 @@
 using Character.Components;
 using Character.Core;
 
-namespace Character.Effects
-{
+
     /// <summary>
     /// 护盾效果实例（通过临时增加护甲实现）
     /// </summary>
@@ -32,4 +31,4 @@ namespace Character.Effects
             base.OnRemove(stats, comp);
         }
     }
-}
+

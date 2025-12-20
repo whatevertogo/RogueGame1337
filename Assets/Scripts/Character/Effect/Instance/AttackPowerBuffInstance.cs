@@ -1,12 +1,12 @@
 using Character.Components;
 using Character.Core;
+using Character.Effects;
 
-namespace Character.Effects
-{
-    /// <summary>
-    /// 攻击力增益效果实例
-    /// </summary>
-    public class AttackPowerBuffInstance : StatusEffectInstanceBase
+
+/// <summary>
+/// 攻击力增益效果实例
+/// </summary>
+public class AttackPowerBuffInstance : StatusEffectInstanceBase
     {
         public override string EffectId => _def.effectId;
 
@@ -32,4 +32,4 @@ namespace Character.Effects
             base.OnRemove(stats, comp);
         }
     }
-}
+

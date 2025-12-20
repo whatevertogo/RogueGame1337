@@ -5,7 +5,7 @@ namespace Character.Combat
     /// <summary>
     /// 攻击策略 SO 基类 - 所有策略都继承此类
     /// </summary>
-    public abstract class AttackStrategyBase : ScriptableObject, IAttackStrategy
+    public abstract class AttackStrategyBaseSO : ScriptableObject, IAttackStrategy
     {
         [Header("基础配置")]
         [Tooltip("策略名称")]

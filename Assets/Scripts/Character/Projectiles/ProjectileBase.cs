@@ -2,13 +2,13 @@ using UnityEngine;
 using System.Collections.Generic;
 using Character.Components;
 using Character.Core;
+using Character;
+using Character.Projectiles;
 
-namespace Character.Projectiles
-{
-    /// <summary>
-    /// 投射物基类 - 支持对象池
-    /// </summary>
-    [RequireComponent(typeof(Rigidbody2D))]
+/// <summary>
+/// 投射物基类 - 支持对象池
+/// </summary>
+[RequireComponent(typeof(Rigidbody2D))]
     [RequireComponent(typeof(Collider2D))]
     public class ProjectileBase : MonoBehaviour
     {
@@ -509,4 +509,3 @@ namespace Character.Projectiles
 
 
     }
-}

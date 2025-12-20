@@ -1,8 +1,7 @@
 using Character.Effects;
 using UnityEngine;
 
-namespace Character.Effects
-{
+
     /// <summary>
     /// 伤害减免增益效果（通过修改受到伤害实现）
     /// </summary>
@@ -19,4 +18,4 @@ namespace Character.Effects
             return new DamageReductionBuffInstance(this);
         }
     }
-}
+

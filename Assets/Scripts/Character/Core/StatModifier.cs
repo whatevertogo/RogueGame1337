@@ -2,8 +2,6 @@ using System;
 using Character;
 
 
-namespace Character.Core
-{
     /// <summary>
     /// 属性修饰符
     /// </summary>
@@ -26,4 +24,3 @@ namespace Character.Core
         public StatModifier(float value, StatModType type) : this(value, type, (int)type, null) { }
         public StatModifier(float value, StatModType type, object source) : this(value, type, (int)type, source) { }
     }
-}

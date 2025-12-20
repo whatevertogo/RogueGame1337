@@ -1,8 +1,8 @@
+using Character;
 using Character.Effects;
 using UnityEngine;
 
-namespace Character.Effects
-{
+
     /// <summary>
     /// 护盾效果定义（通过增加护甲实现）
     /// </summary>
@@ -21,4 +21,4 @@ namespace Character.Effects
             return new ShieldBuffInstance(this);
         }
     }
-}
+

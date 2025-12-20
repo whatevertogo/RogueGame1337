@@ -1,6 +1,7 @@
 using Character.Effects;
 using UnityEngine;
 
+
 public abstract class StatusEffectDefinitionSO : ScriptableObject
 {
     public string effectId;

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Character.Effects;
+using System.Linq;
 
 namespace Character.Components
 {
@@ -197,7 +198,7 @@ namespace Character.Components
         /// </summary>
         public bool HasEffect(string effectId)
         {
-            return _effects.Exists(e => e.EffectId == effectId);
+            return _effects.Any(e => e.EffectId == effectId);
         }
 
         /// <summary>

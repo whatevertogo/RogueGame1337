@@ -1,7 +1,5 @@
 using Character.Components;
 
-namespace Character.Effects
-{
     /// <summary>
     /// 瞬时治疗效果实例
     /// 在 OnApply 时立即治疗，然后自动过期
@@ -44,4 +42,4 @@ namespace Character.Effects
             remainingTime = -1f;
         }
     }
-}
+

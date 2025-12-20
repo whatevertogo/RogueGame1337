@@ -1,4 +1,3 @@
-using CardSystem;
 using CDTU.Utils;
 using RogueGame.Map;
 using UI;
@@ -9,7 +8,6 @@ public class GameRoot : Singleton<GameRoot>
     [Header("Game DataBases")]
     [InlineEditor]
     [SerializeField] private CardDataBase cardDatabase;
-
     public CardDataBase CardDatabase => cardDatabase;
 
     [Header("Scene Managers")]

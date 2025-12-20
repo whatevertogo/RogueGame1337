@@ -1,5 +1,4 @@
 using UnityEngine;
-using CardSystem;
 
 [RequireComponent(typeof(Collider2D))]
 

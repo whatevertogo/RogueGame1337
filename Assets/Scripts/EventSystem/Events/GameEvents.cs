@@ -1,5 +1,4 @@
 using UnityEngine;
-using CardSystem;
 using RogueGame.Map;
 
 namespace RogueGame.Events

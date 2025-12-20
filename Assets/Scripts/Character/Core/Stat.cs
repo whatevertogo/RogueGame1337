@@ -1,9 +1,8 @@
 using System;
 using System.Collections.Generic;
+using Character;
 using UnityEngine;
 
-namespace Character.Core
-{
     /// <summary>
     /// 单个属性，支持基础值 + 多个修饰符
     /// </summary>
@@ -145,4 +144,3 @@ namespace Character.Core
         // 隐式转换，方便使用
         public static implicit operator float(Stat stat) => stat.Value;
     }
-}

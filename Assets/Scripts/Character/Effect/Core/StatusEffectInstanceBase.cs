@@ -1,12 +1,11 @@
 using Character.Components;
-using UnityEngine;
+using Character.Effects;
 
-namespace Character.Effects
-{
-    /// <summary>
-    /// 状态效果基类
-    /// </summary>
-    public abstract class StatusEffectInstanceBase : IStatusEffect
+
+/// <summary>
+/// 状态效果基类
+/// </summary>
+public abstract class StatusEffectInstanceBase : IStatusEffect
     {
         public abstract string EffectId { get; }
 
@@ -58,4 +57,3 @@ namespace Character.Effects
         }
 
     }
-}

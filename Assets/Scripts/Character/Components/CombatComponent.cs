@@ -2,7 +2,6 @@ using System;
 using UnityEngine;
 using Character.Core;
 using Character.Combat;
-using Character.Projectiles;
 
 namespace Character.Components
 {
@@ -14,7 +13,7 @@ namespace Character.Components
         [Header("攻击策略")]
         [Tooltip("攻击策略 SO（投射物/近战等）")]
         [InlineEditor]
-        public AttackStrategyBase attackStrategy;
+        public AttackStrategyBaseSO attackStrategy;
 
         [Header("投射物配置（远程攻击时使用）")]
         [Tooltip("投射物配置 SO")]
@@ -32,10 +31,14 @@ namespace Character.Components
         [SerializeField] private bool enableDebugLog = false;
         [SerializeField] private bool drawGizmos = true;
 
+        [Tooltip("始终显示可视化（否则仅在调试或需求时显示）")]
+        public bool showVisualizer = true;
+
         // 组件缓存
         private CharacterStats stats;
         private StatusEffectComponent statusEffects;
         private CharacterBase characterBase;
+        private Animator anim;
 
         // 运行时状态
         private float lastAttackTime;
@@ -55,6 +58,11 @@ namespace Character.Components
 
         private float AttackCooldown => 1f / Mathf.Max(0.01f, stats?.AttackSpeed?.Value ?? 1f);
 
+        [Header("普通攻击动画")]
+        [SerializeField] private AnimationClip attackClip;
+
+
+
         /// <summary>
         /// 当前使用的攻击策略
         /// </summary>
@@ -68,11 +76,13 @@ namespace Character.Components
             ValidateSetup();
         }
 
+
         private void CacheComponents()
         {
             stats = GetComponent<CharacterStats>();
             statusEffects = GetComponent<StatusEffectComponent>();
             characterBase = GetComponent<CharacterBase>();
+            anim = GetComponent<Animator>();
         }
 
         /// <summary>
@@ -135,7 +145,7 @@ namespace Character.Components
         /// <summary>
         /// 运行时切换攻击策略
         /// </summary>
-        public void SetAttackStrategy(AttackStrategyBase strategy)
+        public void SetAttackStrategy(AttackStrategyBaseSO strategy)
         {
             attackStrategy = strategy;
 
@@ -143,6 +153,7 @@ namespace Character.Components
             {
                 Debug.Log($"[CombatComponent] 切换攻击策略:  {strategy?.strategyName ?? "null"}");
             }
+
         }
 
         /// <summary>
@@ -158,9 +169,7 @@ namespace Character.Components
 
             // 检查攻击条件
             if (!CanAttack)
-            {
                 return false;
-            }
 
             if (stats == null)
             {
@@ -174,6 +183,7 @@ namespace Character.Components
                 return false;
             }
 
+
             // 1. 计算伤害
             DamageInfo damageInfo = CalculateDamage();
 
@@ -183,6 +193,12 @@ namespace Character.Components
 
             // 3. 构建攻击上下文
             AttackContext context = BuildAttackContext(damageInfo);
+
+            //绑定动画时机
+            float animLength = attackClip.length;
+            float speed = animLength / AttackCooldown;
+
+            anim.SetFloat("AttackSpeed", speed);
 
             // 4. 执行攻击策略
             attackStrategy.Execute(context);

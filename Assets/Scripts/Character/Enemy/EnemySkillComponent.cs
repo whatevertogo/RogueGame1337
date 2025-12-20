@@ -1,9 +1,7 @@
 
 using System.Collections.Generic;
 using UnityEngine;
-using CardSystem.SkillSystem;
 using Character.Components.Interface;
-using CardSystem.SkillSystem.Runtime;
 
 namespace Character.Components
 {
@@ -57,16 +55,10 @@ namespace Character.Components
                 CardId = rt.CardId
             };
 
-            // 执行技能
-            if (def.executor != null)
-            {
-                def.executor.Execute(def, ctx);
-            }
-            else
-            {
-                Debug.LogWarning($"[EnemySkillComponent] Skill '{def.skillId}' has no executor configured.");
-            }
 
+            //TODO: 选择目标并应用效果
+
+            
             // 记录使用时间（用于冷却）
             rt.LastUseTime = Time.time;
         }

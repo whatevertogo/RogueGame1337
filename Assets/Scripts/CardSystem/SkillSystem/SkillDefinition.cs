@@ -1,13 +1,8 @@
 using System.Collections.Generic;
-using Character;
 using Character.Components;
-using Character.Effects;
-using CardSystem.SkillSystem.Enum;
 using UnityEngine;
 
 
-namespace CardSystem.SkillSystem
-{
     [CreateAssetMenu(fileName = "NewSkill", menuName = "Card System/Skill Definition")]
     public class SkillDefinition : ScriptableObject
     {
@@ -22,9 +17,8 @@ namespace CardSystem.SkillSystem
         public GameObject vfxPrefab;  // 可选
 
         [Header("Executor")]
-        [Tooltip("为该技能指定执行器（AOE / Buff / Projectile 等）")]
-        [InlineEditor]
-        public SkillExecutorSO executor;
+        [Tooltip("为该技能指定选择目标方法")]
+        public TargetAcquireSO TargetStrategy;
 
         [Header("效果列表")]
         [Tooltip("使用 StatusEffectDefinitionSO（ScriptableObject）来配置技能要应用的效果。运行时会从 Definition 创建实例。")]
@@ -33,4 +27,3 @@ namespace CardSystem.SkillSystem
 
        
     }
-}

@@ -1,8 +1,7 @@
 using Character.Components;
 using Character.Core;
 
-namespace Character.Effects
-{
+
     /// <summary>
     /// 移动速度增益效果实例（通过 StatModifier 实现）
     /// </summary>
@@ -35,4 +34,4 @@ namespace Character.Effects
             base.OnRemove(stats, comp);
         }
     }
-}
+

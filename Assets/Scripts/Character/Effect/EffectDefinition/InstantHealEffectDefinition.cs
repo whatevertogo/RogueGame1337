@@ -1,8 +1,7 @@
 using Character.Effects;
 using UnityEngine;
 
-namespace Character.Effects
-{
+
     /// <summary>
     /// 瞬时治疗效果定义
     /// 用于技能造成的即时治疗（非持续治疗）
@@ -26,4 +25,4 @@ namespace Character.Effects
             return new InstantHealEffectInstance(this);
         }
     }
-}
+

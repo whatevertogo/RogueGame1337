@@ -2,13 +2,12 @@ using System;
 using UnityEngine;
 using Character.Core;
 using Character.Interfaces;
+using Character.Components;
 
-namespace Character.Components
-{
-    /// <summary>
-    /// 生命组件 - 处理伤害和治疗的入口
-    /// </summary>
-    public class HealthComponent : MonoBehaviour, IDamageable, IHealable
+/// <summary>
+/// 生命组件 - 处理伤害和治疗的入口
+/// </summary>
+public class HealthComponent : MonoBehaviour, IDamageable, IHealable
     {
         private CharacterStats stats;
         private StatusEffectComponent statusEffects;
@@ -120,4 +119,3 @@ namespace Character.Components
         }
 
     }
-}

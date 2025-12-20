@@ -1,8 +1,6 @@
 using Character.Components;
 using Character.Core;
 
-namespace Character.Effects
-{
     /// <summary>
     /// 灼烧效果实例（持续伤害型效果）
     /// </summary>
@@ -28,4 +26,3 @@ namespace Character.Effects
             }
         }
     }
-}

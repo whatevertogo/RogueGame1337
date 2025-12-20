@@ -1,8 +1,8 @@
+using Character;
 using Character.Effects;
 using UnityEngine;
 
-namespace Character.Effects
-{
+
     /// <summary>
     /// 移动速度增益效果定义
     /// </summary>
@@ -21,4 +21,4 @@ namespace Character.Effects
             return new MoveSpeedBuffInstance(this);
         }
     }
-}
+

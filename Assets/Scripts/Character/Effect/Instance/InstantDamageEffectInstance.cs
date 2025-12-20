@@ -1,8 +1,6 @@
 using Character.Components;
 using Character.Core;
 
-namespace Character.Effects
-{
     /// <summary>
     /// 瞬时伤害效果实例
     /// 在 OnApply 时立即造成伤害，然后自动过期
@@ -46,4 +44,4 @@ namespace Character.Effects
             remainingTime = -1f;
         }
     }
-}
+

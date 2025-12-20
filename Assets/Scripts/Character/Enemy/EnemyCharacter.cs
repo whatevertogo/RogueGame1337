@@ -225,7 +225,7 @@ public class EnemyCharacter : CharacterBase
         {
             Combat.OnAttack -= OnAttackPerformed;
         }
-        var health = GetComponent<Character.Components.HealthComponent>();
+        var health = GetComponent<HealthComponent>();
         if (health != null)
         {
             health.OnDeathWithAttacker -= HandleDeathWithAttacker;

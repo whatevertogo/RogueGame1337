@@ -8,7 +8,7 @@ namespace Character.Combat
     /// 近战攻击策略 - 扇形范围
     /// </summary>
     [CreateAssetMenu(fileName = "MeleeAttack", menuName = "RogueGame/Combat/Melee Attack")]
-    public class MeleeAttackStrategy : AttackStrategyBase
+    public class MeleeAttackStrategy : AttackStrategyBaseSO
     {
         [Header("近战配置")]
         [Tooltip("攻击半径")]

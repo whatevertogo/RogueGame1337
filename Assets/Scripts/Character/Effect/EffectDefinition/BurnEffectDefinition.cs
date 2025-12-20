@@ -1,8 +1,7 @@
 using Character.Effects;
 using UnityEngine;
 
-namespace Character.Effects
-{
+
     /// <summary>
     /// 灼烧效果定义（持续伤害效果）
     /// </summary>
@@ -17,5 +16,5 @@ namespace Character.Effects
         {
             return new BurnEffectInstance(this);
         }
-    }
+    
 }

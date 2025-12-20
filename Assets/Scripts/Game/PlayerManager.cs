@@ -5,7 +5,6 @@ using UnityEngine;
 using RogueGame.Map;
 using RogueGame.Events;
 using CDTU.Utils;
-using CardSystem.SkillSystem;
 using Character.Player;
 
 /// <summary>
@@ -280,7 +279,7 @@ public class PlayerManager : Singleton<PlayerManager>
         if (playerKiller == null)
         {
             // 尝试通过投射物查找拥有者
-            var proj = attacker.GetComponent<Character.Projectiles.ProjectileBase>();
+            var proj = attacker.GetComponent<ProjectileBase>();
             if (proj?.Owner != null)
             {
                 playerKiller = proj.Owner.GetComponentInParent<PlayerController>();

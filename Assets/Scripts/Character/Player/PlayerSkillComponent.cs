@@ -2,9 +2,7 @@ using System;
 using UnityEngine;
 using Character.Components;
 using Character.Components.Interface;
-using CardSystem.SkillSystem;
 using System.Collections;
-using CardSystem.SkillSystem.Runtime;
 
 namespace Character.Player
 {
@@ -90,15 +88,7 @@ namespace Character.Player
             catch { }
         }
 
-        // 使用配置的 executor（若未指定，则默认直接应用 Effects 到 Targets）
-        if (def.executor != null)
-        {
-            def.executor.Execute(def, ctx);
-        }
-        else
-        {
-            Debug.LogWarning($"[PlayerSkillComponent] Skill '{def.skillId}' has no executor configured. Skill will not apply effects. Please assign an Executor SO.");
-        }
+       // TODO-根据技能不同的选择敌人策略和过滤器执行逻辑
 
         yield break;
     }
