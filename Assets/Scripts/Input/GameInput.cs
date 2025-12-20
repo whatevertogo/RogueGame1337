@@ -2,6 +2,8 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using System;
 using CDTU.Utils;
+using UnityEngine.XR;
+using UI;
 
 public sealed class GameInput : Singleton<GameInput>
 {
@@ -18,7 +20,7 @@ public sealed class GameInput : Singleton<GameInput>
     public bool InteractReleasedThisFrame => playerInput != null && playerInput.PlayerControl.Interact.WasReleasedThisFrame();
     public bool InteractIsPressed => playerInput != null && playerInput.PlayerControl.Interact.IsPressed();
 
-    public bool ESCIsPressed => playerInput != null && playerInput.PlayerControl.ESC.IsPressed();
+    public event Action OnESCPressed;
     
 
     public event Action OnSkillQPressed;
@@ -37,14 +39,6 @@ public sealed class GameInput : Singleton<GameInput>
     {
         MoveDir = playerInput != null ? playerInput.PlayerControl.Move.ReadValue<Vector2>() : Vector2.zero;
 
-
-        //调试输出
-        //调试攻击输入
-        if (!hasLoggedZero) return;
-        if (AttackPressedThisFrame)
-        {
-            Debug.Log("Attack Pressed!");
-        }
     }
 
     public void PauseInput()
@@ -62,13 +56,21 @@ public sealed class GameInput : Singleton<GameInput>
         playerInput.Enable();
         playerInput.PlayerControl.SkillQ.performed += ctx => OnSkillQPressed?.Invoke();
         playerInput.PlayerControl.SkillE.performed += ctx => OnSkillEPressed?.Invoke();
+        playerInput.PlayerControl.ESC.performed += ctx => HandleESCPressed();
     }
+
+    private void HandleESCPressed()
+    {
+        UIManager.Instance.HandleBack();
+    }
+
     private void OnDisable()
     {
         playerInput?.Disable();
 
         playerInput.PlayerControl.SkillQ.performed -= ctx => OnSkillQPressed?.Invoke();
         playerInput.PlayerControl.SkillE.performed -= ctx => OnSkillEPressed?.Invoke();
+        playerInput.PlayerControl.ESC.performed -= ctx => HandleESCPressed();
     }
     private void OnDestroy() { playerInput?.Dispose(); }
 }

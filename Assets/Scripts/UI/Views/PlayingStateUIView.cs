@@ -94,6 +94,7 @@ namespace Game.UI
                 BagButton.onClick.AddListener(() => onClickAction?.Invoke());
             }
         }
+        
 
         /// <summary>更新文本内容</summary>
         public void SetNowLevel(string content)
