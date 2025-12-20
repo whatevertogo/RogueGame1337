@@ -136,6 +136,15 @@ public partial class @PlayerInputSystem: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""ESC"",
+                    ""type"": ""Button"",
+                    ""id"": ""b440d4f0-bdd2-4135-a49b-e93557832184"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -248,6 +257,17 @@ public partial class @PlayerInputSystem: IInputActionCollection2, IDisposable
                     ""action"": ""SkillE"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""6311cf37-587e-4f00-8b66-fb27a1ee0fe8"",
+                    ""path"": ""<Keyboard>/escape"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""ESC"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -261,6 +281,7 @@ public partial class @PlayerInputSystem: IInputActionCollection2, IDisposable
         m_PlayerControl_Interact = m_PlayerControl.FindAction("Interact", throwIfNotFound: true);
         m_PlayerControl_SkillQ = m_PlayerControl.FindAction("SkillQ", throwIfNotFound: true);
         m_PlayerControl_SkillE = m_PlayerControl.FindAction("SkillE", throwIfNotFound: true);
+        m_PlayerControl_ESC = m_PlayerControl.FindAction("ESC", throwIfNotFound: true);
     }
 
     ~@PlayerInputSystem()
@@ -346,6 +367,7 @@ public partial class @PlayerInputSystem: IInputActionCollection2, IDisposable
     private readonly InputAction m_PlayerControl_Interact;
     private readonly InputAction m_PlayerControl_SkillQ;
     private readonly InputAction m_PlayerControl_SkillE;
+    private readonly InputAction m_PlayerControl_ESC;
     /// <summary>
     /// Provides access to input actions defined in input action map "PlayerControl".
     /// </summary>
@@ -377,6 +399,10 @@ public partial class @PlayerInputSystem: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "PlayerControl/SkillE".
         /// </summary>
         public InputAction @SkillE => m_Wrapper.m_PlayerControl_SkillE;
+        /// <summary>
+        /// Provides access to the underlying input action "PlayerControl/ESC".
+        /// </summary>
+        public InputAction @ESC => m_Wrapper.m_PlayerControl_ESC;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -418,6 +444,9 @@ public partial class @PlayerInputSystem: IInputActionCollection2, IDisposable
             @SkillE.started += instance.OnSkillE;
             @SkillE.performed += instance.OnSkillE;
             @SkillE.canceled += instance.OnSkillE;
+            @ESC.started += instance.OnESC;
+            @ESC.performed += instance.OnESC;
+            @ESC.canceled += instance.OnESC;
         }
 
         /// <summary>
@@ -444,6 +473,9 @@ public partial class @PlayerInputSystem: IInputActionCollection2, IDisposable
             @SkillE.started -= instance.OnSkillE;
             @SkillE.performed -= instance.OnSkillE;
             @SkillE.canceled -= instance.OnSkillE;
+            @ESC.started -= instance.OnESC;
+            @ESC.performed -= instance.OnESC;
+            @ESC.canceled -= instance.OnESC;
         }
 
         /// <summary>
@@ -519,5 +551,12 @@ public partial class @PlayerInputSystem: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnSkillE(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "ESC" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnESC(InputAction.CallbackContext context);
     }
 }

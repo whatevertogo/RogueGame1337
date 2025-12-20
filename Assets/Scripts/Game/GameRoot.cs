@@ -12,12 +12,20 @@ public class GameRoot : Singleton<GameRoot>
 
     [Header("Scene Managers")]
     [SerializeField] private GameStateManager gameStateManager;
+    public GameStateManager GameStateManager => gameStateManager;
     [SerializeField] private RoomManager roomManager;
+    public RoomManager RoomManager => roomManager;
     [SerializeField] private UIManager uiManager;
+    public UIManager UIManager => uiManager;
     [SerializeField] private TransitionController transitionController;
+    public TransitionController TransitionController => transitionController;
     [SerializeField] private PlayerManager playerManager;
+    public PlayerManager PlayerManager => playerManager;
     [SerializeField] private InventoryManager inventoryManager;
+    
+    public InventoryManager InventoryManager => inventoryManager;
     [SerializeField] private LootDropper lootDropper;
+    public LootDropper LootDropper => lootDropper;
 
     protected override void Awake()
     {
@@ -46,6 +54,8 @@ public class GameRoot : Singleton<GameRoot>
             uiManager
         );
         roomManager.Initialize(transitionController);
+
+        playerManager.Initialize(roomManager);  
 
     }
 

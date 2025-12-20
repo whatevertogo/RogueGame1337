@@ -19,6 +19,10 @@ public class PlayerManager : Singleton<PlayerManager>
 {
     private readonly Dictionary<string, PlayerRuntimeState> _players = new();
 
+    private PlayerLoader _playerLoader;
+
+    private RoomManager RoomManager;
+
     // 共享库存 (forwarded from RunInventory)
     public event Action<int> OnCoinsChanged;
     public event Action<string, int> OnPassiveCardChanged; // (cardId, count)
@@ -52,6 +56,11 @@ public class PlayerManager : Singleton<PlayerManager>
         EventBus.Subscribe<RoomEnteredEvent>(HandleRoomEnteredEvent);
         // 订阅实体击杀事件，用于分发技能能量
         EventBus.Subscribe<EntityKilledEvent>(HandleEntityKilledEvent);
+    }
+
+    public void Initialize(RoomManager roomManager)
+    {
+        RoomManager = roomManager;
     }
 
     private void OnDestroy()
@@ -105,8 +114,39 @@ public class PlayerManager : Singleton<PlayerManager>
         }
     }
 
+    #region 公共api
+    public PlayerRuntimeState GetLocalPlayerState()
+    {
+        return _players.Values.FirstOrDefault(p => p.IsLocal);
+    }
+
+    /// <summary>
+    /// 创建玩家实例
+    /// </summary>
+    public void CreatePlayer()
+    {
+        _playerLoader ??= new PlayerLoader();
+        var playerPrefab = _playerLoader.Load("Player1");
+        if (playerPrefab == null)
+        {
+            Debug.LogError("[PlayerManager]无法加载玩家预制体。");
+            return;
+        }
+        //TODO-以后在这里写LocalPlayer逻辑，现在是单人PlayerController自己设置为local
+        var playerObj = GameObject.Instantiate(playerPrefab, RoomManager.GetCurrentRoomPosition(), Quaternion.identity);
+
+    }
+    #endregion  
+
     #region 人物注册相关
 
+    /// <summary>
+    /// 玩家自己注册到PlayerManager
+    /// </summary>
+    /// <param name="controller"></param>
+    /// <param name="isLocal"></param>
+    /// <param name="id"></param>
+    /// <returns></returns>
     public PlayerRuntimeState RegisterPlayer(PlayerController controller, bool isLocal = true, string id = null)
     {
         if (controller == null) return null;
@@ -171,9 +211,8 @@ public class PlayerManager : Singleton<PlayerManager>
 
     #endregion
 
-
     #region 技能转发事件
-    
+
     private void AttachSkillListeners(PlayerRuntimeState state)
     {
         if (state == null || state.Controller == null) return;
@@ -189,7 +228,7 @@ public class PlayerManager : Singleton<PlayerManager>
     }
 
     #endregion
-    
+
     #region 共享库存转发器
 
     private void OnRunInventoryCoinsChanged(int coins) => OnCoinsChanged?.Invoke(coins);
@@ -241,10 +280,8 @@ public class PlayerManager : Singleton<PlayerManager>
 
     #region 通知 / 辅助方法
 
-    #region skill forward raises
+    //转发器激活的方法
 
-    // These methods allow other classes (e.g. PlayerSkillForwarder) to notify the manager
-    // which will in turn invoke the events. Events cannot be invoked from outside the declaring class.
     internal void RaisePlayerSkillEnergyChanged(string playerId, int slotIndex, float energy)
     {
         OnPlayerSkillEnergyChanged?.Invoke(playerId, slotIndex, energy);
@@ -264,8 +301,6 @@ public class PlayerManager : Singleton<PlayerManager>
     {
         OnPlayerSkillUnequipped?.Invoke(playerId, slotIndex);
     }
-
-    #endregion
 
     /// <summary>
     /// 当敌人被击杀时通知，为击杀者添加能量

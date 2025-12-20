@@ -105,8 +105,14 @@ namespace RogueGame.Map
         {
             this.TransitionController = transitionController;
         }
-        
+
         public int RandomSeed() => (int)(DateTime.UtcNow.Ticks & 0x7FFFFFFF);
+        public void StartFloor(int floor, RoomMeta startMeta)
+        {
+            _currentFloor = floor;
+            StartRun(startMeta);
+        }
+        
         public void StartRun(RoomMeta startMeta)
         {
             ClearAll();
@@ -116,11 +122,6 @@ namespace RogueGame.Map
             SpawnAndEnter(startMeta, Direction.None);
         }
 
-        public void StartFloor(int floor, RoomMeta startMeta)
-        {
-            _currentFloor = floor;
-            StartRun(startMeta);
-        }
 
         public int GetBossUnlockThreshold()
         {
@@ -158,6 +159,12 @@ namespace RogueGame.Map
                 Debug.LogWarning("[RoomManager] 发布 DoorEnterRequestedEvent 失败: " + ex.Message);
             }
             return true;
+        }
+
+        // 获得当前房间位置
+        public Vector2 GetCurrentRoomPosition()
+        {
+            return _current?.Instance.transform.position ?? Vector2.zero;
         }
 
         // IReadOnlyRoomRepository 实现 - 只读查询接口
@@ -200,7 +207,7 @@ namespace RogueGame.Map
 
         #endregion
 
-        #region 房间切换核心逻辑
+        #region 公开api房间切换核心逻辑
         // 对外暴露切换实现，注意：调用方应确保不会重入（RoomManager 也有内部保护）
         public void SwitchToNextRoom(Direction exitDir)
         {
@@ -510,6 +517,6 @@ namespace RogueGame.Map
         }
 
         #endregion
-        
+
     }
 }

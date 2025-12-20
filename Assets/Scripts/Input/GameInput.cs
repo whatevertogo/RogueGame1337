@@ -18,13 +18,8 @@ public sealed class GameInput : Singleton<GameInput>
     public bool InteractReleasedThisFrame => playerInput != null && playerInput.PlayerControl.Interact.WasReleasedThisFrame();
     public bool InteractIsPressed => playerInput != null && playerInput.PlayerControl.Interact.IsPressed();
 
-    // public bool SkillQPressedThisFrame => playerInput != null && playerInput.PlayerControl.SkillQ.WasPerformedThisFrame();
-    // public bool SkillQReleasedThisFrame => playerInput != null && playerInput.PlayerControl.SkillQ.WasReleasedThisFrame();
-    // public bool SkillQIsPressed => playerInput != null && playerInput.PlayerControl.SkillQ.IsPressed();
-
-    // public bool SkillEPressedThisFrame => playerInput != null && playerInput.PlayerControl.SkillE.WasPerformedThisFrame();
-    // public bool SkillEReleasedThisFrame => playerInput != null && playerInput.PlayerControl.SkillE.WasReleasedThisFrame();
-    // public bool SkillEIsPressed => playerInput != null && playerInput.PlayerControl.SkillE.IsPressed(); 
+    public bool ESCIsPressed => playerInput != null && playerInput.PlayerControl.ESC.IsPressed();
+    
 
     public event Action OnSkillQPressed;
     public event Action OnSkillEPressed;
@@ -50,6 +45,15 @@ public sealed class GameInput : Singleton<GameInput>
         {
             Debug.Log("Attack Pressed!");
         }
+    }
+
+    public void PauseInput()
+    {
+        playerInput?.Disable();
+    }   
+    public void ResumeInput()
+    {
+        playerInput?.Enable();
     }
 
     private void OnEnable()

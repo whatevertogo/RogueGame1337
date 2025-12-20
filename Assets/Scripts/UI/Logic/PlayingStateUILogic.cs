@@ -152,7 +152,9 @@ namespace Game.UI
         /// </summary>
         private void OnBagButtonClicked()
         {
-            // UIManager.Instance.Open<BagUIView>(layer: UILayer.Normal);
+            //时间停止
+            UIManager.Instance.Open<BagViewView>(layer: UILayer.Normal);
+            GameInput.Instance.PauseInput();
         }
     }
 

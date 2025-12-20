@@ -61,6 +61,7 @@ public class PlayerController : CharacterBase
 
 		// 向 PlayerManager 注册自己（支持未来多人）
 		var pm = PlayerManager.Instance;
+		//以后多人写每个人应该注册id
 		if (pm != null)
 		{
 			pm.RegisterPlayer(this, true);
@@ -152,12 +153,6 @@ public class PlayerController : CharacterBase
 		Vector3 mouseWorldPos = Camera.main.ScreenToWorldPoint(UnityEngine.InputSystem.Mouse.current.position.ReadValue());
 		transform.localScale = new Vector3(mouseWorldPos.x > transform.position.x ? 1f : -1f, transform.localScale.y, transform.localScale.z);
 
-		//BUG: 先注释掉，未用以撒的攻击方式
-		// // 记录朝向（用于攻击方向）
-		// if (moveDir.sqrMagnitude > 0.01f)
-		// {
-		// 	lastFacingDirection = moveDir.normalized;
-		// }
 
 		// 更新动画
 		UpdateAnimator(moveDir);

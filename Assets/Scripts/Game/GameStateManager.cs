@@ -79,14 +79,8 @@ public sealed class GameStateManager : MonoBehaviour, IGameStateManager
         RoomManager.StartFloor(CurrentLayer, meta);
         CDTU.Utils.Logger.Log("GameStateManager: StartRun called for Layer " + CurrentLayer);
 
-        // 初始化 UI（诊断）：打印 UIManager 状态以排查为何未执行 Open
-        try
-        {
-            CDTU.Utils.Logger.Log($"GameStateManager: UIManager is {(UIManager == null ? "null" : UIManager.GetType().ToString())}");
-        }
-        catch { }
-        // 初始化UI，由prefab自动注入Logic
-        UIManager?.Open<PlayingStateUIView>();
+        // 初始化UI，由单独的ui入口使用
+        // UIManager?.Open<PlayingStateUIView>(layer: UILayer.Normal);
 
         // 不再主动 EnterRoom：依赖低层发布的 RoomEnteredEvent 来驱动状态机以保持单一事实源。
         // 仍保留对 CurrentRoom 的一次性同步检查（通过只读仓库查询最新实例）
