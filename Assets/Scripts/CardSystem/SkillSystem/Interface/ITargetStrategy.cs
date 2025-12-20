@@ -1,8 +1,9 @@
 
 using System.Collections.Generic;
+using Character;
 using UnityEngine;
 
     public interface ITargetAcquireStrategy
     {
-        List<Transform> Acquire(SkillTargetContext ctx);
+        List<CharacterBase> Acquire(SkillTargetContext ctx);
     }

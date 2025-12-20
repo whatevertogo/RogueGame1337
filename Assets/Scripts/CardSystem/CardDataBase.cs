@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-using System.Linq;
 
 
 [CreateAssetMenu(fileName = "New Card Database", menuName = "Card System/Card Database")]
