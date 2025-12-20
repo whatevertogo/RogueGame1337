@@ -24,14 +24,14 @@ public class CardDataBase : ScriptableObject
         if (_initialized) return;
         foreach (var c in AllCardDefinitions)
         {
-            if (c == null || string.IsNullOrEmpty(c.cardId)) continue;
-            if (!_cardid_cardDefinition_Map.ContainsKey(c.cardId))
+            if (c == null || string.IsNullOrEmpty(c.CardId)) continue;
+            if (!_cardid_cardDefinition_Map.ContainsKey(c.CardId))
             {
-                _cardid_cardDefinition_Map[c.cardId] = c;
+                _cardid_cardDefinition_Map[c.CardId] = c;
             }
             else
             {
-                Debug.LogWarning($"[CardDataBase] Duplicate CardDefinition cardId detected: {c.cardId} ({c.name} & {_cardid_cardDefinition_Map[c.cardId].name})");
+                Debug.LogWarning($"[CardDataBase] Duplicate CardDefinition cardId detected: {c.CardId} ({c.name} & {_cardid_cardDefinition_Map[c.CardId].name})");
             }
         }
         _initialized = true;

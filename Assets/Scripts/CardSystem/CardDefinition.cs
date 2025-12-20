@@ -4,7 +4,7 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "NewCardDefinition", menuName = "Card System/Card Definition")]
 public class CardDefinition : ScriptableObject
 {
-    public string cardId;
+    public string CardId;
     public CardType type; // Passive / Active
     public Sprite cardSprite;
 

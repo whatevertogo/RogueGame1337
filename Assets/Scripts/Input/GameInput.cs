@@ -21,8 +21,6 @@ public sealed class GameInput : Singleton<GameInput>
     public bool InteractIsPressed => playerInput != null && playerInput.PlayerControl.Interact.IsPressed();
 
     public event Action OnESCPressed;
-    
-
     public event Action OnSkillQPressed;
     public event Action OnSkillEPressed;
 
@@ -41,22 +39,25 @@ public sealed class GameInput : Singleton<GameInput>
 
     }
 
-    public void PauseInput()
+    public void PausePlayerInput()
     {
-        playerInput?.Disable();
+        playerInput?.PlayerControl.Disable();
     }   
-    public void ResumeInput()
+    public void ResumePlayerInput()
     {
-        playerInput?.Enable();
+        playerInput?.PlayerControl.Enable();
     }
+
+
 
     private void OnEnable()
     {
         playerInput ??= new PlayerInputSystem();
         playerInput.Enable();
-        playerInput.PlayerControl.SkillQ.performed += ctx => OnSkillQPressed?.Invoke();
-        playerInput.PlayerControl.SkillE.performed += ctx => OnSkillEPressed?.Invoke();
-        playerInput.PlayerControl.ESC.performed += ctx => HandleESCPressed();
+        // 使用方法组订阅，便于正确取消订阅
+        playerInput.PlayerControl.SkillQ.performed += OnSkillQPerformed;
+        playerInput.PlayerControl.SkillE.performed += OnSkillEPerformed;
+        playerInput.UI.ESC.performed += OnESCPerformed;
     }
 
     private void HandleESCPressed()
@@ -67,10 +68,28 @@ public sealed class GameInput : Singleton<GameInput>
     private void OnDisable()
     {
         playerInput?.Disable();
+        if (playerInput != null)
+        {
+            playerInput.PlayerControl.SkillQ.performed -= OnSkillQPerformed;
+            playerInput.PlayerControl.SkillE.performed -= OnSkillEPerformed;
+            playerInput.UI.ESC.performed -= OnESCPerformed;
+        }
+    }
 
-        playerInput.PlayerControl.SkillQ.performed -= ctx => OnSkillQPressed?.Invoke();
-        playerInput.PlayerControl.SkillE.performed -= ctx => OnSkillEPressed?.Invoke();
-        playerInput.PlayerControl.ESC.performed -= ctx => HandleESCPressed();
+    // 输入回调
+    private void OnESCPerformed(UnityEngine.InputSystem.InputAction.CallbackContext ctx)
+    {
+        HandleESCPressed();
+    }
+
+    private void OnSkillQPerformed(UnityEngine.InputSystem.InputAction.CallbackContext ctx)
+    {
+        OnSkillQPressed?.Invoke();
+    }
+
+    private void OnSkillEPerformed(UnityEngine.InputSystem.InputAction.CallbackContext ctx)
+    {
+        OnSkillEPressed?.Invoke();
     }
     private void OnDestroy() { playerInput?.Dispose(); }
 }

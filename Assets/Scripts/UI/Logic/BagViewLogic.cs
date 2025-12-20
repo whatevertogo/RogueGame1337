@@ -22,6 +22,8 @@ namespace Game.UI
         public virtual void Bind(UIViewBase view)
         {
             _view = view as BagViewView;
+            _view.BindPlayerStats1Button(OnPlayerStats1Clicked);
+            _view.BindPlayerStats12Button(OnPlayerStats12Clicked);
         }
 
         public virtual void OnOpen(UIArgs args)
@@ -38,6 +40,8 @@ namespace Game.UI
             SetAllPlayerStatsText();
             _view.SetPlayerImage(localCharacterStats.Icon);
 
+            // 初始化卡牌列表
+            RefreshCardViews();
         }
 
         public virtual void OnClose()
@@ -49,6 +53,14 @@ namespace Game.UI
                 localCharacterStats = null;
             }
             _view = null;
+        }
+
+        public void RefreshCardViews()
+        {
+            foreach (var card in InventoryManager.Instance.GetAllActiveCardDefinitions())
+            {
+                _view.AddCardView(card.CardId);
+            }
         }
 
         /// <summary>
@@ -69,14 +81,14 @@ namespace Game.UI
 
         public void OnPlayerStats1Clicked()
         {
-            // TODO: 处理按钮点击后的业务逻辑（纯逻辑）
-            // 可在此调用 _view.SetXXX 方法更新文本内容
+            _view.SetBagViewALLActive(true);
+            _view.SetPlayerStatViewActive(false);
         }
 
         public void OnPlayerStats12Clicked()
         {
-            // TODO: 处理按钮点击后的业务逻辑（纯逻辑）
-            // 可在此调用 _view.SetXXX 方法更新文本内容
+            _view.SetBagViewALLActive(false);
+            _view.SetPlayerStatViewActive(true);
         }
 
 

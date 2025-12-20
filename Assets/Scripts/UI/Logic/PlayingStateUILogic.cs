@@ -56,12 +56,12 @@ namespace Game.UI
 
         public virtual void OnCovered()
         {
-            GameInput.Instance.PauseInput();
+            GameInput.Instance.PausePlayerInput();
         }
 
         public virtual void OnResume()
         {
-            GameInput.Instance.ResumeInput();
+            GameInput.Instance.ResumePlayerInput();
         }
         private void SubscribeToSkillEvents()
         {

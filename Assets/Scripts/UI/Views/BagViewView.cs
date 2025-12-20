@@ -1,6 +1,7 @@
 ﻿using System;
 using TMPro;
 using UI;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -47,6 +48,9 @@ namespace Game.UI
         [SerializeField] private TMP_Text armor;
         [SerializeField] private TMP_Text dodge;
         [SerializeField] private TMP_Text skillCooldownReductionRate;
+        [SerializeField] private GameObject BagViewALL;
+        [SerializeField] private GameObject PlayerStatViewALL;
+        [SerializeField] private CardUIPrefab cardUIPrefabScript;
 
         public override bool Exclusive => false;
 
@@ -115,25 +119,42 @@ namespace Game.UI
             if (playerStats12 != null) { playerStats12.onClick.RemoveAllListeners(); if (onClickAction != null) playerStats12.onClick.AddListener(() => onClickAction()); }
         }
 
-        /// <summary>设置 maxHP 的值</summary>
 
-        /// <summary>设置 hPRegen 的值</summary>
+        public void SetBagViewALLActive(bool isActive)
+        {
+            if (BagViewALL != null)
+            {
+                BagViewALL.SetActive(isActive);
+            }
+        }
 
-        /// <summary>设置 moveSpeed 的值</summary>
+        public void SetPlayerStatViewActive(bool isActive)
+        {
+            if (PlayerStatViewALL != null)
+            {
+                PlayerStatViewALL.SetActive(isActive);
+            }
+        }
 
-        /// <summary>设置 acceleration 的值</summary>
+        public void AddCardView(string cardId)
+        {
+            if (cardUIPrefabScript == null || scrollView1 == null || scrollView1.content == null) return;
 
-        /// <summary>设置 attackPower 的值</summary>
+            // 以 prefab 的 GameObject 形式在 content 下实例化，并保持本地变换
+            var go = Instantiate(cardUIPrefabScript.gameObject, scrollView1.content, false);
+            var newCard = go.GetComponent<CardUIPrefab>();
+            if (newCard == null) return;
 
-        /// <summary>设置 attackSpeed 的值</summary>
+            // 重置 RectTransform 以避免继承不期望的缩放/位置
+            if (newCard.transform is RectTransform rt)
+            {
+                rt.localScale = Vector3.one;
+                rt.anchoredPosition = Vector2.zero;
+            }
+            newCard.transform.SetAsLastSibling();
 
-        /// <summary>设置 attackRange 的值</summary>
-
-        /// <summary>设置 armor 的值</summary>
-
-        /// <summary>设置 dodge 的值</summary>
-
-        /// <summary>设置 skillCooldownReductionRate 的值</summary>
+            newCard.Init(cardId);
+        }
 
         public void Close()
         {
