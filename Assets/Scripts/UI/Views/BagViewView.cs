@@ -48,7 +48,9 @@ namespace Game.UI
         [SerializeField] private TMP_Text dodge;
         [SerializeField] private TMP_Text skillCooldownReductionRate;
 
-        public override bool Exclusive => true;
+        public override bool Exclusive => false;
+
+        public override bool CanBack => true;
 
         public override void OnCreate()
         {
@@ -106,11 +108,11 @@ namespace Game.UI
         /// <summary>绑定 Button 事件</summary>
         public void BindPlayerStats1Button(System.Action onClickAction)
         {
-            if (playerStats1 != null) { playerStats1.onClick.RemoveAllListeners(); playerStats1.onClick.AddListener(() => onClickAction?.Invoke()); }
+            if (playerStats1 != null) { playerStats1.onClick.RemoveAllListeners(); if (onClickAction != null) playerStats1.onClick.AddListener(() => onClickAction()); }
         }
         public void BindPlayerStats12Button(System.Action onClickAction)
         {
-            if (playerStats12 != null) { playerStats12.onClick.RemoveAllListeners(); playerStats12.onClick.AddListener(() => onClickAction?.Invoke()); }
+            if (playerStats12 != null) { playerStats12.onClick.RemoveAllListeners(); if (onClickAction != null) playerStats12.onClick.AddListener(() => onClickAction()); }
         }
 
         /// <summary>设置 maxHP 的值</summary>

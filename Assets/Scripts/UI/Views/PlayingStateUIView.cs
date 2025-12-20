@@ -22,7 +22,8 @@ namespace Game.UI
         [SerializeField] private Image skillSlot2Energy;
         [SerializeField] private Button BagButton;
 
-        public override bool Exclusive => true;
+        public override bool Exclusive => false;
+        public override bool CanBack => false;
 
         // 在运行时创建阶段进行自动绑定（UIManager 会调用 OnCreate）
         public override void OnCreate()

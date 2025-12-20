@@ -51,6 +51,22 @@ namespace Game.UI
             _view = null;
         }
 
+        /// <summary>
+        /// 被同层新 UI 覆盖
+        /// </summary>
+        public virtual void OnCovered()
+        {
+            // 默认行为：关闭交互
+        }
+
+        /// <summary>
+        /// 从覆盖状态恢复到栈顶
+        /// </summary>
+        public virtual void OnResume()
+        {
+            // 默认行为：恢复交互
+        }
+
         public void OnPlayerStats1Clicked()
         {
             // TODO: 处理按钮点击后的业务逻辑（纯逻辑）
@@ -67,23 +83,23 @@ namespace Game.UI
 
         public void SetAllPlayerStatsText()
         {
-             if (playerManager != null)
+            if (playerManager != null)
             {
                 var player = playerManager.GetLocalPlayerData()?.Controller;
                 if (player != null)
                 {
                     if (localCharacterStats != null)
                     {
-                        _view.SetMaxHP("MaxHP: " + localCharacterStats.MaxHP.BaseValue.ToString()+"("+ (localCharacterStats.MaxHP.Value-localCharacterStats.MaxHP.BaseValue).ToString() + ")");
-                        _view.SetHPRegen("HPRegen: " + localCharacterStats.HPRegen.BaseValue.ToString()+"("+ (localCharacterStats.HPRegen.Value-localCharacterStats.HPRegen.BaseValue).ToString() + ")");
-                        _view.SetMoveSpeed("MoveSpeed: " + localCharacterStats.MoveSpeed.BaseValue.ToString()+"("+ (localCharacterStats.MoveSpeed.Value-localCharacterStats.MoveSpeed.BaseValue).ToString() + ")");
-                        _view.SetAcceleration("Acceleration: " + localCharacterStats.Acceleration.BaseValue.ToString()+"("+ (localCharacterStats.Acceleration.Value-localCharacterStats.Acceleration.BaseValue).ToString() + ")");
-                        _view.SetAttackPower("AttackPower: " + localCharacterStats.AttackPower.BaseValue.ToString()+"("+ (localCharacterStats.AttackPower.Value-localCharacterStats.AttackPower.BaseValue).ToString() + ")");
-                        _view.SetAttackSpeed("AttackSpeed: " + localCharacterStats.AttackSpeed.BaseValue.ToString()+"("+ (localCharacterStats.AttackSpeed.Value-localCharacterStats.AttackSpeed.BaseValue).ToString() + ")");
-                        _view.SetAttackRange("AttackRange: " + localCharacterStats.AttackRange.BaseValue.ToString()+"("+ (localCharacterStats.AttackRange.Value-localCharacterStats.AttackRange.BaseValue).ToString() + ")");
-                        _view.SetArmor("Armor: " + localCharacterStats.Armor.BaseValue.ToString()+"("+ (localCharacterStats.Armor.Value-localCharacterStats.Armor.BaseValue).ToString() + ")");
-                        _view.SetDodge("Dodge: " + localCharacterStats.Dodge.BaseValue.ToString()+"("+ (localCharacterStats.Dodge.Value-localCharacterStats.Dodge.BaseValue).ToString() + ")");
-                        _view.SetSkillCooldownReductionRate("SkillCooldownReductionRate: " + localCharacterStats.SkillCooldownReductionRate.BaseValue.ToString()+"("+ (localCharacterStats.SkillCooldownReductionRate.Value-localCharacterStats.SkillCooldownReductionRate.BaseValue).ToString() + ")");
+                        _view.SetMaxHP("MaxHP: " + localCharacterStats.MaxHP.BaseValue.ToString() + "(" + (localCharacterStats.MaxHP.Value - localCharacterStats.MaxHP.BaseValue).ToString() + ")");
+                        _view.SetHPRegen("HPRegen: " + localCharacterStats.HPRegen.BaseValue.ToString() + "(" + (localCharacterStats.HPRegen.Value - localCharacterStats.HPRegen.BaseValue).ToString() + ")");
+                        _view.SetMoveSpeed("MoveSpeed: " + localCharacterStats.MoveSpeed.BaseValue.ToString() + "(" + (localCharacterStats.MoveSpeed.Value - localCharacterStats.MoveSpeed.BaseValue).ToString() + ")");
+                        _view.SetAcceleration("Acceleration: " + localCharacterStats.Acceleration.BaseValue.ToString() + "(" + (localCharacterStats.Acceleration.Value - localCharacterStats.Acceleration.BaseValue).ToString() + ")");
+                        _view.SetAttackPower("AttackPower: " + localCharacterStats.AttackPower.BaseValue.ToString() + "(" + (localCharacterStats.AttackPower.Value - localCharacterStats.AttackPower.BaseValue).ToString() + ")");
+                        _view.SetAttackSpeed("AttackSpeed: " + localCharacterStats.AttackSpeed.BaseValue.ToString() + "(" + (localCharacterStats.AttackSpeed.Value - localCharacterStats.AttackSpeed.BaseValue).ToString() + ")");
+                        _view.SetAttackRange("AttackRange: " + localCharacterStats.AttackRange.BaseValue.ToString() + "(" + (localCharacterStats.AttackRange.Value - localCharacterStats.AttackRange.BaseValue).ToString() + ")");
+                        _view.SetArmor("Armor: " + localCharacterStats.Armor.BaseValue.ToString() + "(" + (localCharacterStats.Armor.Value - localCharacterStats.Armor.BaseValue).ToString() + ")");
+                        _view.SetDodge("Dodge: " + localCharacterStats.Dodge.BaseValue.ToString() + "(" + (localCharacterStats.Dodge.Value - localCharacterStats.Dodge.BaseValue).ToString() + ")");
+                        _view.SetSkillCooldownReductionRate("SkillCooldownReductionRate: " + localCharacterStats.SkillCooldownReductionRate.BaseValue.ToString() + "(" + (localCharacterStats.SkillCooldownReductionRate.Value - localCharacterStats.SkillCooldownReductionRate.BaseValue).ToString() + ")");
                     }
                 }
             }
@@ -121,6 +137,16 @@ namespace Game.UI
         private void OnPlayerStats12Clicked()
         {
             _core.OnPlayerStats12Clicked();
+        }
+
+        public void OnCovered()
+        {
+            _core.OnCovered();
+        }
+
+        public void OnResume()
+        {
+            _core.OnResume();
         }
     }
 }

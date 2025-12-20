@@ -33,7 +33,7 @@ namespace Game.UI
                 if (p.IsLocal) { existingState = p; break; }
             }
             if (existingState != null) PlayerRegistered(existingState);
-            
+
             // 绑定 BagButton 点击事件
             _view?.BindBagButton(OnBagButtonClicked);
         }
@@ -52,6 +52,16 @@ namespace Game.UI
             UnsubscribeFromSkillEvents();
             _myPlayerState = null;
             _view = null;
+        }
+
+        public virtual void OnCovered()
+        {
+            GameInput.Instance.PauseInput();
+        }
+
+        public virtual void OnResume()
+        {
+            GameInput.Instance.ResumeInput();
         }
         private void SubscribeToSkillEvents()
         {
@@ -86,7 +96,7 @@ namespace Game.UI
             // TODO-刷新技能槽初始显示
             if (_myPlayerState != null && _view != null)
             {
-                
+
             }
         }
 
@@ -112,7 +122,7 @@ namespace Game.UI
             stats.OnHealthChanged -= OnPlayerHealthChanged;
         }
 
-        private void OnPlayerHealthChanged(float currentHealth,float maxHealth)
+        private void OnPlayerHealthChanged(float currentHealth, float maxHealth)
         {
             Debug.Log($"玩家血量变化，当前血量：{currentHealth}");
             _view?.SetHealthNormalized(currentHealth / Math.Max(1f, maxHealth));
@@ -146,7 +156,7 @@ namespace Game.UI
                 _myPlayerState = null;
             }
         }
-        
+
         /// <summary>
         /// BagButton 点击事件处理
         /// </summary>
@@ -154,7 +164,8 @@ namespace Game.UI
         {
             //时间停止
             UIManager.Instance.Open<BagViewView>(layer: UILayer.Normal);
-            GameInput.Instance.PauseInput();
+            //停止游戏输入写在UILogic的 OnCovered 里
+            //开启游戏输入写在UILogic的 OnResume 里
         }
     }
 
@@ -180,10 +191,19 @@ namespace Game.UI
         {
             _core.OnClose();
         }
+        public void OnCovered()
+        {
+            _core.OnCovered();
+        }
+
+        public void OnResume()
+        {
+            _core.OnResume();
+        }
 
         private void TryUseSkillSlot(int slotIndex)
         {
-            
+
         }
     }
 }

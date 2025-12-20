@@ -25,7 +25,7 @@ namespace UI
         /// <summary>
         /// 是否允许 ESC / Back 回退
         /// </summary>
-        public virtual bool CanBack => true;
+        public abstract bool CanBack { get; }
 
         #region Logic 管理
 
@@ -95,7 +95,11 @@ namespace UI
         /// </summary>
         public virtual void OnCovered()
         {
-            // 默认行为：关闭交互
+            // 默认行为：通知逻辑层被覆盖（可重写以定制行为）
+            foreach (var logic in _logics)
+            {
+                try { logic.OnCovered(); } catch (System.Exception e) { Debug.LogException(e, this); }
+            }
         }
 
         /// <summary>
@@ -103,7 +107,11 @@ namespace UI
         /// </summary>
         public virtual void OnResume()
         {
-            // 默认行为：恢复交互
+            // 默认行为：通知逻辑层恢复（可重写以定制行为）
+            foreach (var logic in _logics)
+            {
+                try { logic.OnResume(); } catch (System.Exception e) { Debug.LogException(e, this); }
+            }
         }
 
         #endregion

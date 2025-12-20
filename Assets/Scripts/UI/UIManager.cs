@@ -35,16 +35,12 @@ namespace UI
         /// </summary>
         private readonly Dictionary<UILayer, Transform> _layerRoots = new();
 
-        #region Unity 生命周期
-
         protected override void Awake()
         {
             base.Awake();
             CreateLayerRoots();
             Debug.Log("[UIManager] Initialized");
         }
-
-        #endregion
 
         #region Layer 管理
 
@@ -198,7 +194,7 @@ namespace UI
         }
 
         /// <summary>
-        /// 关闭某一层的所有 UI
+        /// 关闭某一层的所有 UI，包括栈顶和非栈顶
         /// </summary>
         private void CloseAllInLayer(UILayer layer)
         {
