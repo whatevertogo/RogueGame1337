@@ -193,11 +193,22 @@ namespace Character.Components
             // 3. 构建攻击上下文
             AttackContext context = BuildAttackContext(damageInfo);
 
-            //绑定动画时机
-            float animLength = attackClip.length;
-            float speed = animLength / AttackCooldown;
+            // 绑定动画时机（防护：attackClip 或 anim 可能未在 Inspector 中赋值）
+            float animLength = attackClip != null ? attackClip.length : AttackCooldown;
+            float speed = animLength / Mathf.Max(0.0001f, AttackCooldown);
 
-            anim.SetFloat("AttackSpeed", speed);
+            if (anim != null)
+            {
+                anim.SetFloat("AttackSpeed", speed);
+            }
+            else if (enableDebugLog)
+            {
+                Debug.LogWarning($"[CombatComponent] {gameObject.name} Animator 未设置，跳过设置 AttackSpeed。");
+            }
+            if (attackClip == null && enableDebugLog)
+            {
+                Debug.LogWarning($"[CombatComponent] {gameObject.name} attackClip 未分配，使用 AttackCooldown({AttackCooldown:F3}) 作为动画时长替代。");
+            }
 
             // 4. 执行攻击策略
             attackStrategy.Execute(context);

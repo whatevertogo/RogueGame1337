@@ -3,10 +3,14 @@ using UnityEngine;
 [CreateAssetMenu(
     fileName = "Alive Filter",
     menuName = "Skill/Targeting/Filters/Alive")]
-public class AliveFilter : TargetFilterSO
+public class AliveFliter : TargetFilterSO
 {
     public override bool IsValid(SkillTargetContext ctx, CharacterBase target)
     {
-        return !target.GetComponent<HealthComponent>().IsDead;
+        // 添加空值检查以避免空引用
+        if (target == null) return false;
+        var health = target.GetComponent<HealthComponent>();
+        if (health == null) return false;
+        return !health.IsDead;
     }
 }

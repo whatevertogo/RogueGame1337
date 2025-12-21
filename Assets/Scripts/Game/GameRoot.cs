@@ -48,6 +48,13 @@ public class GameRoot : Singleton<GameRoot>
             return;
         }
 
+        // 确保 SlotService 在运行时存在，用于处理槽位相关集中逻辑（例如响应 ClearAllSlotsRequestedEvent）
+        if (GetComponent<SlotService>() == null)
+        {
+            gameObject.AddComponent<SlotService>();
+            Debug.Log("[GameRoot] SlotService added to GameRoot at runtime");
+        }
+
         Debug.Log("[GameRoot] All required references assigned. Initializing CardDatabase.");
         cardDatabase.Initialize();
 

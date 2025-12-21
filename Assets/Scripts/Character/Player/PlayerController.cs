@@ -240,11 +240,27 @@ public class PlayerController : CharacterBase
 
 	protected override void OnDeath()
 	{
+		// 先取消任何正在进行的技能协程，避免死亡/复活冲突
+		if (skillComponent != null)
+		{
+			skillComponent.CancelAllSkillCoroutines();
+		}
+
 		base.OnDeath();
 		Movement?.SetCanMove(false);
 		// 播放死亡动画
 		playerAnim.PlayDie();
 		Debug.Log("💀 玩家死亡");
+	}
+
+	private void OnDisable()
+	{
+		// 当控制器被禁用时也取消技能协程并停止转发
+		if (skillComponent != null)
+		{
+			skillComponent.CancelAllSkillCoroutines();
+		}
+		StopSkillForwarding();
 	}
 
 	protected override void OnDamaged(float damage)

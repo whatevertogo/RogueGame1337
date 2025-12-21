@@ -118,6 +118,11 @@ namespace Game.UI
             if (playerStats12 != null) { playerStats12.onClick.RemoveAllListeners(); if (onClickAction != null) playerStats12.onClick.AddListener(() => onClickAction()); }
         }
 
+        public void BindClearCardButton1(System.Action onClickAction)
+        {
+            if (ClearCardButton1 != null) { ClearCardButton1.onClick.RemoveAllListeners(); if (onClickAction != null) ClearCardButton1.onClick.AddListener(() => onClickAction()); }
+        }
+
         public void SetBagViewALLActive(bool isActive)
         {
             if (BagViewALL != null)

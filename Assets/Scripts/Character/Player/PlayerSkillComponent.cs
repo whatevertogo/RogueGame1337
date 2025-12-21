@@ -3,6 +3,7 @@ using UnityEngine;
 using Character.Components;
 using Character.Components.Interface;
 using System.Collections;
+using RogueGame.Events;
 
 namespace Character.Player
 {
@@ -31,6 +32,37 @@ namespace Character.Player
                     if (_playerSkillSlots[i] == null)
                         _playerSkillSlots[i] = new SkillSlot();
                 }
+            }
+            EventBus.Subscribe<ClearAllSlotsRequestedEvent>(evt => 
+            {
+                // 清理所有槽位
+                for (int i = 0; i < _playerSkillSlots.Length; i++)
+                {
+                    UnequipActiveCardBySlotIndex(i);
+                }
+            });
+
+            EventBus.Subscribe<PlayerSlotCardChangedEvent>(OnPlayerSlotCardChanged);
+        }
+
+        private void OnPlayerSlotCardChanged(PlayerSlotCardChangedEvent @event)
+        {
+            var ps = PlayerManager.Instance?.GetLocalPlayerState();
+            if (ps == null) return;
+            if (@event.PlayerId != ps.PlayerId) return;
+
+            int slotIndex = @event.SlotIndex;
+            string newCardId = @event.NewCardId;
+
+            if (string.IsNullOrEmpty(newCardId))
+            {
+                // 取消装备
+                UnequipActiveCardBySlotIndex(slotIndex);
+            }
+            else
+            {
+                // 装备新卡
+                EquipActiveCardToSlotIndex(slotIndex, newCardId);
             }
         }
 
@@ -86,9 +118,27 @@ namespace Character.Player
                 catch { }
             }
 
+            // 获取候选目标（防护式）
+            var targets = new System.Collections.Generic.List<CharacterBase>();
+            if (def.TargetAcquireSO != null)
+            {
+                var acquired = def.TargetAcquireSO.Acquire(ctx);
+                if (acquired != null)
+                    targets = acquired;
+            }
 
-            var targets = def.TargetAcquireSO.Acquire(ctx);
-            var validTargets =  def.TargetFilters != null ? targets.FindAll(t => def.TargetFilters.IsValid(ctx, t)) : targets;
+            // 应用过滤器（若存在过滤组）
+            var validTargets = targets;
+            if (def.TargetFilters != null && def.TargetFilters.filters != null && def.TargetFilters.filters.Count > 0)
+            {
+                validTargets = targets.FindAll(t => def.TargetFilters.IsValid(ctx, t));
+            }
+
+            // 如果没有目标则直接返回（策略可能返回 null/空）
+            if (validTargets == null || validTargets.Count == 0)
+            {
+                yield break;
+            }
 
             foreach (var target in validTargets)
             {
@@ -132,15 +182,30 @@ namespace Character.Player
             };
 
             // 启动协程处理（包含手动选择 / 消耗 / 冷却 / 延迟执行）
-            StartCoroutine(ManualSelectAndExecute(def, ctx, slotIndex));
+            // 取消并替换已有同槽位的流程，避免并发执行
+            try
+            {
+                if (rt.RunningCoroutine != null)
+                {
+                    StopCoroutine(rt.RunningCoroutine);
+                    rt.RunningCoroutine = null;
+                }
+            }
+            catch { }
+
+            rt.RunningCoroutine = StartCoroutine(ManualSelectAndExecute(def, ctx, slotIndex));
         }
 
 
         public void EquipActiveCardToSlotIndex(int slotIndex, string cardId)
         {
             // 不查 Inventory
-            var cardDef = GameRoot.Instance.CardDatabase.Resolve(cardId);
-            if (cardDef == null) return;
+            var cardDef = GameRoot.Instance?.CardDatabase?.Resolve(cardId);
+            if (cardDef == null)
+            {
+                Debug.LogWarning($"[PlayerSkillComponent] Equip failed: cardDef for id '{cardId}' is null. slotIndex={slotIndex}");
+                return;
+            }
 
             var skillDef = cardDef.activeCardConfig.skill;
             if (_playerSkillSlots[slotIndex] == null)
@@ -226,12 +291,11 @@ namespace Character.Player
 
             // 如果卡牌要求消耗能量（或充能），在这里检查并消耗
             bool requiresCharge = false;
-            try
+            var cdLookup = GameRoot.Instance?.CardDatabase?.Resolve(rt.CardId);
+            if (cdLookup != null && cdLookup.activeCardConfig != null)
             {
-                var cd = GameRoot.Instance?.CardDatabase?.Resolve(rt.CardId);
-                if (cd != null) requiresCharge = cd.activeCardConfig.requiresCharge;
+                requiresCharge = cdLookup.activeCardConfig.requiresCharge;
             }
-            catch { }
 
             if (requiresCharge)
             {
@@ -246,14 +310,12 @@ namespace Character.Player
                 }
 
                 // 通知 UI 当前剩余充能（归一化到 0..1）
-                try
-                {
-                    var cd = GameRoot.Instance?.CardDatabase?.Resolve(rt.CardId);
-                    int max = cd != null ? cd.activeCardConfig.maxCharges : 1;
-                    float norm = max > 0 ? (float)remaining / max : 0f;
-                    OnEnergyChanged?.Invoke(slotIndex, norm);
-                }
-                catch { }
+                var cd2 = GameRoot.Instance?.CardDatabase?.Resolve(rt.CardId);
+                int max = 1;
+                if (cd2 != null && cd2.activeCardConfig != null)
+                    max = Mathf.Max(1, cd2.activeCardConfig.maxCharges);
+                float norm = max > 0 ? (float)remaining / max : 0f;
+                OnEnergyChanged?.Invoke(slotIndex, norm);
             }
 
             // 标记为本房间已使用（房间内一次性规则）并记录使用时间（用于冷却计算）
@@ -264,9 +326,44 @@ namespace Character.Player
             OnSkillUsed?.Invoke(slotIndex);
 
             // 开始执行（处理 detectionDelay 和 executor）
-            StartCoroutine(DelayedExecute(def, ctx.AimPoint, slotIndex));
+            // 将 DelayedExecute 嵌入到当前协程内，保证单一协程句柄可用于取消
+            yield return DelayedExecute(def, ctx.AimPoint, slotIndex);
 
+            // 清理运行时协程引用
+            try { rt.RunningCoroutine = null; } catch { }
             yield break;
+        }
+
+        /// <summary>
+        /// 取消指定槽位正在运行的技能协程（若有）
+        /// </summary>
+        public void CancelSlotCoroutine(int slotIndex)
+        {
+            if (_playerSkillSlots == null) return;
+            if (slotIndex < 0 || slotIndex >= _playerSkillSlots.Length) return;
+            var rt = _playerSkillSlots[slotIndex]?.Runtime;
+            if (rt == null) return;
+            if (rt.RunningCoroutine != null)
+            {
+                try
+                {
+                    StopCoroutine(rt.RunningCoroutine);
+                }
+                catch { }
+                rt.RunningCoroutine = null;
+            }
+        }
+
+        /// <summary>
+        /// 取消所有槽位的技能协程（用于死亡/禁用时）
+        /// </summary>
+        public void CancelAllSkillCoroutines()
+        {
+            if (_playerSkillSlots == null) return;
+            for (int i = 0; i < _playerSkillSlots.Length; i++)
+            {
+                CancelSlotCoroutine(i);
+            }
         }
     }
 }

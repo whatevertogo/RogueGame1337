@@ -149,4 +149,12 @@ namespace RogueGame.Events
         public string NewCardId; // 可能为 null，表示槽位被清空
     }
 
+    /// <summary>
+    /// 请求清空所有槽位（由 UI 或逻辑发布，请专门的系统订阅并执行具体清理）
+    /// </summary>
+    public class ClearAllSlotsRequestedEvent
+    {
+        public string PlayerId; // 可选：限定针对某玩家（若为空则对所有玩家生效）
+    }
+
 }

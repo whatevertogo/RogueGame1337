@@ -24,6 +24,7 @@ namespace Game.UI
             _view = view as BagViewView;
             _view.BindPlayerStats1Button(OnPlayerStats1Clicked);
             _view.BindPlayerStats12Button(OnPlayerStats12Clicked);
+            _view.BindClearCardButton1(OnClearCardButtonClicked);
         }
 
         public virtual void OnOpen(UIArgs args)
@@ -99,6 +100,16 @@ namespace Game.UI
             _view.ClearCardViews();
             RefreshActiveCardViews();
             RefreshPassiveCardViews();
+        }
+
+        public void OnClearCardButtonClicked()
+        {
+            Debug.Log("[BagViewLogic] OnClearCardButtonClicked invoked");
+            RefreshAllCardViews();
+
+            // 发布事件请求，由 SlotService 或其他订阅方执行具体清理（实现解耦）
+            var playerId = GameRoot.Instance.PlayerManager.GetLocalPlayerData()?.PlayerId;
+            EventBus.Publish(new RogueGame.Events.ClearAllSlotsRequestedEvent { PlayerId = playerId });
         }
 
 

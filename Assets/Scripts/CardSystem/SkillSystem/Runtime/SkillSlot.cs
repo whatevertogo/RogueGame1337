@@ -14,6 +14,13 @@ public class SkillSlot
 
     public void Clear()
     {
+        if (Runtime != null)
+        {
+            // 释放对较大对象的引用，减少内存泄漏风险
+            Runtime.Skill = null;
+            Runtime.CardId = null;
+            Runtime.InstanceId = null;
+        }
         Runtime = null;
     }
 }

@@ -14,6 +14,10 @@ public class NearestTargetStrategy : TargetAcquireSO
     [SerializeField] private LayerMask targetMask;
     public override List<CharacterBase> Acquire(SkillTargetContext ctx)
     {
+        // 保护性检查：施法者不能为空
+        if (ctx.Caster == null)
+            return new List<CharacterBase>();
+
         Collider[] hitColliders = Physics.OverlapSphere(ctx.Caster.transform.position, Range, targetMask);
         CharacterBase nearestTarget = null;
         float nearestDistanceSqr = float.MaxValue;
