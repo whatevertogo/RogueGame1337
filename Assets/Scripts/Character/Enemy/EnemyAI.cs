@@ -1,7 +1,7 @@
 using UnityEngine;
 using Character.Components;
 using System.Collections;
-using Character.Core;
+using Unity.VisualScripting.Antlr3.Runtime.Misc;
 
 /// <summary>
 /// 增强敌人 AI 基类：提供通用的敌人行为框架
@@ -65,10 +65,10 @@ public class EnemyAI : MonoBehaviour
         enemyAnimator = GetComponent<EnemyAnimator>();
 
         // 订阅生命值事件
-        if (health != null && stats != null)
+        if (stats != null)
         {
-            health.OnDeath += HandleDeath;
-            health.OnDamaged += HandleDamaged;
+            stats.OnDeath += HandleDeath;
+            stats.OnDamaged += HandleDamaged;
         }
     }
 
@@ -240,7 +240,7 @@ public class EnemyAI : MonoBehaviour
     /// <summary>
     /// 处理受到伤害
     /// </summary>
-    protected virtual void HandleDamaged(DamageResult damageResult)
+    protected virtual void HandleDamaged(float damageAmount)
     {
         // 播放受伤动画
         if (enemyAnimator != null)
@@ -320,10 +320,10 @@ public class EnemyAI : MonoBehaviour
     protected virtual void OnDestroy()
     {
         // 清理事件订阅
-        if (health != null)
+        if (stats != null)
         {
-            health.OnDeath -= HandleDeath;
-            health.OnDamaged -= HandleDamaged;
+            stats.OnDeath -= HandleDeath;
+            stats.OnDamaged -= HandleDamaged;
         }
     }
 

@@ -1,7 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
 using Character.Components;
-using Character.Core;
 using Character;
 using Character.Projectiles;
 

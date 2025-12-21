@@ -454,14 +454,15 @@ namespace RogueGame.Map
 
             activeEnemies.Add(enemy);
 
+            var stats = enemy.GetComponent<CharacterStats>();
             var health = enemy.GetComponent<HealthComponent>();
-            if (health != null)
+            if (stats != null)
             {
                 // 使用具名转发器，便于取消订阅与调试
                 var forwarder = new EnemyDeathForwarder(this, enemy);
                 Action deathHandler = forwarder.OnDeath;
                 Action<GameObject> deathWithAttackerHandler = forwarder.OnDeathWithAttacker;
-                health.OnDeath += deathHandler;
+                stats.OnDeath += deathHandler;
                 health.OnDeathWithAttacker += deathWithAttackerHandler;
                 _enemyDeathHandlersDic[enemy] = deathHandler;
                 _enemyDeathWithAttackerHandlersDic[enemy] = deathWithAttackerHandler;
@@ -499,12 +500,13 @@ namespace RogueGame.Map
         private void UnsubscribeEnemyEvents(GameObject enemy)
         {
             if (enemy == null) return;
+            var stats = enemy.GetComponent<CharacterStats>();
             var health = enemy.GetComponent<HealthComponent>();
-            if (health == null) return;
+            if (health == null|| stats == null) return;
 
             if (_enemyDeathHandlersDic.TryGetValue(enemy, out var dh))
             {
-                health.OnDeath -= dh;
+                stats.OnDeath -= dh;
                 _enemyDeathHandlersDic.Remove(enemy);
             }
             if (_enemyDeathWithAttackerHandlersDic.TryGetValue(enemy, out var dha))

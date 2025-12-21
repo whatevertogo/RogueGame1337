@@ -22,6 +22,18 @@ public class CardDataBase : ScriptableObject
     public void Initialize()
     {
         if (_initialized) return;
+
+        Debug.Log($"[CardDataBase] Initializing. AllCardDefinitions.Count={AllCardDefinitions?.Count ?? 0}");
+        if (AllCardDefinitions != null)
+        {
+            foreach (var ctest in AllCardDefinitions)
+            {
+                if (ctest == null)
+                    Debug.Log("[CardDataBase] AllCardDefinitions contains null entry");
+                else
+                    Debug.Log($"[CardDataBase] Entry: name={ctest.name}, CardId={ctest.CardId}");
+            }
+        }
         foreach (var c in AllCardDefinitions)
         {
             if (c == null || string.IsNullOrEmpty(c.CardId)) continue;

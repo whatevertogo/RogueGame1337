@@ -5,7 +5,7 @@ using UnityEngine;
 public class CardDefinition : ScriptableObject
 {
     public string CardId;
-    public CardType type; // Passive / Active
+    public CardType CardType; // Passive / Active
     public Sprite cardSprite;
 
     public ActiveCardConfig activeCardConfig;

@@ -156,6 +156,24 @@ namespace Game.UI
             newCard.Init(cardId);
         }
 
+        /// <summary>
+        /// 清空当前 content 下的卡牌视图（用于刷新前清理）
+        /// </summary>
+        public void ClearCardViews()
+        {
+            if (scrollView1 == null || scrollView1.content == null) return;
+            var parent = scrollView1.content;
+            // 注意：在运行时使用 Destroy
+            for (int i = parent.childCount - 1; i >= 0; i--)
+            {
+                var child = parent.GetChild(i);
+                if (Application.isPlaying)
+                    GameObject.Destroy(child.gameObject);
+                else
+                    GameObject.DestroyImmediate(child.gameObject);
+            }
+        }
+
         public void Close()
         {
             gameObject.SetActive(false);

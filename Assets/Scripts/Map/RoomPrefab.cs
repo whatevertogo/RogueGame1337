@@ -149,7 +149,6 @@ namespace RogueGame.Map
         /// </summary>
         public void OpenAllExcept(Direction excludeDir)
         {
-            Debug.Log($"[RoomPrefab] OpenAllExcept 调用，排除方向: {excludeDir}");
             foreach (var door in Doors)
             {
                 if (door == null) continue;

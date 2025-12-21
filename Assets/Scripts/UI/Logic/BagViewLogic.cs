@@ -41,7 +41,7 @@ namespace Game.UI
             _view.SetPlayerImage(localCharacterStats.Icon);
 
             // 初始化卡牌列表
-            RefreshCardViews();
+            RefreshActiveCardViews();
         }
 
         public virtual void OnClose()
@@ -55,11 +55,47 @@ namespace Game.UI
             _view = null;
         }
 
-        public void RefreshCardViews()
+        public void RefreshActiveCardViews()
         {
-            foreach (var card in InventoryManager.Instance.GetAllActiveCardDefinitions())
+            if (_view == null) return;
+            _view.ClearCardViews();
+
+            var inv = InventoryManager.Instance;
+            if (inv == null)
             {
+                Debug.LogWarning("[BagView] InventoryManager.Instance is null");
+                return;
+            }
+
+            var cards = inv.GetAllActiveCardDefinitions();
+            // 详细调试：打印运行时列表信息，帮助排查为何没有卡牌
+            Debug.Log($"[BagView] ActiveCardIdInfos.Count={inv.ActiveCardIdInfos.Count}, ActiveCardStates.Count={inv.ActiveCardStates.Count}, GetAllActiveCardDefinitions.Count={cards?.Count ?? 0}");
+            if (inv.ActiveCardIdInfos.Count > 0)
+            {
+                foreach (var i in inv.ActiveCardIdInfos)
+                {
+                    Debug.Log($"[BagView] ActiveCardInfo: cardId={i.cardId}, isEquipped={i.isEquipped}, equippedPlayerId={i.equippedPlayerId}");
+                }
+            }
+            if (inv.ActiveCardStates != null && inv.ActiveCardStates.Count > 0)
+            {
+                foreach (var s in inv.ActiveCardStates)
+                {
+                    Debug.Log($"[BagView] ActiveCardState: cardId={s.cardId}, instanceId={s.instanceId}, charges={s.currentCharges}, equipped={s.isEquipped}, player={s.equippedPlayerId}");
+                }
+            }
+
+            if (cards == null || cards.Count == 0)
+            {
+                Debug.Log("[BagView] No active cards to display.");
+                return;
+            }
+
+            foreach (var card in cards)
+            {
+                if (card == null) continue;
                 _view.AddCardView(card.CardId);
+                Debug.Log($"[BagView] 添加 ={card.CardId}");
             }
         }
 
@@ -76,19 +112,24 @@ namespace Game.UI
         /// </summary>
         public virtual void OnResume()
         {
-            // 默认行为：恢复交互
+            // 初始化卡牌列表
+            RefreshActiveCardViews();
         }
 
         public void OnPlayerStats1Clicked()
         {
             _view.SetBagViewALLActive(true);
             _view.SetPlayerStatViewActive(false);
+            // 初始化卡牌列表
+            RefreshActiveCardViews();
         }
 
         public void OnPlayerStats12Clicked()
         {
             _view.SetBagViewALLActive(false);
             _view.SetPlayerStatViewActive(true);
+            // 初始化卡牌列表
+            RefreshActiveCardViews();
         }
 
 
@@ -139,16 +180,6 @@ namespace Game.UI
         public void OnClose()
         {
             _core.OnClose();
-        }
-
-        private void OnPlayerStats1Clicked()
-        {
-            _core.OnPlayerStats1Clicked();
-        }
-
-        private void OnPlayerStats12Clicked()
-        {
-            _core.OnPlayerStats12Clicked();
         }
 
         public void OnCovered()

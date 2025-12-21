@@ -66,7 +66,7 @@ public sealed class CardPickup : MonoBehaviour, IPickup
             return;
         }
         //TODO -完善添加卡牌逻辑
-        // InventoryManager.Instance.AddCardById(CardId);
+        InventoryManager.Instance.AddCardById(CardId);
         Destroy(gameObject);
     }
 

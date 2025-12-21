@@ -1,5 +1,4 @@
 using UnityEngine;
-using Character.Core;
 
 namespace Character.Combat
 {

@@ -3,7 +3,6 @@ using System;
 using Character;
 using Character.Projectiles;
 using Character.Components;
-using Character.Core;
 using UnityEngine;
 using System.Collections;
 

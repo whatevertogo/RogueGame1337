@@ -83,6 +83,10 @@ public class PlayerController : CharacterBase
 		Debug.Log($"[PlayerController] Awake: {gameObject.name}, tag={gameObject.tag}, layer={LayerMask.LayerToName(gameObject.layer)}, Rigidbody2D={(rb != null ? "Yes" : "No")}, Collider2D={(col != null ? "Yes" : "No")}");
 	}
 
+	 void OnEnable()
+	{
+	}
+
 	protected override void OnDestroy()
 	{
 		if (Combat != null)
@@ -241,5 +245,13 @@ public class PlayerController : CharacterBase
 		// 播放死亡动画
 		playerAnim.PlayDie();
 		Debug.Log("💀 玩家死亡");
+	}
+
+	protected override void OnDamaged(float damage)
+	{
+		// 播放受伤动画
+		playerAnim?.PlayHurt();
+
+		//TODO-飘伤害数字
 	}
 }

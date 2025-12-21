@@ -24,9 +24,8 @@ public sealed class InventoryManager : Singleton<InventoryManager>
         public string cardId;
         public int count;
     }
-
-    private List<ActiveCardIdRuntimeInfo> _ActiveCardIdInfos = new List<ActiveCardIdRuntimeInfo>();
-    private List<PassiveCardIdRuntimeInfo> _PassiveCardIdInfos = new List<PassiveCardIdRuntimeInfo>();
+    [SerializeField] private List<ActiveCardIdRuntimeInfo> _ActiveCardIdInfos = new();
+    [SerializeField] private List<PassiveCardIdRuntimeInfo> _PassiveCardIdInfos = new();
 
     // 运行时的主动卡牌完整状态列表（包含 instanceId / charges / cooldown / equip 状态）
     public class ActiveCardState
@@ -63,6 +62,7 @@ public sealed class InventoryManager : Singleton<InventoryManager>
     #region 卡牌操作
 
     public bool HasActiveCard(string cardId) => _ActiveCardIdInfos.Exists(info => info.cardId == cardId);
+
 
     // 创建一个新的主动卡牌运行时状态实例（返回 instanceId）
     public string AddActiveCardInstance(string cardId, int initialCharges = 0)
@@ -195,6 +195,26 @@ public sealed class InventoryManager : Singleton<InventoryManager>
         var list = new List<CardDefinition>();
         if (db == null) return list;
         foreach (var info in _ActiveCardIdInfos)
+        {
+            var cd = db.Resolve(info.cardId);
+            if (cd != null)
+            {
+                list.Add(cd);
+            }
+            else
+            {
+                Debug.LogWarning($"[InventoryManager] CardDefinition not found for active cardId='{info.cardId}'");
+            }
+        }
+        return list;
+    }
+
+    public List<CardDefinition> GetAllPassiveCardDefinitions()
+    {
+        var db = GameRoot.Instance?.CardDatabase;
+        var list = new List<CardDefinition>();
+        if (db == null) return list;
+        foreach (var info in _PassiveCardIdInfos)
         {
             var cd = db.Resolve(info.cardId);
             if (cd != null)

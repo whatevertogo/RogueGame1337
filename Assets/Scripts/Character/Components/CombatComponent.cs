@@ -1,6 +1,5 @@
 using System;
 using UnityEngine;
-using Character.Core;
 using Character.Combat;
 
 namespace Character.Components

@@ -1,6 +1,5 @@
 using System;
 using UnityEngine;
-using Character.Core;
 
 namespace Character.Components
 {
@@ -22,6 +21,8 @@ namespace Character.Components
         //生命恢复
         [ReadOnly][SerializeField] private Stat _hpRegen = new(0);
         [ReadOnly][SerializeField] private float _currentHP;
+        // 初始化期间抑制 HP 相关事件（避免 Awake/Initialize 触发订阅前的回调）
+        private bool _suppressHPEvents = false;
 
         [Header("移动")]
         [ReadOnly][SerializeField] private Stat _moveSpeed = new(4f);
@@ -69,9 +70,30 @@ namespace Character.Components
                 float oldHP = _currentHP;
                 _currentHP = Mathf.Clamp(value, 0, _maxHP.Value);
 
-                if (Math.Abs(oldHP - _currentHP) > 0.001f)
+                float delta = _currentHP - oldHP;
+                if (_suppressHPEvents) return;
+
+                if (Math.Abs(delta) > 0.001f)
                 {
+                    if (delta < 0)
+                    {
+                        // 受伤（传递正数的伤害量）
+                        OnDamaged?.Invoke(Mathf.Abs(delta));
+                    }
+                    else
+                    {
+                        // 治疗
+                        OnHealed?.Invoke(delta);
+                    }
+
+                    // 总是通知生命值变化（current, max）
                     OnHealthChanged?.Invoke(_currentHP, _maxHP.Value);
+
+                    // 如果从存活变为死亡，触发死亡事件
+                    if (oldHP > 0f && _currentHP <= 0f)
+                    {
+                        OnDeath?.Invoke();
+                    }
                 }
             }
         }
@@ -86,8 +108,10 @@ namespace Character.Components
 
         // ========== 事件 ==========
         public event Action<float, float> OnHealthChanged;  // (current, max)
+        public event Action<float> OnDamaged;
         public event Action OnDeath;
         public event Action OnStatsChanged;
+        public event Action<float> OnHealed;
 
         // ========== 生命周期 ==========
 
@@ -161,22 +185,20 @@ namespace Character.Components
         public float TakeDamage(float amount)
         {
             var info = DamageInfo.Create(amount);
-            return TakeDamage(info).FinalDamage;
+            return TakeDamage(info);
         }
         /// <summary>
         /// 受到伤害
         /// </summary>
-        public DamageResult TakeDamage(DamageInfo info)
+        public float TakeDamage(DamageInfo info)
         {
-            var result = new DamageResult();
 
-            if (IsDead) return result;
+            if (IsDead) return 0;
 
             // 闪避判定
             if (UnityEngine.Random.value < _dodge.Value)
             {
-                result.IsDodged = true;
-                return result;
+                return 0;
             }
 
             // 计算伤害
@@ -196,16 +218,11 @@ namespace Character.Components
             int finalDamage = Mathf.Max(1, Mathf.RoundToInt(damage));
             CurrentHP -= finalDamage;
 
-            result.FinalDamage = finalDamage;
+            // result.FinalDamage = finalDamage;
             // result.IsCrit = info.IsCrit;
-            result.IsKilled = IsDead;
+            // result.IsKilled = IsDead;
 
-            if (IsDead)
-            {
-                OnDeath?.Invoke();
-            }
-
-            return result;
+            return finalDamage;
         }
 
 

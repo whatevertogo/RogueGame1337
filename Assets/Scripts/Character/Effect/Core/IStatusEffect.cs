@@ -1,5 +1,4 @@
 using Character.Components;
-using Character.Core;
 
 namespace Character.Effects
 {

@@ -1,3 +1,4 @@
+using System;
 using CDTU.Utils;
 using RogueGame.Map;
 using UI;
@@ -30,6 +31,7 @@ public class GameRoot : Singleton<GameRoot>
     protected override void Awake()
     {
         base.Awake();
+        Debug.Log("[GameRoot] Awake()");
 
         bool ok = true;
         ok &= AssertNotNull(cardDatabase, nameof(cardDatabase));
@@ -42,10 +44,24 @@ public class GameRoot : Singleton<GameRoot>
 
         if (!ok)
         {
+            // 如果有缺失引用，记录并在 cardDatabase 可用时强制初始化数据库，便于调试和最小功能运行
             Debug.LogError("[GameRoot] Initialization aborted due to missing references.");
+            if (cardDatabase != null)
+            {
+                try
+                {
+                    Debug.LogWarning("[GameRoot] Some references missing but CardDatabase assigned — initializing CardDatabase for debug.");
+                    cardDatabase.Initialize();
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogError($"[GameRoot] CardDatabase.Initialize() threw: {ex}");
+                }
+            }
             return;
         }
 
+        Debug.Log("[GameRoot] All required references assigned. Initializing CardDatabase.");
         cardDatabase.Initialize();
 
         gameStateManager.Initialize(
@@ -59,7 +75,7 @@ public class GameRoot : Singleton<GameRoot>
 
     }
 
-    private bool AssertNotNull(Object obj, string name)
+    private bool AssertNotNull(UnityEngine.Object obj, string name)
     {
         if (obj == null)
         {

@@ -1,5 +1,4 @@
 using Character.Components;
-using Character.Core;
 
     /// <summary>
     /// 灼烧效果实例（持续伤害型效果）

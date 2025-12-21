@@ -1,6 +1,5 @@
 using System;
 using UnityEngine;
-using Character.Core;
 using Character.Interfaces;
 using Character.Components;
 
@@ -12,9 +11,6 @@ public class HealthComponent : MonoBehaviour, IDamageable, IHealable
         private CharacterStats stats;
         private StatusEffectComponent statusEffects;
 
-        public event Action<DamageResult> OnDamaged;
-        public event Action<float> OnHealed;
-        public event Action OnDeath;
         /// <summary>
         /// 当死亡时，通知造成最后一击的攻击者（可能为 null）
         /// 参数：攻击者 GameObject
@@ -50,10 +46,10 @@ public class HealthComponent : MonoBehaviour, IDamageable, IHealable
             }
         }
 
-        public DamageResult TakeDamage(DamageInfo damageInfo)
+        public float TakeDamage(DamageInfo damageInfo)
         {
             if (stats == null || IsDead)
-                return new DamageResult();
+                return new ();
 
             // 让状态效果修改受到的伤害
             if (statusEffects != null)
@@ -66,10 +62,6 @@ public class HealthComponent : MonoBehaviour, IDamageable, IHealable
 
             var result = stats.TakeDamage(damageInfo);
 
-            if (!result.IsDodged)
-            {
-                OnDamaged?.Invoke(result);
-            }
 
             return result;
         }
@@ -87,10 +79,6 @@ public class HealthComponent : MonoBehaviour, IDamageable, IHealable
             stats.Heal(amount);
             float healed = stats.CurrentHP - before;
 
-            if (healed > 0)
-            {
-                OnHealed?.Invoke(healed);
-            }
         }
 
         public void Heal(int amount) => Heal((float)amount);
@@ -103,10 +91,6 @@ public class HealthComponent : MonoBehaviour, IDamageable, IHealable
             stats.FullHeal();
             float healed = stats.CurrentHP - before;
 
-            if (healed > 0)
-            {
-                OnHealed?.Invoke(healed);
-            }
         }
 
         private GameObject lastDamageSource;
@@ -115,7 +99,6 @@ public class HealthComponent : MonoBehaviour, IDamageable, IHealable
         {
             // 触发扩展事件
             OnDeathWithAttacker?.Invoke(lastDamageSource);
-            OnDeath?.Invoke();
         }
 
     }

@@ -1,11 +1,10 @@
-using Character.Core;
 using UnityEngine;
 
 namespace Character.Interfaces
 {
     public interface IDamageable
     {
-        DamageResult TakeDamage(DamageInfo damageInfo);
+        float TakeDamage(DamageInfo damageInfo);
         void TakeDamage(int amount);
     }
 

@@ -1,5 +1,4 @@
 using Character.Components;
-using Character.Core;
 
     /// <summary>
     /// 瞬时伤害效果实例

@@ -8,7 +8,6 @@ using UI;
 public sealed class GameInput : Singleton<GameInput>
 {
     private PlayerInputSystem playerInput;
-    private readonly bool hasLoggedZero = false; // 调试标志
 
     public Vector2 MoveDir { get; private set; }
     // 仅保留 Attack
@@ -20,7 +19,6 @@ public sealed class GameInput : Singleton<GameInput>
     public bool InteractReleasedThisFrame => playerInput != null && playerInput.PlayerControl.Interact.WasReleasedThisFrame();
     public bool InteractIsPressed => playerInput != null && playerInput.PlayerControl.Interact.IsPressed();
 
-    public event Action OnESCPressed;
     public event Action OnSkillQPressed;
     public event Action OnSkillEPressed;
 
