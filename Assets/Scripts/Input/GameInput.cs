@@ -26,9 +26,15 @@ public sealed class GameInput : Singleton<GameInput>
     {
         base.Awake();
         Debug.Log("GameInput Awake called");
-        playerInput = new PlayerInputSystem();
-        playerInput.Enable();
-        Debug.Log("PlayerInputSystem enabled");
+        
+        try {
+            playerInput = new PlayerInputSystem();
+            playerInput.Enable();
+            Debug.Log("PlayerInputSystem enabled successfully");
+        } catch (System.Exception ex) {
+            Debug.LogError($"[GameInput] 初始化输入系统失败: {ex.Message}");
+            // 尝试继续运行，但记录错误
+        }
     }
 
     private void Update()

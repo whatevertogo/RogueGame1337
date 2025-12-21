@@ -58,11 +58,19 @@ public class CardDataBase : ScriptableObject
     /// </summary>
     public CardDefinition Resolve(string cardId)
     {
-        if (string.IsNullOrEmpty(cardId)) return null;
+        if (string.IsNullOrEmpty(cardId)) {
+            Debug.LogWarning($"[CardDataBase] Resolve: cardId is null or empty");
+            return null;
+        }
 
         if (!_initialized) Initialize();
-        _cardid_cardDefinition_Map.TryGetValue(cardId, out var data);
-        return data;
+        
+        if (_cardid_cardDefinition_Map.TryGetValue(cardId, out var data)) {
+            return data;
+        } else {
+            Debug.LogWarning($"[CardDataBase] Resolve: CardId '{cardId}' not found in database");
+            return null;
+        }
     }
 
     /// <summary>

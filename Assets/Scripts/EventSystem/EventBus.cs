@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 public static class EventBus
 {
@@ -47,14 +48,23 @@ public static class EventBus
     /// <param name="evt"></param>
     public static void Publish<T>(T evt)
     {
+        if (evt == null) {
+            Debug.LogWarning($"[EventBus] Publish: Event of type {typeof(T).Name} is null");
+            return;
+        }
+
         var type = typeof(T);
-        if (_listeners.TryGetValue(type, out var list))
+        if (!_listeners.TryGetValue(type, out var list))
+            return; // 没有监听器是正常情况
+
+        // 防止回调中修改列表
+        var snapshot = list.ToArray();
+        for (int i = 0; i < snapshot.Length; i++)
         {
-            // 防止回调中修改列表
-            var snapshot = list.ToArray();
-            foreach (var cb in snapshot)
-            {
-                ((Action<T>)cb)?.Invoke(evt);
+            try {
+                ((Action<T>)snapshot[i])?.Invoke(evt);
+            } catch (System.Exception ex) {
+                Debug.LogError($"[EventBus] 事件处理失败 (事件类型: {type.Name}, 索引: {i}): {ex.Message}");
             }
         }
     }

@@ -49,7 +49,7 @@ public class HealthComponent : MonoBehaviour, IDamageable, IHealable
         public float TakeDamage(DamageInfo damageInfo)
         {
             if (stats == null || IsDead)
-                return new ();
+                return 0f;
 
             // 让状态效果修改受到的伤害
             if (statusEffects != null)

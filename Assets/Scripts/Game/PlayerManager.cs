@@ -78,7 +78,10 @@ public class PlayerManager : Singleton<PlayerManager>
             EventBus.Unsubscribe<RoomEnteredEvent>(HandleRoomEnteredEvent);
             EventBus.Unsubscribe<RogueGame.Events.EntityKilledEvent>(HandleEntityKilledEvent);
         }
-        catch { }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"[PlayerManager] 取消订阅事件失败: {ex.Message}");
+        }
     }
 
     private void HandleRoomEnteredEvent(RoomEnteredEvent evt)

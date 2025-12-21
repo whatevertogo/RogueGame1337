@@ -89,8 +89,12 @@ namespace Character.Player
 
         private IEnumerator DelayedExecute(SkillDefinition def, Vector3? aimPoint, int slotIndex)
         {
+            // 修复1: 添加技能定义空值检查日志
             if (def == null)
+            {
+                Debug.LogWarning("[PlayerSkillComponent] DelayedExecute: SkillDefinition is null");
                 yield break;
+            }
 
             // 等待检测延迟
             if (def.detectionDelay > 0f)
@@ -99,12 +103,40 @@ namespace Character.Player
             // 计算目标点（若未指定，则使用施法者位置）
             Vector3 origin = aimPoint ?? transform.position;
 
-            // 构建上下文 —— 目标检测/命中逻辑由 Executor 自行负责（Executor SO 包含其配置）
-            var cardId = _playerSkillSlots != null && slotIndex >= 0 && slotIndex < _playerSkillSlots.Length ? _playerSkillSlots[slotIndex]?.Runtime?.CardId : null;
+            // 修复2: 改进链式调用安全性并添加日志
+            string cardId = null;
+            if (_playerSkillSlots != null && slotIndex >= 0 && slotIndex < _playerSkillSlots.Length)
+            {
+                var slot = _playerSkillSlots[slotIndex];
+                if (slot?.Runtime != null)
+                {
+                    cardId = slot.Runtime.CardId;
+                    if (string.IsNullOrEmpty(cardId))
+                    {
+                        Debug.LogWarning($"[PlayerSkillComponent] DelayedExecute: CardId is null or empty for slot {slotIndex}");
+                    }
+                }
+                else
+                {
+                    Debug.LogWarning($"[PlayerSkillComponent] DelayedExecute: Runtime is null for slot {slotIndex}");
+                }
+            }
+            else
+            {
+                Debug.LogWarning($"[PlayerSkillComponent] DelayedExecute: Invalid slot index {slotIndex} or _playerSkillSlots is null");
+            }
+
+            // 修复3: 添加CharacterBase组件空值检查
+            var caster = GetComponent<CharacterBase>();
+            if (caster == null)
+            {
+                Debug.LogError("[PlayerSkillComponent] DelayedExecute: CharacterBase component not found on gameObject");
+                yield break;
+            }
 
             var ctx = new SkillTargetContext
             {
-                Caster = GetComponent<CharacterBase>(),
+                Caster = caster,
                 AimPoint = origin,
             };
 
@@ -115,33 +147,76 @@ namespace Character.Player
                 {
                     GameObject.Instantiate(def.vfxPrefab, origin, Quaternion.identity);
                 }
-                catch { }
+                catch (System.Exception ex)
+                {
+                    Debug.LogError($"[PlayerSkillComponent] DelayedExecute: Failed to instantiate VFX prefab: {ex.Message}");
+                }
             }
 
-            // 获取候选目标（防护式）
+            // 修复4: 改进目标获取逻辑并添加详细日志
             var targets = new System.Collections.Generic.List<CharacterBase>();
             if (def.TargetAcquireSO != null)
             {
-                var acquired = def.TargetAcquireSO.Acquire(ctx);
-                if (acquired != null)
-                    targets = acquired;
+                try
+                {
+                    var acquired = def.TargetAcquireSO.Acquire(ctx);
+                    if (acquired != null)
+                    {
+                        targets = acquired;
+                    }
+                    else
+                    {
+                        Debug.LogWarning("[PlayerSkillComponent] DelayedExecute: TargetAcquireSO.Acquire returned null");
+                    }
+                }
+                catch (System.Exception ex)
+                {
+                    Debug.LogError($"[PlayerSkillComponent] DelayedExecute: Exception during target acquisition: {ex.Message}");
+                }
+            }
+            else
+            {
+                Debug.Log("[PlayerSkillComponent] DelayedExecute: No TargetAcquireSO defined");
+            }
+
+            // 修复5: 添加效果定义空值检查
+            if (def.Effects == null)
+            {
+                Debug.LogWarning("[PlayerSkillComponent] DelayedExecute: SkillDefinition.Effects is null");
+                yield break;
             }
 
             // 应用过滤器（若存在过滤组）
             var validTargets = targets;
             if (def.TargetFilters != null && def.TargetFilters.filters != null && def.TargetFilters.filters.Count > 0)
             {
-                validTargets = targets.FindAll(t => def.TargetFilters.IsValid(ctx, t));
+                try
+                {
+                    validTargets = targets.FindAll(t => def.TargetFilters.IsValid(ctx, t));
+                }
+                catch (System.Exception ex)
+                {
+                    Debug.LogError($"[PlayerSkillComponent] DelayedExecute: Exception during target filtering: {ex.Message}");
+                    validTargets = targets; // 失败时使用未过滤的目标
+                }
             }
 
             // 如果没有目标则直接返回（策略可能返回 null/空）
             if (validTargets == null || validTargets.Count == 0)
             {
+                Debug.Log("[PlayerSkillComponent] DelayedExecute: No valid targets found, skipping effect application");
                 yield break;
             }
 
+            // 修复6: 添加状态效果组件空值检查
             foreach (var target in validTargets)
             {
+                if (target == null)
+                {
+                    Debug.LogWarning("[PlayerSkillComponent] DelayedExecute: Found null target in validTargets list");
+                    continue;
+                }
+
                 // 应用效果
                 foreach (var effectDef in def.Effects)
                 {
@@ -150,8 +225,41 @@ namespace Character.Player
                         var statusComp = target.GetComponent<StatusEffectComponent>();
                         if (statusComp != null)
                         {
-                            var effectInstance = effectDef.CreateInstance();
-                            statusComp.AddEffect(effectInstance);
+                            try
+                            {
+                                var effectInstance = effectDef.CreateInstance();
+                                    if (effectInstance != null)
+                                    {
+                                        // 尝试在运行时为效果设置伤害来源（避免对具体实现硬编码引用）
+                                        try
+                                        {
+                                            var mi = effectInstance.GetType().GetMethod("SetDamageSource", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                                            if (mi != null)
+                                            {
+                                                mi.Invoke(effectInstance, new object[] { caster });
+                                            }
+                                        }
+                                        catch (System.Exception ex)
+                                        {
+                                            // 仅在反射调用失败时记录警告，避免大量日志
+                                            Debug.LogWarning($"[PlayerSkillComponent] Failed to set damage source via reflection: {ex.Message}");
+                                        }
+
+                                        statusComp.AddEffect(effectInstance);
+                                    }
+                                else
+                                {
+                                    Debug.LogWarning($"[PlayerSkillComponent] DelayedExecute: Failed to create effect instance for {effectDef.GetType().Name}");
+                                }
+                            }
+                            catch (System.Exception ex)
+                            {
+                                Debug.LogError($"[PlayerSkillComponent] DelayedExecute: Exception applying effect {effectDef.GetType().Name}: {ex.Message}");
+                            }
+                        }
+                        else
+                        {
+                            Debug.LogWarning($"[PlayerSkillComponent] DelayedExecute: Target {target.name} has no StatusEffectComponent");
                         }
                     }
                 }

@@ -71,9 +71,6 @@ namespace Character
         Hurt,
         Stunned,
         Dead
-
     }
-
-
 
 }
