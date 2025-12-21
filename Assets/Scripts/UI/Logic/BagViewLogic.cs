@@ -38,10 +38,11 @@ namespace Game.UI
                 localCharacterStats.OnStatsChanged += SetAllPlayerStatsText;
             }
             SetAllPlayerStatsText();
-            _view.SetPlayerImage(localCharacterStats.Icon);
+            //TODO- 设置玩家头像
+            // _view.SetPlayerImage(localCharacterStats.Icon);
 
             // 初始化卡牌列表
-            RefreshActiveCardViews();
+            RefreshAllCardViews();
         }
 
         public virtual void OnClose()
@@ -57,8 +58,6 @@ namespace Game.UI
 
         public void RefreshActiveCardViews()
         {
-            if (_view == null) return;
-            _view.ClearCardViews();
 
             var inv = InventoryManager.Instance;
             if (inv == null)
@@ -68,36 +67,40 @@ namespace Game.UI
             }
 
             var cards = inv.GetAllActiveCardDefinitions();
-            // 详细调试：打印运行时列表信息，帮助排查为何没有卡牌
-            Debug.Log($"[BagView] ActiveCardIdInfos.Count={inv.ActiveCardIdInfos.Count}, ActiveCardStates.Count={inv.ActiveCardStates.Count}, GetAllActiveCardDefinitions.Count={cards?.Count ?? 0}");
-            if (inv.ActiveCardIdInfos.Count > 0)
-            {
-                foreach (var i in inv.ActiveCardIdInfos)
-                {
-                    Debug.Log($"[BagView] ActiveCardInfo: cardId={i.cardId}, isEquipped={i.isEquipped}, equippedPlayerId={i.equippedPlayerId}");
-                }
-            }
-            if (inv.ActiveCardStates != null && inv.ActiveCardStates.Count > 0)
-            {
-                foreach (var s in inv.ActiveCardStates)
-                {
-                    Debug.Log($"[BagView] ActiveCardState: cardId={s.cardId}, instanceId={s.instanceId}, charges={s.currentCharges}, equipped={s.isEquipped}, player={s.equippedPlayerId}");
-                }
-            }
 
-            if (cards == null || cards.Count == 0)
+            foreach (var card in cards)
             {
-                Debug.Log("[BagView] No active cards to display.");
+                if (card == null) continue;
+                _view.AddCardView(card.CardId, 1);
+            }
+        }
+
+        public void RefreshPassiveCardViews()
+        {
+
+            var inv = InventoryManager.Instance;
+            if (inv == null)
+            {
+                Debug.LogWarning("[BagView] InventoryManager.Instance is null");
                 return;
             }
+
+            var cards = inv.GetAllPassiveCardDefinitions();
 
             foreach (var card in cards)
             {
                 if (card == null) continue;
                 _view.AddCardView(card.CardId);
-                Debug.Log($"[BagView] 添加 ={card.CardId}");
             }
         }
+
+        public void RefreshAllCardViews()
+        {
+            _view.ClearCardViews();
+            RefreshActiveCardViews();
+            RefreshPassiveCardViews();
+        }
+
 
         /// <summary>
         /// 被同层新 UI 覆盖

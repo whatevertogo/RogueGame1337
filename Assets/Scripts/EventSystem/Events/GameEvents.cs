@@ -142,4 +142,11 @@ namespace RogueGame.Events
         public string AttackerPlayerId;
     }
 
+    public class PlayerSlotCardChangedEvent
+    {
+        public string PlayerId;
+        public int SlotIndex;
+        public string NewCardId; // 可能为 null，表示槽位被清空
+    }
+
 }

@@ -16,6 +16,8 @@ namespace Game.UI
         public virtual void Bind(UIViewBase view)
         {
             _view = view as PlayingStateUIView;
+            // 绑定 BagButton 点击事件
+            _view?.BindBagButton(OnBagButtonClicked);
         }
 
         //todo-后面联机可能改
@@ -34,8 +36,6 @@ namespace Game.UI
             }
             if (existingState != null) PlayerRegistered(existingState);
 
-            // 绑定 BagButton 点击事件
-            _view?.BindBagButton(OnBagButtonClicked);
         }
 
         public virtual void OnClose()

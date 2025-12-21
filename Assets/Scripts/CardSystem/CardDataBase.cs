@@ -1,42 +1,45 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 [CreateAssetMenu(fileName = "New Card Database", menuName = "Card System/Card Database")]
 /// <summary>
-/// 全局卡牌定义注册表：通过 cardId 查找 CardData(SO)
+/// 全局卡牌定义注册表：通过 cardId 查找 CardDefinition(SO)
 /// 运行时自动初始化；编辑器下会扫描工程中的所有 CardDefinition 并做唯一性检查。
 /// </summary>
 public class CardDataBase : ScriptableObject
 {
+    // 映射表，非序列化
     private readonly Dictionary<string, CardDefinition> _cardid_cardDefinition_Map = new Dictionary<string, CardDefinition>();
 
-    // 缓存初始化标志，避免重复构建字典
+    // 缓存初始化标志
     private bool _initialized = false;
 
+    [Header("所有卡牌定义列表")]
     public List<CardDefinition> AllCardDefinitions = new List<CardDefinition>();
 
     /// <summary>
-    /// 初始化映射表（幂等）。在编辑器下可手动触发。
+    /// 初始化映射表（幂等）。可重复调用。
     /// </summary>
     public void Initialize()
     {
-        if (_initialized) return;
+        // 清理旧数据，保证幂等性
+        _cardid_cardDefinition_Map.Clear();
 
-        Debug.Log($"[CardDataBase] Initializing. AllCardDefinitions.Count={AllCardDefinitions?.Count ?? 0}");
-        if (AllCardDefinitions != null)
+        if (AllCardDefinitions == null || AllCardDefinitions.Count == 0)
         {
-            foreach (var ctest in AllCardDefinitions)
-            {
-                if (ctest == null)
-                    Debug.Log("[CardDataBase] AllCardDefinitions contains null entry");
-                else
-                    Debug.Log($"[CardDataBase] Entry: name={ctest.name}, CardId={ctest.CardId}");
-            }
+            _initialized = true;
+            return;
         }
+
         foreach (var c in AllCardDefinitions)
         {
-            if (c == null || string.IsNullOrEmpty(c.CardId)) continue;
+            if (c == null || string.IsNullOrEmpty(c.CardId))
+                continue;
+
             if (!_cardid_cardDefinition_Map.ContainsKey(c.CardId))
             {
                 _cardid_cardDefinition_Map[c.CardId] = c;
@@ -46,26 +49,56 @@ public class CardDataBase : ScriptableObject
                 Debug.LogWarning($"[CardDataBase] Duplicate CardDefinition cardId detected: {c.CardId} ({c.name} & {_cardid_cardDefinition_Map[c.CardId].name})");
             }
         }
+
         _initialized = true;
     }
 
+    /// <summary>
+    /// 根据 cardId 查找对应卡牌定义
+    /// </summary>
     public CardDefinition Resolve(string cardId)
     {
         if (string.IsNullOrEmpty(cardId)) return null;
+
         if (!_initialized) Initialize();
         _cardid_cardDefinition_Map.TryGetValue(cardId, out var data);
         return data;
     }
 
+    /// <summary>
+    /// 尝试解析卡牌
+    /// </summary>
     public bool TryResolve(string cardId, out CardDefinition data)
     {
         data = Resolve(cardId);
         return data != null;
     }
 
+    /// <summary>
+    /// 获取所有卡牌定义
+    /// </summary>
     public IReadOnlyCollection<CardDefinition> GetAllDefinitions()
     {
         if (!_initialized) Initialize();
         return _cardid_cardDefinition_Map.Values;
     }
+
+    /// <summary>
+    /// ScriptableObject 生命周期保证，每次加载资源都重置初始化状态
+    /// </summary>
+    private void OnEnable()
+    {
+        _initialized = false;
+        _cardid_cardDefinition_Map.Clear();
+    }
+
+#if UNITY_EDITOR
+    /// <summary>
+    /// 编辑器中修改 Inspector 时保证状态一致
+    /// </summary>
+    private void OnValidate()
+    {
+        _initialized = false;
+    }
+#endif
 }

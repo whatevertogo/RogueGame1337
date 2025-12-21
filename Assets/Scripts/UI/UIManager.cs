@@ -148,6 +148,16 @@ namespace UI
             return view;
         }
 
+        public T GetView<T>() where T : UIViewBase
+        {
+            Type type = typeof(T);
+            if (_openViews.TryGetValue(type, out var entry))
+            {
+                return entry.View as T;
+            }
+            return null;
+        }
+
         /// <summary>
         /// 关闭栈顶 UI（ESC / 返回）
         /// </summary>

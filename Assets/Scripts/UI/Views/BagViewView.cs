@@ -26,9 +26,6 @@ namespace Game.UI
         [SerializeField] private Image scrollView;
         [SerializeField] private ScrollRect scrollView1;
         [SerializeField] private Image viewport;
-        [SerializeField] private Image cardUIPrefab;
-        [SerializeField] private Image cardBackGround;
-        [SerializeField] private Image cardImageRealByID;
         [SerializeField] private Image scrollbarHorizontal;
         [SerializeField] private Image handle;
         [SerializeField] private Image scrollbarVertical;
@@ -51,6 +48,8 @@ namespace Game.UI
         [SerializeField] private GameObject BagViewALL;
         [SerializeField] private GameObject PlayerStatViewALL;
         [SerializeField] private CardUIPrefab cardUIPrefabScript;
+        [SerializeField] private Button ClearCardButton1;
+
 
         public override bool Exclusive => false;
 
@@ -119,7 +118,6 @@ namespace Game.UI
             if (playerStats12 != null) { playerStats12.onClick.RemoveAllListeners(); if (onClickAction != null) playerStats12.onClick.AddListener(() => onClickAction()); }
         }
 
-
         public void SetBagViewALLActive(bool isActive)
         {
             if (BagViewALL != null)
@@ -136,7 +134,7 @@ namespace Game.UI
             }
         }
 
-        public void AddCardView(string cardId)
+        public void AddCardView(string cardId, int Amount = 1)
         {
             if (cardUIPrefabScript == null || scrollView1 == null || scrollView1.content == null) return;
 
@@ -153,7 +151,7 @@ namespace Game.UI
             }
             newCard.transform.SetAsLastSibling();
 
-            newCard.Init(cardId);
+            newCard.Init(cardId, Amount); // 初始化
         }
 
         /// <summary>
@@ -173,6 +171,8 @@ namespace Game.UI
                     GameObject.DestroyImmediate(child.gameObject);
             }
         }
+
+
 
         public void Close()
         {

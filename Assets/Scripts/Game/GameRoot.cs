@@ -44,20 +44,7 @@ public class GameRoot : Singleton<GameRoot>
 
         if (!ok)
         {
-            // 如果有缺失引用，记录并在 cardDatabase 可用时强制初始化数据库，便于调试和最小功能运行
             Debug.LogError("[GameRoot] Initialization aborted due to missing references.");
-            if (cardDatabase != null)
-            {
-                try
-                {
-                    Debug.LogWarning("[GameRoot] Some references missing but CardDatabase assigned — initializing CardDatabase for debug.");
-                    cardDatabase.Initialize();
-                }
-                catch (Exception ex)
-                {
-                    Debug.LogError($"[GameRoot] CardDatabase.Initialize() threw: {ex}");
-                }
-            }
             return;
         }
 
