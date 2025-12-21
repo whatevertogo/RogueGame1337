@@ -84,16 +84,21 @@ public class PlayerManager : Singleton<PlayerManager>
         }
     }
 
+    /// <summary>
+    /// 处理房间进入事件
+    /// 重置所有玩家的技能使用状态（仅本房间标记）
+    /// </summary>
+    /// <param name="evt"></param>
     private void HandleRoomEnteredEvent(RoomEnteredEvent evt)
     {
-        // TODO-当房间被进入时，重置所有玩家的技能使用状态（仅本房间标记）
         ResetSkillUsageForAllPlayers();
     }
 
     /// <summary>
     /// 处理实体击杀事件
-    /// </summary>
+    /// 分发技能能量给击杀者
     /// <param name="evt"></param>
+    /// </summary>
     private void HandleEntityKilledEvent(RogueGame.Events.EntityKilledEvent evt)
     {
         if (evt == null) return;

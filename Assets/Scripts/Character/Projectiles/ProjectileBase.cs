@@ -300,6 +300,12 @@ using Character.Projectiles;
         {
             if (enableDebugLog) Debug.Log($"[ProjectileBase] OnCollisionEnter2D collided with {collision?.gameObject?.name} (layer={LayerMask.LayerToName(collision.gameObject.layer)})");
             TryHit(collision.gameObject);
+            //如果是墙壁就销毁
+            if(collision.gameObject.CompareTag("Wall"))
+            {
+                SpawnHitEffect();
+                OnHitDestroy();
+            }
         }
 
         bool IsAlreadyHit(GameObject target, out HealthComponent health)
@@ -452,7 +458,7 @@ using Character.Projectiles;
             if (data.HitEffect != null)
             {
                 var effect = Instantiate(data.HitEffect, transform.position, Quaternion.identity);
-                Destroy(effect, 2f);
+                Destroy(effect, 1f);
             }
         }
 

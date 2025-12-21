@@ -6,7 +6,7 @@ using UnityEngine;
 /// 伤害状态效果实例
 /// 支持瞬间伤害和持续伤害两种模式
 /// </summary>
-public class DamageStatusEffectInstance : StatusEffectInstanceBase
+public class DamageStatusEffectInstance : StatusEffectInstanceBase, IDamageSourceAware
 {
     public override string EffectId => _def.effectId;
     

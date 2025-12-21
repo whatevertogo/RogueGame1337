@@ -28,14 +28,17 @@ public sealed class InventoryManager : Singleton<InventoryManager>
     [SerializeField] private List<PassiveCardIdRuntimeInfo> _PassiveCardIdInfos = new();
 
     // 运行时的主动卡牌完整状态列表（包含 instanceId / charges / cooldown / equip 状态）
+    [Serializable]
     public class ActiveCardState
     {
-        public string cardId;
-        public string instanceId;
-        public int currentCharges;
-        public float cooldownRemaining;
-        public bool isEquipped;
-        public string equippedPlayerId;
+        public string CardId;
+        public string InstanceId;
+        public int CurrentCharges;
+        public bool IsEquipped;
+        public string EquippedPlayerId;
+        
+        // 运行时专有字段（不序列化）
+        [NonSerialized] public float CooldownRemaining;
     }
 
     private List<ActiveCardState> _activeCardStates = new List<ActiveCardState>();
@@ -69,34 +72,34 @@ public sealed class InventoryManager : Singleton<InventoryManager>
     {
         var st = new ActiveCardState
         {
-            cardId = cardId,
-            instanceId = Guid.NewGuid().ToString(),
-            currentCharges = Math.Max(0, initialCharges),
-            cooldownRemaining = 0f,
-            isEquipped = false,
-            equippedPlayerId = null
+            CardId = cardId,
+            InstanceId = Guid.NewGuid().ToString(),
+            CurrentCharges = Math.Max(0, initialCharges),
+            CooldownRemaining = 0f,
+            IsEquipped = false,
+            EquippedPlayerId = null
         };
 
         _activeCardStates.Add(st);
 
         // 保持简化视图列表（仅 cardId + 装备信息）用于 UI 查询
-        _ActiveCardIdInfos.Add(new ActiveCardIdRuntimeInfo { cardId = st.cardId, isEquipped = st.isEquipped, equippedPlayerId = st.equippedPlayerId });
+        _ActiveCardIdInfos.Add(new ActiveCardIdRuntimeInfo { cardId = st.CardId, isEquipped = st.IsEquipped, equippedPlayerId = st.EquippedPlayerId });
 
         // notify pool changed (count of instances for this card)
-        OnActiveCardPoolChanged?.Invoke(cardId, _activeCardStates.FindAll(s => s.cardId == cardId).Count);
-        return st.instanceId;
+        OnActiveCardPoolChanged?.Invoke(cardId, _activeCardStates.FindAll(s => s.CardId == cardId).Count);
+        return st.InstanceId;
     }
 
     // 返回详细运行时状态（可为 null）
     public ActiveCardState GetActiveCardState(string instanceId)
     {
-        return _activeCardStates.Find(s => s.instanceId == instanceId);
+        return _activeCardStates.Find(s => s.InstanceId == instanceId);
     }
 
     // 返回第一个匹配的实例（或 null）
     public ActiveCardState GetFirstInstanceByCardId(string cardId)
     {
-        return _activeCardStates.Find(s => s.cardId == cardId);
+        return _activeCardStates.Find(s => s.CardId == cardId);
     }
 
     // 标记实例为被某玩家装备（playerId 可为空以取消装备）
@@ -104,19 +107,19 @@ public sealed class InventoryManager : Singleton<InventoryManager>
     {
         var st = GetActiveCardState(instanceId);
         if (st == null) return;
-        st.isEquipped = !string.IsNullOrEmpty(playerId);
-        st.equippedPlayerId = playerId;
+        st.IsEquipped = !string.IsNullOrEmpty(playerId);
+        st.EquippedPlayerId = playerId;
 
         // 更新简化视图中的装备信息
         for (int i = 0; i < _ActiveCardIdInfos.Count; i++)
         {
-            if (_ActiveCardIdInfos[i].cardId == st.cardId)
+            if (_ActiveCardIdInfos[i].cardId == st.CardId)
             {
-                _ActiveCardIdInfos[i] = new ActiveCardIdRuntimeInfo { cardId = _ActiveCardIdInfos[i].cardId, isEquipped = st.isEquipped, equippedPlayerId = st.equippedPlayerId };
+                _ActiveCardIdInfos[i] = new ActiveCardIdRuntimeInfo { cardId = _ActiveCardIdInfos[i].cardId, isEquipped = st.IsEquipped, equippedPlayerId = st.EquippedPlayerId };
             }
         }
 
-        OnActiveCardPoolChanged?.Invoke(st.cardId, _activeCardStates.FindAll(s => s.cardId == st.cardId).Count);
+        OnActiveCardPoolChanged?.Invoke(st.CardId, _activeCardStates.FindAll(s => s.CardId == st.CardId).Count);
     }
 
     // 为指定玩家已装备的主动卡牌增加充能（通常在击杀事件中调用）
@@ -125,16 +128,16 @@ public sealed class InventoryManager : Singleton<InventoryManager>
         if (string.IsNullOrEmpty(playerId) || amount <= 0) return;
         foreach (var st in _activeCardStates)
         {
-            if (st.equippedPlayerId == playerId)
+            if (st.EquippedPlayerId == playerId)
             {
                 // 获取配置的上限
-                var cd = GameRoot.Instance?.CardDatabase?.Resolve(st.cardId);
+                var cd = GameRoot.Instance?.CardDatabase?.Resolve(st.CardId);
                 int max = cd != null ? cd.activeCardConfig.maxCharges : 1;
-                int before = st.currentCharges;
-                st.currentCharges = Math.Min(max, st.currentCharges + amount);
-                if (st.currentCharges != before)
+                int before = st.CurrentCharges;
+                st.CurrentCharges = Math.Min(max, st.CurrentCharges + amount);
+                if (st.CurrentCharges != before)
                 {
-                    OnActiveCardChargesChanged?.Invoke(st.instanceId, st.currentCharges);
+                    OnActiveCardChargesChanged?.Invoke(st.InstanceId, st.CurrentCharges);
                 }
             }
         }
@@ -147,17 +150,17 @@ public sealed class InventoryManager : Singleton<InventoryManager>
         int roomMult = roomType == RogueGame.Map.RoomType.Elite ? 2 : (roomType == RogueGame.Map.RoomType.Boss ? 3 : 1);
         foreach (var st in _activeCardStates)
         {
-            if (st.equippedPlayerId != playerId) continue;
-            var cd = GameRoot.Instance?.CardDatabase?.Resolve(st.cardId);
+            if (st.EquippedPlayerId != playerId) continue;
+            var cd = GameRoot.Instance?.CardDatabase?.Resolve(st.CardId);
             if (cd == null) continue;
             int baseGain = cd.activeCardConfig.chargesPerKill;
             int delta = Math.Max(0, baseGain * roomMult);
             int max = cd.activeCardConfig.maxCharges;
-            int before = st.currentCharges;
-            st.currentCharges = Math.Min(max, st.currentCharges + delta);
-            if (st.currentCharges != before)
+            int before = st.CurrentCharges;
+            st.CurrentCharges = Math.Min(max, st.CurrentCharges + delta);
+            if (st.CurrentCharges != before)
             {
-                OnActiveCardChargesChanged?.Invoke(st.instanceId, st.currentCharges);
+                OnActiveCardChargesChanged?.Invoke(st.InstanceId, st.CurrentCharges);
             }
         }
     }
@@ -168,10 +171,10 @@ public sealed class InventoryManager : Singleton<InventoryManager>
         remaining = 0;
         var st = GetActiveCardState(instanceId);
         if (st == null || amount <= 0) return false;
-        if (st.currentCharges < amount) return false;
-        st.currentCharges -= amount;
-        remaining = st.currentCharges;
-        OnActiveCardChargesChanged?.Invoke(st.instanceId, st.currentCharges);
+        if (st.CurrentCharges < amount) return false;
+        st.CurrentCharges -= amount;
+        remaining = st.CurrentCharges;
+        OnActiveCardChargesChanged?.Invoke(st.InstanceId, st.CurrentCharges);
         return true;
     }
 
@@ -293,6 +296,7 @@ public sealed class InventoryManager : Singleton<InventoryManager>
         {
             // 已存在，无需重复添加
             //TODO-也许能加金币重复获得主动卡牌
+            AddCoins(5);
 
         }
     }

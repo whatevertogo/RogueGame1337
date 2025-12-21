@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using Character.Combat;
+using Core;
 
 namespace Character.Components
 {
@@ -107,7 +108,7 @@ namespace Character.Components
             }
 
             // 如果场景中存在 Enemy，但都不在 hitMask 中，也提示可能的层/掩码错误
-            var allChars = FindObjectsOfType<CharacterBase>();
+            var allChars = ObjectCache.Instance.FindObjectsOfType<CharacterBase>();
             bool anyEnemyExist = false;
             bool anyEnemyInMask = false;
             foreach (var ch in allChars)

@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using RogueGame.Events;
+using Core;
 
 /// <summary>
 /// 订阅 ClearAllSlotsRequestedEvent 并执行槽位清理的集中服务
@@ -21,7 +22,7 @@ public class SlotService : MonoBehaviour
     private void OnClearAllSlotsRequested(ClearAllSlotsRequestedEvent evt)
     {
         Debug.Log("[SlotService] ClearAllSlotsRequestedEvent received, clearing slots");
-        var slots = GameObject.FindObjectsOfType<CardSlot>();
+        var slots = ObjectCache.Instance.FindObjectsOfType<CardSlot>();
         foreach (var slot in slots)
         {
             if (slot == null) continue;

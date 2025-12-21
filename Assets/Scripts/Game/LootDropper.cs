@@ -49,6 +49,8 @@ public sealed class LootDropper : Singleton<LootDropper>
     /// <summary>
     /// 在指定位置掉落一个卡牌拾取物（主动或被动）
     /// </summary>
+    /// <param name="position">掉落位置</param>
+    /// <param name="cardId">卡牌ID</param>
     public void DropCard(Vector3 position, string cardId)
     {
         if (CardPickupPrefab == null)

@@ -2,6 +2,8 @@ using System;
 using UnityEngine;
 using Character.Interfaces;
 using Character.Components;
+using RogueGame.Events;
+using UI.Combat;
 
 /// <summary>
 /// 生命组件 - 处理伤害和治疗的入口
@@ -46,10 +48,10 @@ public class HealthComponent : MonoBehaviour, IDamageable, IHealable
             }
         }
 
-        public float TakeDamage(DamageInfo damageInfo)
+        public DamageResult TakeDamage(DamageInfo damageInfo)
         {
             if (stats == null || IsDead)
-                return 0f;
+                return DamageResult.Zero;
 
             // 让状态效果修改受到的伤害
             if (statusEffects != null)
@@ -60,15 +62,18 @@ public class HealthComponent : MonoBehaviour, IDamageable, IHealable
             // 记录最后伤害来源
             lastDamageSource = damageInfo.Source;
 
+            // 实际应用伤害到CharacterStats
             var result = stats.TakeDamage(damageInfo);
-
-
+            
+            // 触发伤害事件用于UI反馈
+            TriggerDamageEvent(damageInfo, result);
+            
             return result;
         }
 
-        public void TakeDamage(int amount)
+        public DamageResult TakeDamage(int amount)
         {
-            TakeDamage(DamageInfo.Create(amount));
+            return TakeDamage(DamageInfo.Create(amount));
         }
 
         public void Heal(float amount)
@@ -79,6 +84,11 @@ public class HealthComponent : MonoBehaviour, IDamageable, IHealable
             stats.Heal(amount);
             float healed = stats.CurrentHP - before;
 
+            // 触发治疗事件
+            if (healed > 0)
+            {
+                TriggerHealEvent(healed);
+            }
         }
 
         public void Heal(int amount) => Heal((float)amount);
@@ -94,6 +104,35 @@ public class HealthComponent : MonoBehaviour, IDamageable, IHealable
         }
 
         private GameObject lastDamageSource;
+
+        /// <summary>
+        /// 触发伤害事件
+        /// </summary>
+        private void TriggerDamageEvent(DamageInfo damageInfo, DamageResult result)
+        {
+            // 发布伤害事件用于UI反馈
+            EventBus.Publish(new DamageDealtEvent
+            {
+                Position = transform.position,
+                Damage = Mathf.RoundToInt(result.FinalDamage),
+                IsMiss = Mathf.Approximately(result.FinalDamage, 0f),
+                Target = gameObject,
+                Source = damageInfo.Source
+            });
+        }
+
+        /// <summary>
+        /// 触发治疗事件
+        /// </summary>
+        private void TriggerHealEvent(float amount)
+        {
+            EventBus.Publish(new HealEvent
+            {
+                Position = transform.position,
+                Amount = Mathf.RoundToInt(amount),
+                Target = gameObject
+            });
+        }
 
         private void HandleDeath()
         {

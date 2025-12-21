@@ -267,7 +267,7 @@ namespace RogueGame.Map
             // 广播全局击杀事件（供卡牌充能 / 玩家能量分发 / 掉落逻辑订阅）
             try
             {
-                EventBus.Publish(new RogueGame.Events.EntityKilledEvent
+                EventBus.Publish(new EntityKilledEvent
                 {
                     Victim = enemy,
                     Attacker = attacker,
@@ -276,7 +276,8 @@ namespace RogueGame.Map
             }
             catch { }
 
-            // 由 EnemyCharacter 自行处理（掉落/能量），避免重复分配
+            //PlayerManager通过EventBus接收事件，更新玩家能量
+            //这里不做处理
 
             if (activeEnemies.Count <= 0 && currentState == RoomState.Combat)
             {

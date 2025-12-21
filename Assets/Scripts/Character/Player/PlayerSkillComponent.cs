@@ -66,33 +66,55 @@ namespace Character.Player
             }
         }
 
+        /// <summary>
+        /// 检查技能是否可用（统一的可用性检查入口）
+        /// </summary>
         public bool CanUseSkill(int slotIndex)
         {
             if (slotIndex < 0 || slotIndex >= _playerSkillSlots.Length) return false;
             var rt = _playerSkillSlots[slotIndex]?.Runtime;
             if (rt == null || rt.Skill == null) return false;
-            // 房间内只能使用一次
+            
+            // 检查 1: 房间内是否已使用
             if (rt.UsedInCurrentRoom) return false;
-            // 冷却判断
-            var last = rt.LastUseTime;
-            var baseCd = rt.Skill != null ? rt.Skill.cooldown : 0f;
-            // 从角色属性获取冷却减速率（例如 0.2 表示冷却减少 20% -> 实际冷却 80%）
+            
+            // 检查 2: 冷却判断
+            var baseCd = rt.Skill.cooldown;
             var stats = GetComponent<CharacterStats>();
             var reduction = stats != null ? stats.SkillCooldownReductionRate.Value : 0f;
             var effectiveCd = Mathf.Max(0f, baseCd * (1f - reduction));
-            if (Time.time - last < effectiveCd) return false;
-
-            //TODO完善
+            if (Time.time - rt.LastUseTime < effectiveCd) return false;
+            
+            // 检查 3: 充能检查（如果卡牌需要充能）
+            var cardDef = GameRoot.Instance?.CardDatabase?.Resolve(rt.CardId);
+            if (cardDef != null && cardDef.activeCardConfig != null && cardDef.activeCardConfig.requiresCharge)
+            {
+                var inv = InventoryManager.Instance;
+                if (inv == null || string.IsNullOrEmpty(rt.InstanceId)) return false;
+                
+                var state = inv.GetActiveCardState(rt.InstanceId);
+                if (state == null || state.CurrentCharges < 1) return false;
+            }
+            
+            // 检查 4: 状态效果（眩晕、沉默等）- 预留扩展
+            var effectComp = GetComponent<StatusEffectComponent>();
+            if (effectComp != null)
+            {
+                // TODO: 检查是否被沉默（无法使用技能）
+                // if (effectComp.HasEffectOfType("Silence")) return false;
+            }
 
             return true;
         }
 
         private IEnumerator DelayedExecute(SkillDefinition def, Vector3? aimPoint, int slotIndex)
         {
-            // 修复1: 添加技能定义空值检查日志
+            // 关键检查：技能定义必须存在
             if (def == null)
             {
+#if UNITY_EDITOR
                 Debug.LogWarning("[PlayerSkillComponent] DelayedExecute: SkillDefinition is null");
+#endif
                 yield break;
             }
 
@@ -103,165 +125,95 @@ namespace Character.Player
             // 计算目标点（若未指定，则使用施法者位置）
             Vector3 origin = aimPoint ?? transform.position;
 
-            // 修复2: 改进链式调用安全性并添加日志
-            string cardId = null;
-            if (_playerSkillSlots != null && slotIndex >= 0 && slotIndex < _playerSkillSlots.Length)
-            {
-                var slot = _playerSkillSlots[slotIndex];
-                if (slot?.Runtime != null)
-                {
-                    cardId = slot.Runtime.CardId;
-                    if (string.IsNullOrEmpty(cardId))
-                    {
-                        Debug.LogWarning($"[PlayerSkillComponent] DelayedExecute: CardId is null or empty for slot {slotIndex}");
-                    }
-                }
-                else
-                {
-                    Debug.LogWarning($"[PlayerSkillComponent] DelayedExecute: Runtime is null for slot {slotIndex}");
-                }
-            }
-            else
-            {
-                Debug.LogWarning($"[PlayerSkillComponent] DelayedExecute: Invalid slot index {slotIndex} or _playerSkillSlots is null");
-            }
-
-            // 修复3: 添加CharacterBase组件空值检查
+            // 获取施法者（已在组件初始化时验证，运行时应存在）
             var caster = GetComponent<CharacterBase>();
             if (caster == null)
             {
-                Debug.LogError("[PlayerSkillComponent] DelayedExecute: CharacterBase component not found on gameObject");
+                Debug.LogError("[PlayerSkillComponent] CharacterBase component not found");
                 yield break;
             }
 
+            // 创建技能上下文
             var ctx = new SkillTargetContext
             {
                 Caster = caster,
                 AimPoint = origin,
+                AimDirection = (origin - transform.position).normalized,
+                PowerMultiplier = 1.0f // 可扩展：从 Buff 或技能等级读取
             };
 
             // 播放 VFX（如果有）
             if (def.vfxPrefab != null)
             {
-                try
-                {
-                    GameObject.Instantiate(def.vfxPrefab, origin, Quaternion.identity);
-                }
-                catch (System.Exception ex)
-                {
-                    Debug.LogError($"[PlayerSkillComponent] DelayedExecute: Failed to instantiate VFX prefab: {ex.Message}");
-                }
+                GameObject.Instantiate(def.vfxPrefab, origin, Quaternion.identity);
             }
 
-            // 修复4: 改进目标获取逻辑并添加详细日志
+            // 获取目标
             var targets = new System.Collections.Generic.List<CharacterBase>();
             if (def.TargetAcquireSO != null)
             {
-                try
-                {
-                    var acquired = def.TargetAcquireSO.Acquire(ctx);
-                    if (acquired != null)
-                    {
-                        targets = acquired;
-                    }
-                    else
-                    {
-                        Debug.LogWarning("[PlayerSkillComponent] DelayedExecute: TargetAcquireSO.Acquire returned null");
-                    }
-                }
-                catch (System.Exception ex)
-                {
-                    Debug.LogError($"[PlayerSkillComponent] DelayedExecute: Exception during target acquisition: {ex.Message}");
-                }
-            }
-            else
-            {
-                Debug.Log("[PlayerSkillComponent] DelayedExecute: No TargetAcquireSO defined");
+                targets = def.TargetAcquireSO.Acquire(ctx);
             }
 
-            // 修复5: 添加效果定义空值检查
-            if (def.Effects == null)
-            {
-                Debug.LogWarning("[PlayerSkillComponent] DelayedExecute: SkillDefinition.Effects is null");
-                yield break;
-            }
-
-            // 应用过滤器（若存在过滤组）
+            // 应用过滤器（如果存在）
             var validTargets = targets;
             if (def.TargetFilters != null && def.TargetFilters.filters != null && def.TargetFilters.filters.Count > 0)
             {
-                try
-                {
-                    validTargets = targets.FindAll(t => def.TargetFilters.IsValid(ctx, t));
-                }
-                catch (System.Exception ex)
-                {
-                    Debug.LogError($"[PlayerSkillComponent] DelayedExecute: Exception during target filtering: {ex.Message}");
-                    validTargets = targets; // 失败时使用未过滤的目标
-                }
+                validTargets = targets.FindAll(t => def.TargetFilters.IsValid(ctx, t));
             }
 
-            // 如果没有目标则直接返回（策略可能返回 null/空）
+            // 如果没有目标则直接返回
             if (validTargets == null || validTargets.Count == 0)
             {
-                Debug.Log("[PlayerSkillComponent] DelayedExecute: No valid targets found, skipping effect application");
+#if UNITY_EDITOR
+                Debug.Log($"[PlayerSkillComponent] No valid targets found for skill {def.skillId}");
+#endif
                 yield break;
             }
 
-            // 修复6: 添加状态效果组件空值检查
+            // 应用效果到所有有效目标
+            if (def.Effects == null || def.Effects.Count == 0)
+            {
+#if UNITY_EDITOR
+                Debug.LogWarning($"[PlayerSkillComponent] Skill {def.skillId} has no effects defined");
+#endif
+                yield break;
+            }
+
             foreach (var target in validTargets)
             {
-                if (target == null)
+                if (target == null) continue;
+
+                var statusComp = target.GetComponent<StatusEffectComponent>();
+                if (statusComp == null)
                 {
-                    Debug.LogWarning("[PlayerSkillComponent] DelayedExecute: Found null target in validTargets list");
+#if UNITY_EDITOR
+                    Debug.LogWarning($"[PlayerSkillComponent] Target {target.name} has no StatusEffectComponent");
+#endif
                     continue;
                 }
 
-                // 应用效果
+                // 应用所有效果
                 foreach (var effectDef in def.Effects)
                 {
-                    if (effectDef != null)
-                    {
-                        var statusComp = target.GetComponent<StatusEffectComponent>();
-                        if (statusComp != null)
-                        {
-                            try
-                            {
-                                var effectInstance = effectDef.CreateInstance();
-                                    if (effectInstance != null)
-                                    {
-                                        // 尝试在运行时为效果设置伤害来源（避免对具体实现硬编码引用）
-                                        try
-                                        {
-                                            var mi = effectInstance.GetType().GetMethod("SetDamageSource", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
-                                            if (mi != null)
-                                            {
-                                                mi.Invoke(effectInstance, new object[] { caster });
-                                            }
-                                        }
-                                        catch (System.Exception ex)
-                                        {
-                                            // 仅在反射调用失败时记录警告，避免大量日志
-                                            Debug.LogWarning($"[PlayerSkillComponent] Failed to set damage source via reflection: {ex.Message}");
-                                        }
+                    if (effectDef == null) continue;
 
-                                        statusComp.AddEffect(effectInstance);
-                                    }
-                                else
-                                {
-                                    Debug.LogWarning($"[PlayerSkillComponent] DelayedExecute: Failed to create effect instance for {effectDef.GetType().Name}");
-                                }
-                            }
-                            catch (System.Exception ex)
-                            {
-                                Debug.LogError($"[PlayerSkillComponent] DelayedExecute: Exception applying effect {effectDef.GetType().Name}: {ex.Message}");
-                            }
-                        }
-                        else
-                        {
-                            Debug.LogWarning($"[PlayerSkillComponent] DelayedExecute: Target {target.name} has no StatusEffectComponent");
-                        }
+                    var effectInstance = effectDef.CreateInstance();
+                    if (effectInstance == null)
+                    {
+#if UNITY_EDITOR
+                        Debug.LogWarning($"[PlayerSkillComponent] Failed to create effect instance from {effectDef.GetType().Name}");
+#endif
+                        continue;
                     }
+
+                    // 使用接口设置伤害来源（替代反射调用，性能提升显著）
+                    if (effectInstance is IDamageSourceAware damageSourceAware)
+                    {
+                        damageSourceAware.SetDamageSource(caster);
+                    }
+
+                    statusComp.AddEffect(effectInstance);
                 }
             }
 
@@ -472,6 +424,68 @@ namespace Character.Player
             {
                 CancelSlotCoroutine(i);
             }
+        }
+
+        /// <summary>
+        /// 打断技能（用于控制效果如眩晕、击飞等）
+        /// </summary>
+        /// <param name="slotIndex">技能槽位索引，-1 表示打断所有正在施放的技能</param>
+        /// <param name="refundCharges">是否退还充能</param>
+        public void InterruptSkill(int slotIndex = -1, bool refundCharges = false)
+        {
+            if (slotIndex < 0)
+            {
+                // 打断所有技能
+                for (int i = 0; i < _playerSkillSlots.Length; i++)
+                {
+                    InterruptSingleSkill(i, refundCharges);
+                }
+            }
+            else
+            {
+                InterruptSingleSkill(slotIndex, refundCharges);
+            }
+        }
+
+        /// <summary>
+        /// 打断单个技能槽位
+        /// </summary>
+        private void InterruptSingleSkill(int slotIndex, bool refundCharges)
+        {
+            if (slotIndex < 0 || slotIndex >= _playerSkillSlots.Length) return;
+            var rt = _playerSkillSlots[slotIndex]?.Runtime;
+            if (rt == null) return;
+
+            // 取消协程
+            if (rt.RunningCoroutine != null)
+            {
+                try
+                {
+                    StopCoroutine(rt.RunningCoroutine);
+                }
+                catch { }
+                rt.RunningCoroutine = null;
+            }
+
+            // 如果需要退还充能
+            if (refundCharges && !string.IsNullOrEmpty(rt.InstanceId))
+            {
+                var inv = InventoryManager.Instance;
+                var cardDef = GameRoot.Instance?.CardDatabase?.Resolve(rt.CardId);
+                if (inv != null && cardDef != null && cardDef.activeCardConfig != null && cardDef.activeCardConfig.requiresCharge)
+                {
+                    var state = inv.GetActiveCardState(rt.InstanceId);
+                    if (state != null)
+                    {
+                        int maxCharges = cardDef.activeCardConfig.maxCharges;
+                        state.CurrentCharges = Mathf.Min(maxCharges, state.CurrentCharges + 1);
+                        inv.OnActiveCardChargesChanged?.Invoke(rt.InstanceId, state.CurrentCharges);
+                    }
+                }
+            }
+
+            // 重置使用标记（允许再次使用）
+            rt.UsedInCurrentRoom = false;
         }
     }
 }

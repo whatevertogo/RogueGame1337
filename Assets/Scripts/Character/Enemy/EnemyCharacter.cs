@@ -1,8 +1,6 @@
 
 using System;
 using Character;
-using Character.Projectiles;
-using Character.Components;
 using UnityEngine;
 using System.Collections;
 
@@ -138,15 +136,15 @@ public class EnemyCharacter : CharacterBase
             LootDropper.Instance?.DropCoins(transform.position, amount);
         }
 
-        // // 扔卡牌：被动 & 主动分开依据概率
-        // if (!string.IsNullOrEmpty(enemyConfigStats.PassiveCardId) && UnityEngine.Random.value <= enemyConfigStats.PassiveDropChance)
-        // {
-        //     LootDropper.Instance?.DropCard(transform.position, enemyConfigStats.PassiveCardId, false);
-        // }
-        // if (!string.IsNullOrEmpty(enemyConfigStats.ActiveCardId) && UnityEngine.Random.value <= enemyConfigStats.ActiveDropChance)
-        // {
-        //     LootDropper.Instance?.DropCard(transform.position, enemyConfigStats.ActiveCardId, true);
-        // }
+        // 扔卡牌：被动 & 主动分开依据概率
+        if (!string.IsNullOrEmpty(enemyConfigStats.PassiveCardId) && UnityEngine.Random.value <= enemyConfigStats.PassiveDropChance)
+        {
+            LootDropper.Instance?.DropCard(transform.position, enemyConfigStats.PassiveCardId);
+        }
+        if (!string.IsNullOrEmpty(enemyConfigStats.ActiveCardId) && UnityEngine.Random.value <= enemyConfigStats.ActiveDropChance)
+        {
+            LootDropper.Instance?.DropCard(transform.position, enemyConfigStats.ActiveCardId);
+        }
 
         // 分配能量给击杀者（如果击杀者为玩家）
         PlayerController killer = null;

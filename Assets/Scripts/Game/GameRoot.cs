@@ -1,6 +1,7 @@
 using System;
 using CDTU.Utils;
 using RogueGame.Map;
+using RogueGame.SaveSystem;
 using UI;
 using UnityEngine;
 
@@ -27,6 +28,8 @@ public class GameRoot : Singleton<GameRoot>
     public InventoryManager InventoryManager => inventoryManager;
     [SerializeField] private LootDropper lootDropper;
     public LootDropper LootDropper => lootDropper;
+    // [SerializeField] private SaveManager saveManager;
+    // public SaveManager SaveManager => saveManager;
 
     protected override void Awake()
     {
@@ -66,6 +69,8 @@ public class GameRoot : Singleton<GameRoot>
         roomManager.Initialize(transitionController);
 
         playerManager.Initialize(roomManager);  
+
+        // saveManager.Initialize(gameStateManager, playerManager);
 
     }
 

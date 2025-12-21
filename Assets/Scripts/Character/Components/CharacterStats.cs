@@ -33,10 +33,6 @@ namespace Character.Components
         [ReadOnly][SerializeField] private Stat _attackSpeed = new(1f);
         [ReadOnly][SerializeField] private Stat _attackRange = new(1.5f);
 
-        // [Header("暴击")]
-        // [ReadOnly][SerializeField] private Stat _critChance = new(0.05f);
-        // [ReadOnly][SerializeField] private Stat _critDamage = new(2f);
-
         [Header("防御")]
         [ReadOnly][SerializeField] private Stat _armor = new(0f);
         [ReadOnly][SerializeField][Range(0f, 1f)] private Stat _dodge = new(0f);//闪避
@@ -182,7 +178,7 @@ namespace Character.Components
         /// <summary>
         /// 简化版受伤
         /// </summary>
-        public float TakeDamage(float amount)
+        public DamageResult TakeDamage(float amount)
         {
             var info = DamageInfo.Create(amount);
             return TakeDamage(info);
@@ -190,15 +186,15 @@ namespace Character.Components
         /// <summary>
         /// 受到伤害
         /// </summary>
-        public float TakeDamage(DamageInfo info)
+        public DamageResult TakeDamage(DamageInfo info)
         {
 
-            if (IsDead) return 0;
+            if (IsDead) return new DamageResult(0, info.Source?.name ?? "Unknown");
 
             // 闪避判定
             if (UnityEngine.Random.value < _dodge.Value)
             {
-                return 0;
+                return new DamageResult(0, info.Source?.name ?? "Unknown");
             }
 
             // 计算伤害
@@ -218,11 +214,7 @@ namespace Character.Components
             int finalDamage = Mathf.Max(1, Mathf.RoundToInt(damage));
             CurrentHP -= finalDamage;
 
-            // result.FinalDamage = finalDamage;
-            // result.IsCrit = info.IsCrit;
-            // result.IsKilled = IsDead;
-
-            return finalDamage;
+            return new DamageResult(finalDamage, info.Source?.name ?? "Unknown");
         }
 
 
@@ -253,17 +245,11 @@ namespace Character.Components
         public DamageInfo CalculateAttackDamage()
         {
             float damage = _attackPower.Value;
-            // bool isCrit = UnityEngine.Random.value < _critChance.Value;
-
-            // if (isCrit)
-            // {
-            //     damage *= _critDamage.Value;
-            // }
 
             return new DamageInfo
             {
                 Amount = damage,
-                // IsCrit = isCrit,
+                // IsCrit = false,
                 Source = gameObject
             };
         }
@@ -315,28 +301,28 @@ namespace Character.Components
             };
         }
 
-        /// <summary>
-        /// 根据名称获取 Stat（兼容旧代码）
-        /// </summary>
-        public Stat GetStat(string statName)
-        {
-            return statName.ToLower() switch
-            {
-                "maxhp" => _maxHP,
-                "hpregen" => _hpRegen,
-                "movespeed" => _moveSpeed,
-                "acceleration" => _acceleration,
-                "attackpower" => _attackPower,
-                "attackspeed" => _attackSpeed,
-                "attackrange" => _attackRange,
-                // "critchance" => _critChance,
-                // "critdamage" => _critDamage,
-                "armor" => _armor,
-                "dodge" => _dodge,
-                "skillcooldownreductionrate" => _skillCooldownReductionRate,
-                _ => null
-            };
-        }
+        // /// <summary>
+        // /// 根据名称获取 Stat（兼容旧代码）
+        // /// </summary>
+        // public Stat GetStat(string statName)
+        // {
+        //     return statName.ToLower() switch
+        //     {
+        //         "maxhp" => _maxHP,
+        //         "hpregen" => _hpRegen,
+        //         "movespeed" => _moveSpeed,
+        //         "acceleration" => _acceleration,
+        //         "attackpower" => _attackPower,
+        //         "attackspeed" => _attackSpeed,
+        //         "attackrange" => _attackRange,
+        //         // "critchance" => _critChance,
+        //         // "critdamage" => _critDamage,
+        //         "armor" => _armor,
+        //         "dodge" => _dodge,
+        //         "skillcooldownreductionrate" => _skillCooldownReductionRate,
+        //         _ => null
+        //     };
+        // }
 
         /// <summary>
         /// 移除某来源的所有修饰符

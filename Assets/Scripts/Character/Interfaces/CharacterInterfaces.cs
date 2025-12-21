@@ -4,8 +4,8 @@ namespace Character.Interfaces
 {
     public interface IDamageable
     {
-        float TakeDamage(DamageInfo damageInfo);
-        void TakeDamage(int amount);
+        DamageResult TakeDamage(DamageInfo damageInfo);
+        DamageResult TakeDamage(int amount);
     }
 
     public interface IHealable
