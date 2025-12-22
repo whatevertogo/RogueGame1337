@@ -80,7 +80,7 @@ namespace RogueGame.SaveSystem
             {
                 foreach (var equipped in data.EquippedCards)
                 {
-                    EventBus.Publish(new PlayerSlotCardChangedEvent
+                    EventBus.Publish(new OnPlayerSkillEquippedEvent
                     {
                         PlayerId = localPlayer.PlayerId,
                         SlotIndex = equipped.SlotIndex,

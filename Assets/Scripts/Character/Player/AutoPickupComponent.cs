@@ -15,6 +15,7 @@ public class AutoPickupComponent : MonoBehaviour
 
     private readonly Collider2D[] hitBuffer = new Collider2D[32];
     private readonly HashSet<int> notified = new HashSet<int>();
+    private ContactFilter2D pickupFilter;
     private float nextScanTime = 0f;
 
     private void Awake()
@@ -24,6 +25,9 @@ public class AutoPickupComponent : MonoBehaviour
             int layer = LayerMask.NameToLayer("Pickups");
             if (layer != -1) pickupLayer = 1 << layer;
         }
+        pickupFilter = new ContactFilter2D();
+        pickupFilter.SetLayerMask(pickupLayer);
+        pickupFilter.useTriggers = true;
     }
 
     private void Update()
@@ -31,7 +35,9 @@ public class AutoPickupComponent : MonoBehaviour
         if (Time.time < nextScanTime) return;
         nextScanTime = Time.time + Mathf.Max(0.01f, scanInterval);
 
-        int count = Physics2D.OverlapCircleNonAlloc(transform.position, pickupRadius, hitBuffer, pickupLayer);
+        int count = Physics2D.OverlapCircle(
+            transform.position, pickupRadius, pickupFilter, hitBuffer);
+
         var seenThisFrame = new HashSet<int>();
         for (int i = 0; i < count; i++)
         {

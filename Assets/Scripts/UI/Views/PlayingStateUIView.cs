@@ -28,59 +28,10 @@ namespace Game.UI
         // 在运行时创建阶段进行自动绑定（UIManager 会调用 OnCreate）
         public override void OnCreate()
         {
-            BindComponentsAtRuntime();
         }
 
         private void BindComponents() { } // 预留给自动绑定工具使用
-        private void BindComponentsAtRuntime()
-        {
-            if (bloorBarBackGround == null)
-            {
-                var t = transform.Find("BloorBarPartical/BloorBarBackGround");
-                if (t != null) bloorBarBackGround = t.GetComponent<Image>();
-                if (bloorBarBackGround == null) Debug.LogWarning("[PlayingStateUIView] bloorBarBackGround (Image) 未绑定");
-            }
-            if (bloorBar == null)
-            {
-                var t = transform.Find("BloorBarPartical/BloorBar");
-                if (t != null) bloorBar = t.GetComponent<Image>();
-                if (bloorBar == null) Debug.LogWarning("[PlayingStateUIView] bloorBar (Image) 未绑定");
-            }
-            if (nowLevel == null)
-            {
-                var t = transform.Find("NowLevel/NowLevel");
-                if (t != null) nowLevel = t.GetComponent<TMP_Text>();
-                if (nowLevel == null) Debug.LogWarning("[PlayingStateUIView] nowLevel (TMP_Text) 未绑定");
-            }
-            if (skillSlote1Image == null)
-            {
-                var t = transform.Find("SkillSlotes/SkillSlote1/SkillSlote1Image");
-                if (t != null) skillSlote1Image = t.GetComponent<Image>();
-                if (skillSlote1Image == null) Debug.LogWarning("[PlayingStateUIView] skillSlote1Image (Image) 未绑定");
-            }
-            if (skillSlote2Image == null)
-            {
-                var t = transform.Find("SkillSlotes/SkillSlote2/SkillSlote2Image");
-                if (t != null) skillSlote2Image = t.GetComponent<Image>();
-                if (skillSlote2Image == null) Debug.LogWarning("[PlayingStateUIView] skillSlote2Image (Image) 未绑定");
-            }
-            if (skillSlot1Energy == null)
-            {
-                var t = transform.Find("SkillSlotes/SkillSlote1/SkillSlot1Energy");
-                if (t != null) skillSlot1Energy = t.GetComponent<Image>();
-            }
-            if (skillSlot2Energy == null)
-            {
-                var t = transform.Find("SkillSlotes/SkillSlote2/SkillSlot2Energy");
-                if (t != null) skillSlot2Energy = t.GetComponent<Image>();
-            }
-            
-            // 绑定 BagButton 点击事件
-            if (BagButton != null)
-            {
-                BagButton.onClick.RemoveAllListeners();
-            }
-        }
+        
         
         /// <summary>
         /// 绑定 BagButton 点击事件

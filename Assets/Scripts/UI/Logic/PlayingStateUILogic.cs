@@ -70,6 +70,8 @@ namespace Game.UI
             if (_skillEventsSubscribed) return;
             pm.OnPlayerSkillEnergyChanged += this.OnPlayerSkillEnergyChanged;
             pm.OnPlayerSkillUsed += this.OnPlayerSkillUsed;
+            pm.OnPlayerSkillEquipped += this.OnPlayerSkillEquipped;
+            pm.OnPlayerSkillUnequipped += this.OnPlayerSkillUnequipped;
             _skillEventsSubscribed = true;
         }
 
@@ -80,7 +82,25 @@ namespace Game.UI
             if (!_skillEventsSubscribed) return;
             pm.OnPlayerSkillEnergyChanged -= this.OnPlayerSkillEnergyChanged;
             pm.OnPlayerSkillUsed -= this.OnPlayerSkillUsed;
+            pm.OnPlayerSkillEquipped -= this.OnPlayerSkillEquipped;
+            pm.OnPlayerSkillUnequipped -= this.OnPlayerSkillUnequipped;
             _skillEventsSubscribed = false;
+        }
+
+        private void OnPlayerSkillEquipped(string playerId, int slotIndex, string cardId)
+        {
+            if (_myPlayerState == null || playerId != _myPlayerState.PlayerId) return;
+            var def = GameRoot.Instance?.CardDatabase?.Resolve(cardId);
+            if (def != null)
+            {
+                _view?.SetSkillSlotIcon(slotIndex, def.GetSprite());
+            }
+        }
+
+        private void OnPlayerSkillUnequipped(string playerId, int slotIndex)
+        {
+            if (_myPlayerState == null || playerId != _myPlayerState.PlayerId) return;
+            _view?.SetSkillSlotIcon(slotIndex, null);
         }
 
         private void PlayerRegistered(PlayerRuntimeState state)

@@ -142,7 +142,7 @@ namespace RogueGame.Events
         public string AttackerPlayerId;
     }
 
-    public class PlayerSlotCardChangedEvent
+    public class OnPlayerSkillEquippedEvent
     {
         public string PlayerId;
         public int SlotIndex;

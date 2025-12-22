@@ -42,15 +42,15 @@ namespace Character.Player
                 }
             });
 
-            EventBus.Subscribe<PlayerSlotCardChangedEvent>(OnPlayerSlotCardChanged);
+            EventBus.Subscribe<OnPlayerSkillEquippedEvent>(OnPlayerSlotCardChanged);
         }
 
         private void OnDestroy()
         {
-            EventBus.Unsubscribe<PlayerSlotCardChangedEvent>(OnPlayerSlotCardChanged);
+            EventBus.Unsubscribe<OnPlayerSkillEquippedEvent>(OnPlayerSlotCardChanged);
         }
 
-        private void OnPlayerSlotCardChanged(PlayerSlotCardChangedEvent @event)
+        private void OnPlayerSlotCardChanged(OnPlayerSkillEquippedEvent @event)
         {
             // 获取拥有此组件的 PlayerController
             var pc = GetComponent<PlayerController>();
@@ -309,6 +309,28 @@ namespace Character.Player
             }
 
             _playerSkillSlots[slotIndex].Equip(new ActiveSkillRuntime(cardId, skillDef, instanceId));
+            
+            // 广播初始能量/充能状态
+            if (cardDef.activeCardConfig != null && cardDef.activeCardConfig.requiresCharge)
+            {
+                int max = Mathf.Max(1, cardDef.activeCardConfig.maxCharges);
+                int current = max; // default
+                
+                if (inv != null && !string.IsNullOrEmpty(instanceId))
+                {
+                    var state = inv.GetActiveCardState(instanceId);
+                    if (state != null) current = state.CurrentCharges;
+                }
+                
+                float norm = (float)current / max;
+                OnEnergyChanged?.Invoke(slotIndex, norm);
+            }
+            else
+            {
+                // 非充能技能，默认满能量（可用）
+                 OnEnergyChanged?.Invoke(slotIndex, 1f);
+            }
+
             OnSkillEquipped?.Invoke(slotIndex, cardId);
         }
 

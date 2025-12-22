@@ -8,509 +8,515 @@ using Character.Projectiles;
 /// 投射物基类 - 支持对象池
 /// </summary>
 [RequireComponent(typeof(Rigidbody2D))]
-    [RequireComponent(typeof(Collider2D))]
-    public class ProjectileBase : MonoBehaviour
+[RequireComponent(typeof(Collider2D))]
+public class ProjectileBase : MonoBehaviour
+{
+    // ========== 缓存组件 ==========
+    protected Rigidbody2D rb;
+    protected Collider2D col;
+    protected TrailRenderer trailRenderer;
+
+    // ========== 运行时数据 ==========
+    protected ProjectileData data;
+    protected float timer;
+    protected int currentPierceCount;
+    protected bool isInitialized;
+    protected Vector2 currentDirection;
+
+    // ========== 追踪优化 ==========
+    protected Transform homingTarget;
+    protected float targetSearchTimer;
+    protected const float TARGET_SEARCH_INTERVAL = 0.2f;
+
+    // ========== 避免重复命中 ==========
+    // 优先使用 HealthComponent 来判断是否重复命中同一实体
+    protected HashSet<HealthComponent> hitHealthTargets;
+    // 对于没有 HealthComponent 的阻挡物等，使用 instanceId 做退路
+    protected HashSet<int> hitInstanceIds;
+
+    private ContactFilter2D HitFilter;
+
+    [Header("Debug")]
+    [SerializeField] private bool enableDebugLog = false;
+
+
+
+    /// <summary>
+    /// 投射物的拥有者
+    /// </summary>
+    public Transform Owner => data.Owner;
+
+    // ========== 静态缓冲区（避免 GC）==========
+    private static readonly Collider2D[] s_hitBuffer = new Collider2D[16];
+
+    #region 生命周期
+
+    protected virtual void Awake()
     {
-        // ========== 缓存组件 ==========
-        protected Rigidbody2D rb;
-        protected Collider2D col;
-        protected TrailRenderer trailRenderer;
+        // 缓存组件（只执行一次）
+        rb = GetComponent<Rigidbody2D>();
+        col = GetComponent<Collider2D>();
+        trailRenderer = GetComponentInChildren<TrailRenderer>();
 
-        // ========== 运行时数据 ==========
-        protected ProjectileData data;
-        protected float timer;
-        protected int currentPierceCount;
-        protected bool isInitialized;
-        protected Vector2 currentDirection;
-
-        // ========== 追踪优化 ==========
-        protected Transform homingTarget;
-        protected float targetSearchTimer;
-        protected const float TARGET_SEARCH_INTERVAL = 0.2f;
-
-        // ========== 避免重复命中 ==========
-        // 优先使用 HealthComponent 来判断是否重复命中同一实体
-        protected HashSet<HealthComponent> hitHealthTargets;
-        // 对于没有 HealthComponent 的阻挡物等，使用 instanceId 做退路
-        protected HashSet<int> hitInstanceIds;
-
-        [Header("Debug")]
-        [SerializeField] private bool enableDebugLog = false;
-
-
-
-        /// <summary>
-        /// 投射物的拥有者
-        /// </summary>
-        public Transform Owner => data.Owner;
-
-        // ========== 静态缓冲区（避免 GC）==========
-        private static readonly Collider2D[] s_hitBuffer = new Collider2D[16];
-
-        #region 生命周期
-
-        protected virtual void Awake()
+        if (rb != null)
         {
-            // 缓存组件（只执行一次）
-            rb = GetComponent<Rigidbody2D>();
-            col = GetComponent<Collider2D>();
-            trailRenderer = GetComponentInChildren<TrailRenderer>();
-
-            if (rb != null)
-            {
-                rb.gravityScale = 0;
-                rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
-            }
-
-            if (col == null)
-            {
-                Debug.LogWarning($"[ProjectileBase] {gameObject.name} 缺少 Collider2D！无法检测碰撞。");
-            }
-
-            hitHealthTargets = new HashSet<HealthComponent>();
-            hitInstanceIds = new HashSet<int>();
-
-            if (enableDebugLog)
-            {
-                Debug.Log($"[ProjectileBase] Awake: rb.bodyType={(rb != null ? rb.bodyType.ToString() : "null")}, colliderIsTrigger={(col != null ? col.isTrigger.ToString() : "null")}");
-            }
+            rb.gravityScale = 0;
+            rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
         }
 
-        protected virtual void OnEnable()
+        if (col == null)
         {
-            // 对象池取出时重置拖尾
-            if (trailRenderer != null)
-            {
-                trailRenderer.Clear();
-            }
+            Debug.LogWarning($"[ProjectileBase] {gameObject.name} 缺少 Collider2D！无法检测碰撞。");
         }
 
-        protected virtual void OnDisable()
+        hitHealthTargets = new HashSet<HealthComponent>();
+        hitInstanceIds = new HashSet<int>();
+
+        if (enableDebugLog)
         {
-            // 对象池归还时重置状态
-            ResetState();
+            Debug.Log($"[ProjectileBase] Awake: rb.bodyType={(rb != null ? rb.bodyType.ToString() : "null")}, colliderIsTrigger={(col != null ? col.isTrigger.ToString() : "null")}");
         }
 
-        #endregion
+        HitFilter = new ContactFilter2D();
+        HitFilter.SetLayerMask(data.HitMask);
+        HitFilter.useTriggers = true;
+    }
 
-        #region 初始化
-
-        /// <summary>
-        /// 初始化投射物
-        /// </summary>
-        public virtual void Init(ProjectileData projectileData)
+    protected virtual void OnEnable()
+    {
+        // 对象池取出时重置拖尾
+        if (trailRenderer != null)
         {
-            data = projectileData;
-            currentDirection = data.Direction.sqrMagnitude > 0.001f
-                ? data.Direction.normalized
-                : Vector2.up;
-            currentPierceCount = data.PierceCount;
-            timer = 0f;
-            targetSearchTimer = 0f;
-            homingTarget = null;
-            hitHealthTargets.Clear();
-            hitInstanceIds.Clear();
-            isInitialized = true;
-
-            // 设置初始速度
-            if (rb != null)
-            {
-                rb.linearVelocity = currentDirection * data.Speed;
-            }
-
-            // 设置旋转
-            UpdateRotation();
-
-            if (enableDebugLog)
-            {
-                string ownerName = data.Owner != null ? data.Owner.name : "null";
-                Debug.Log($"[ProjectileBase] Init - Owner={ownerName}, OwnerTeam={data.OwnerTeam}, HitMask.value={data.HitMask.value}, Damage={data.Damage}");
-            }
+            trailRenderer.Clear();
         }
+    }
 
-        /// <summary>
-        /// 便捷初始化方法（兼容旧代码）
-        //TODO-在这里添加暴击，但我不想有暴击后面可以更改如果需要
-        /// </summary>
-        public void Init(ProjectileConfig config, Vector2 direction, float damage,
-            TeamType ownerTeam, Transform owner, LayerMask hitMask, StatusEffectDefinitionSO[] effects = null, bool isCrit = false)
+    protected virtual void OnDisable()
+    {
+        // 对象池归还时重置状态
+        ResetState();
+    }
+
+    #endregion
+
+    #region 初始化
+
+    /// <summary>
+    /// 初始化投射物
+    /// </summary>
+    public virtual void Init(ProjectileData projectileData)
+    {
+        data = projectileData;
+        currentDirection = data.Direction.sqrMagnitude > 0.001f
+            ? data.Direction.normalized
+            : Vector2.up;
+        currentPierceCount = data.PierceCount;
+        timer = 0f;
+        targetSearchTimer = 0f;
+        homingTarget = null;
+        hitHealthTargets.Clear();
+        hitInstanceIds.Clear();
+        isInitialized = true;
+
+        // 设置初始速度
+        if (rb != null)
         {
-            var projectileData = ProjectileData.FromConfig(
-                config, direction, damage, ownerTeam, owner, hitMask, effects);
-            Init(projectileData);
-
-            if (enableDebugLog)
-            {
-                Debug.Log($"[ProjectileBase] Init (compat) - prefab based init, owner={(owner != null ? owner.name : "null")}, ownerTeam={ownerTeam}, hitMask={hitMask.value}");
-            }
-        }
-
-        /// <summary>
-        /// 重置状态
-        /// </summary>
-        protected virtual void ResetState()
-        {
-            isInitialized = false;
-            homingTarget = null;
-            hitHealthTargets?.Clear();
-            hitInstanceIds?.Clear();
-
-            if (rb != null)
-            {
-                rb.linearVelocity = Vector2.zero;
-                rb.angularVelocity = 0f;
-            }
-        }
-
-        #endregion
-
-        #region 更新
-
-        protected virtual void Update()
-        {
-            if (!isInitialized) return;
-
-            // 生命周期
-            timer += Time.deltaTime;
-            if (timer >= data.Lifetime)
-            {
-                OnLifetimeEnd();
-                return;
-            }
-
-            // 追踪逻辑
-            if (data.IsHoming)
-            {
-                UpdateHoming();
-            }
-        }
-
-        protected virtual void FixedUpdate()
-        {
-            if (!isInitialized || rb == null) return;
-
             rb.linearVelocity = currentDirection * data.Speed;
         }
 
-        protected void UpdateRotation()
+        // 设置旋转
+        UpdateRotation();
+
+        if (enableDebugLog)
         {
-            float angle = Mathf.Atan2(currentDirection.y, currentDirection.x) * Mathf.Rad2Deg - 90f;
-            transform.rotation = Quaternion.Euler(0, 0, angle);
+            string ownerName = data.Owner != null ? data.Owner.name : "null";
+            Debug.Log($"[ProjectileBase] Init - Owner={ownerName}, OwnerTeam={data.OwnerTeam}, HitMask.value={data.HitMask.value}, Damage={data.Damage}");
+        }
+    }
+
+    /// <summary>
+    /// 便捷初始化方法（兼容旧代码）
+    //TODO-在这里添加暴击，但我不想有暴击后面可以更改如果需要
+    /// </summary>
+    public void Init(ProjectileConfig config, Vector2 direction, float damage,
+        TeamType ownerTeam, Transform owner, LayerMask hitMask, StatusEffectDefinitionSO[] effects = null, bool isCrit = false)
+    {
+        var projectileData = ProjectileData.FromConfig(
+            config, direction, damage, ownerTeam, owner, hitMask, effects);
+        Init(projectileData);
+
+        if (enableDebugLog)
+        {
+            Debug.Log($"[ProjectileBase] Init (compat) - prefab based init, owner={(owner != null ? owner.name : "null")}, ownerTeam={ownerTeam}, hitMask={hitMask.value}");
+        }
+    }
+
+    /// <summary>
+    /// 重置状态
+    /// </summary>
+    protected virtual void ResetState()
+    {
+        isInitialized = false;
+        homingTarget = null;
+        hitHealthTargets?.Clear();
+        hitInstanceIds?.Clear();
+
+        if (rb != null)
+        {
+            rb.linearVelocity = Vector2.zero;
+            rb.angularVelocity = 0f;
+        }
+    }
+
+    #endregion
+
+    #region 更新
+
+    protected virtual void Update()
+    {
+        if (!isInitialized) return;
+
+        // 生命周期
+        timer += Time.deltaTime;
+        if (timer >= data.Lifetime)
+        {
+            OnLifetimeEnd();
+            return;
         }
 
-        #endregion
-
-        #region 追踪
-
-        protected virtual void UpdateHoming()
+        // 追踪逻辑
+        if (data.IsHoming)
         {
-            targetSearchTimer += Time.deltaTime;
+            UpdateHoming();
+        }
+    }
 
-            // 降低搜索频率
-            if (targetSearchTimer >= TARGET_SEARCH_INTERVAL)
+    protected virtual void FixedUpdate()
+    {
+        if (!isInitialized || rb == null) return;
+
+        rb.linearVelocity = currentDirection * data.Speed;
+    }
+
+    protected void UpdateRotation()
+    {
+        float angle = Mathf.Atan2(currentDirection.y, currentDirection.x) * Mathf.Rad2Deg - 90f;
+        transform.rotation = Quaternion.Euler(0, 0, angle);
+    }
+
+    #endregion
+
+    #region 追踪
+
+    protected virtual void UpdateHoming()
+    {
+        targetSearchTimer += Time.deltaTime;
+
+        // 降低搜索频率
+        if (targetSearchTimer >= TARGET_SEARCH_INTERVAL)
+        {
+            targetSearchTimer = 0f;
+
+            if (homingTarget == null || !IsValidHomingTarget(homingTarget))
             {
-                targetSearchTimer = 0f;
-
-                if (homingTarget == null || !IsValidHomingTarget(homingTarget))
-                {
-                    homingTarget = FindHomingTarget();
-                }
-            }
-
-            if (homingTarget == null) return;
-
-            // 平滑转向
-            Vector2 toTarget = ((Vector2)homingTarget.position - (Vector2)transform.position).normalized;
-            currentDirection = Vector2.Lerp(currentDirection, toTarget,
-                data.HomingStrength * Time.deltaTime).normalized;
-
-            UpdateRotation();
-        }
-
-        protected virtual Transform FindHomingTarget()
-        {
-            if (data.HomingRadius <= 0) return null;
-
-            // 使用 NonAlloc 避免 GC
-            int hitCount = Physics2D.OverlapCircleNonAlloc(
-                transform.position, data.HomingRadius, s_hitBuffer, data.HitMask);
-
-            Transform bestTarget = null;
-            float bestScore = float.MaxValue;
-
-            for (int i = 0; i < hitCount; i++)
-            {
-                var hit = s_hitBuffer[i];
-                if (hit == null) continue;
-
-                // 跳过自己
-                if (data.Owner != null && hit.transform == data.Owner)
-                    continue;
-
-                // 跳过同阵营
-                var charBase = hit.GetComponent<CharacterBase>();
-                if (charBase != null && charBase.Team == data.OwnerTeam)
-                    continue;
-
-                // 跳过已死亡
-                var health = hit.GetComponent<HealthComponent>();
-                if (health != null && health.IsDead)
-                    continue;
-
-                // 计算评分（距离 + 方向权重）
-                Vector2 toTarget = (Vector2)hit.transform.position - (Vector2)transform.position;
-                float distance = toTarget.magnitude;
-                float dot = Vector2.Dot(currentDirection, toTarget.normalized);
-
-                // 优先前方目标
-                float score = distance * (dot > 0 ? 1f : 2f);
-
-                if (score < bestScore)
-                {
-                    bestScore = score;
-                    bestTarget = hit.transform;
-                }
-            }
-
-            return bestTarget;
-        }
-
-        protected bool IsValidHomingTarget(Transform target)
-        {
-            if (target == null) return false;
-
-            float distance = Vector2.Distance(transform.position, target.position);
-            if (distance > data.HomingRadius * 1.5f) return false;
-
-            var health = target.GetComponent<HealthComponent>();
-            return health == null || !health.IsDead;
-        }
-
-        #endregion
-
-        #region 碰撞处理
-
-        protected virtual void OnTriggerEnter2D(Collider2D other)
-        {
-            if (enableDebugLog) Debug.Log($"[ProjectileBase] OnTriggerEnter2D collided with {other?.gameObject?.name} (layer={LayerMask.LayerToName(other.gameObject.layer)})");
-            TryHit(other.gameObject);
-        }
-
-        protected virtual void OnCollisionEnter2D(Collision2D collision)
-        {
-            if (enableDebugLog) Debug.Log($"[ProjectileBase] OnCollisionEnter2D collided with {collision?.gameObject?.name} (layer={LayerMask.LayerToName(collision.gameObject.layer)})");
-            TryHit(collision.gameObject);
-            //如果是墙壁就销毁
-            if(collision.gameObject.CompareTag("Wall"))
-            {
-                SpawnHitEffect();
-                OnHitDestroy();
+                homingTarget = FindHomingTarget();
             }
         }
 
-        bool IsAlreadyHit(GameObject target, out HealthComponent health)
+        if (homingTarget == null) return;
+
+        // 平滑转向
+        Vector2 toTarget = ((Vector2)homingTarget.position - (Vector2)transform.position).normalized;
+        currentDirection = Vector2.Lerp(currentDirection, toTarget,
+            data.HomingStrength * Time.deltaTime).normalized;
+
+        UpdateRotation();
+    }
+
+    protected virtual Transform FindHomingTarget()
+    {
+        if (data.HomingRadius <= 0) return null;
+
+        // 使用 NonAlloc 避免 GC
+        int hitCount = Physics2D.OverlapCircle(
+            transform.position, data.HomingRadius,HitFilter,s_hitBuffer);
+
+        Transform bestTarget = null;
+        float bestScore = float.MaxValue;
+
+        for (int i = 0; i < hitCount; i++)
         {
-            health = target.GetComponent<HealthComponent>();
-            if (health != null)
-            {
-                return hitHealthTargets.Contains(health);
-            }
-            else
-            {
-                int targetId = target.GetInstanceID();
-                return hitInstanceIds.Contains(targetId);
-            }
-        }
+            var hit = s_hitBuffer[i];
+            if (hit == null) continue;
 
-        protected virtual void TryHit(GameObject target)
-        {
-            if (!isInitialized) return;
+            // 跳过自己
+            if (data.Owner != null && hit.transform == data.Owner)
+                continue;
 
-           if (IsAlreadyHit(target, out var health)) return;
-
-            // 图层过滤
-            bool inMask = IsInLayerMask(target.layer, data.HitMask);
-            if (enableDebugLog && !inMask)
-            {
-                Debug.Log($"[ProjectileBase] TryHit: target={target.name}, layer={LayerMask.LayerToName(target.layer)}, inHitMask={inMask}");
-            }
-            if (!inMask) return;
-
-
-
-            // 跳过发射者
-            if (data.Owner != null && target.transform == data.Owner)
-            {
-                if (enableDebugLog) Debug.Log("[ProjectileBase] TryHit: skipping owner");
-                return;
-            }
-
-            // 阵营过滤
-            var charBase = target.GetComponent<CharacterBase>();
+            // 跳过同阵营
+            var charBase = hit.GetComponent<CharacterBase>();
             if (charBase != null && charBase.Team == data.OwnerTeam)
-            {
-                if (enableDebugLog) Debug.Log($"[ProjectileBase] TryHit: skipping same team (targetTeam={charBase.Team}, ownerTeam={data.OwnerTeam})");
-                return;
-            }
+                continue;
 
-            // 标记已命中
-            if (health != null)
-            {
-                hitHealthTargets.Add(health);
-            }
-            else
-            {
-                int targetId = target.GetInstanceID();
-                hitInstanceIds.Add(targetId);
-            }
+            // 跳过已死亡
+            var health = hit.GetComponent<HealthComponent>();
+            if (health != null && health.IsDead)
+                continue;
 
-            // 造成伤害
-            if (health != null)
+            // 计算评分（距离 + 方向权重）
+            Vector2 toTarget = (Vector2)hit.transform.position - (Vector2)transform.position;
+            float distance = toTarget.magnitude;
+            float dot = Vector2.Dot(currentDirection, toTarget.normalized);
+
+            // 优先前方目标
+            float score = distance * (dot > 0 ? 1f : 2f);
+
+            if (score < bestScore)
             {
-                if (enableDebugLog)
-                {
-                    Debug.Log($"[ProjectileBase] DealDamage -> target={target.name}, healthExists=true, damage={data.Damage}");
-                }
-                DealDamage(health);
+                bestScore = score;
+                bestTarget = hit.transform;
             }
+        }
 
-            // 如果投射物携带状态效果定义，尝试将这些效果应用到目标（若目标有 StatusEffectComponent）
-            if (data.Effects != null && data.Effects.Length > 0)
-            {
-                var effectComp = target.GetComponent<Character.Components.StatusEffectComponent>();
-                if (effectComp != null)
-                {
-                    foreach (var def in data.Effects)
-                    {
-                        if (def == null) continue;
-                        var inst = def.CreateInstance();
-                        if (inst == null) continue;
-                        effectComp.AddEffect(inst);
-                    }
-                }
-            }
+        return bestTarget;
+    }
 
-            // 在探测后输出物理层忽略信息（仅调试）
-            if (enableDebugLog)
-            {
-                int projectileLayer = gameObject.layer;
-                int targetLayer = target.layer;
-                bool ignored = Physics2D.GetIgnoreLayerCollision(projectileLayer, targetLayer);
-                var col2d = target.GetComponent<Collider2D>();
-                Debug.Log($"[ProjectileBase] After TryHit: projectileLayer={LayerMask.LayerToName(projectileLayer)}, targetLayer={LayerMask.LayerToName(targetLayer)}, ignoredByPhysicsMatrix={ignored}, targetColliderIsTrigger={(col2d != null ? col2d.isTrigger : false)}");
-            }
+    protected bool IsValidHomingTarget(Transform target)
+    {
+        if (target == null) return false;
 
-            // 穿透处理
-            if (currentPierceCount > 0)
-            {
-                currentPierceCount--;
-                OnPierce(target);
+        float distance = Vector2.Distance(transform.position, target.position);
+        if (distance > data.HomingRadius * 1.5f) return false;
 
-                // 追踪弹命中后重新寻找目标
-                if (data.IsHoming && homingTarget == target.transform)
-                {
-                    homingTarget = null;
-                }
-                return;
-            }
+        var health = target.GetComponent<HealthComponent>();
+        return health == null || !health.IsDead;
+    }
 
-            // 命中销毁
+    #endregion
+
+    #region 碰撞处理
+
+    protected virtual void OnTriggerEnter2D(Collider2D other)
+    {
+        if (enableDebugLog) Debug.Log($"[ProjectileBase] OnTriggerEnter2D collided with {other?.gameObject?.name} (layer={LayerMask.LayerToName(other.gameObject.layer)})");
+        TryHit(other.gameObject);
+    }
+
+    protected virtual void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (enableDebugLog) Debug.Log($"[ProjectileBase] OnCollisionEnter2D collided with {collision?.gameObject?.name} (layer={LayerMask.LayerToName(collision.gameObject.layer)})");
+        TryHit(collision.gameObject);
+        //如果是墙壁就销毁
+        if (collision.gameObject.CompareTag("Wall"))
+        {
             SpawnHitEffect();
             OnHitDestroy();
         }
+    }
 
-        protected virtual void DealDamage(HealthComponent healthComponent)
+    bool IsAlreadyHit(GameObject target, out HealthComponent health)
+    {
+        health = target.GetComponent<HealthComponent>();
+        if (health != null)
         {
-            var damageInfo = new DamageInfo
+            return hitHealthTargets.Contains(health);
+        }
+        else
+        {
+            int targetId = target.GetInstanceID();
+            return hitInstanceIds.Contains(targetId);
+        }
+    }
+
+    protected virtual void TryHit(GameObject target)
+    {
+        if (!isInitialized) return;
+
+        if (IsAlreadyHit(target, out var health)) return;
+
+        // 图层过滤
+        bool inMask = IsInLayerMask(target.layer, data.HitMask);
+        if (enableDebugLog && !inMask)
+        {
+            Debug.Log($"[ProjectileBase] TryHit: target={target.name}, layer={LayerMask.LayerToName(target.layer)}, inHitMask={inMask}");
+        }
+        if (!inMask) return;
+
+
+
+        // 跳过发射者
+        if (data.Owner != null && target.transform == data.Owner)
+        {
+            if (enableDebugLog) Debug.Log("[ProjectileBase] TryHit: skipping owner");
+            return;
+        }
+
+        // 阵营过滤
+        var charBase = target.GetComponent<CharacterBase>();
+        if (charBase != null && charBase.Team == data.OwnerTeam)
+        {
+            if (enableDebugLog) Debug.Log($"[ProjectileBase] TryHit: skipping same team (targetTeam={charBase.Team}, ownerTeam={data.OwnerTeam})");
+            return;
+        }
+
+        // 标记已命中
+        if (health != null)
+        {
+            hitHealthTargets.Add(health);
+        }
+        else
+        {
+            int targetId = target.GetInstanceID();
+            hitInstanceIds.Add(targetId);
+        }
+
+        // 造成伤害
+        if (health != null)
+        {
+            if (enableDebugLog)
             {
-                Amount = data.Damage,
-                // IsCrit = data.IsCrit,
-                Source = data.Owner?.gameObject,
-                HitPoint = transform.position,
-                KnockbackDir = currentDirection,
-                KnockbackForce = 0
-            };
-
-            healthComponent.TakeDamage(damageInfo);
+                Debug.Log($"[ProjectileBase] DealDamage -> target={target.name}, healthExists=true, damage={data.Damage}");
+            }
+            DealDamage(health);
         }
 
-        #endregion
-
-        #region 生命周期回调
-
-        protected virtual void OnPierce(GameObject target)
+        // 如果投射物携带状态效果定义，尝试将这些效果应用到目标（若目标有 StatusEffectComponent）
+        if (data.Effects != null && data.Effects.Length > 0)
         {
-            // 子类可重写
-        }
-
-        protected virtual void OnHitDestroy()
-        {
-            ReturnToPool();
-        }
-
-        protected virtual void OnLifetimeEnd()
-        {
-            ReturnToPool();
-        }
-
-        protected virtual void SpawnHitEffect()
-        {
-            if (data.HitEffect != null)
+            var effectComp = target.GetComponent<Character.Components.StatusEffectComponent>();
+            if (effectComp != null)
             {
-                var effect = Instantiate(data.HitEffect, transform.position, Quaternion.identity);
-                Destroy(effect, 1f);
+                foreach (var def in data.Effects)
+                {
+                    if (def == null) continue;
+                    var inst = def.CreateInstance();
+                    if (inst == null) continue;
+                    effectComp.AddEffect(inst);
+                }
             }
         }
 
-        /// <summary>
-        /// 归还到对象池
-        /// </summary>
-        protected virtual void ReturnToPool()
+        // 在探测后输出物理层忽略信息（仅调试）
+        if (enableDebugLog)
         {
-            isInitialized = false;
-
-            if (ProjectilePool.Instance != null)
-            {
-                ProjectilePool.Instance.Return(this);
-            }
-            else
-            {
-                Destroy(gameObject);
-            }
+            int projectileLayer = gameObject.layer;
+            int targetLayer = target.layer;
+            bool ignored = Physics2D.GetIgnoreLayerCollision(projectileLayer, targetLayer);
+            var col2d = target.GetComponent<Collider2D>();
+            Debug.Log($"[ProjectileBase] After TryHit: projectileLayer={LayerMask.LayerToName(projectileLayer)}, targetLayer={LayerMask.LayerToName(targetLayer)}, ignoredByPhysicsMatrix={ignored}, targetColliderIsTrigger={(col2d != null ? col2d.isTrigger : false)}");
         }
 
-        #endregion
-
-        #region 工具方法
-
-        protected bool IsInLayerMask(int layer, LayerMask mask)
+        // 穿透处理
+        if (currentPierceCount > 0)
         {
-            return ((1 << layer) & mask.value) != 0;
+            currentPierceCount--;
+            OnPierce(target);
+
+            // 追踪弹命中后重新寻找目标
+            if (data.IsHoming && homingTarget == target.transform)
+            {
+                homingTarget = null;
+            }
+            return;
         }
 
-        #endregion
+        // 命中销毁
+        SpawnHitEffect();
+        OnHitDestroy();
+    }
 
-        #region 调试
+    protected virtual void DealDamage(HealthComponent healthComponent)
+    {
+        var damageInfo = new DamageInfo
+        {
+            Amount = data.Damage,
+            // IsCrit = data.IsCrit,
+            Source = data.Owner?.gameObject,
+            HitPoint = transform.position,
+            KnockbackDir = currentDirection,
+            KnockbackForce = 0
+        };
+
+        healthComponent.TakeDamage(damageInfo);
+    }
+
+    #endregion
+
+    #region 生命周期回调
+
+    protected virtual void OnPierce(GameObject target)
+    {
+        // 子类可重写
+    }
+
+    protected virtual void OnHitDestroy()
+    {
+        ReturnToPool();
+    }
+
+    protected virtual void OnLifetimeEnd()
+    {
+        ReturnToPool();
+    }
+
+    protected virtual void SpawnHitEffect()
+    {
+        if (data.HitEffect != null)
+        {
+            var effect = Instantiate(data.HitEffect, transform.position, Quaternion.identity);
+            Destroy(effect, 1f);
+        }
+    }
+
+    /// <summary>
+    /// 归还到对象池
+    /// </summary>
+    protected virtual void ReturnToPool()
+    {
+        isInitialized = false;
+
+        if (ProjectilePool.Instance != null)
+        {
+            ProjectilePool.Instance.Return(this);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
+
+    #endregion
+
+    #region 工具方法
+
+    protected bool IsInLayerMask(int layer, LayerMask mask)
+    {
+        return ((1 << layer) & mask.value) != 0;
+    }
+
+    #endregion
+
+    #region 调试
 
 #if UNITY_EDITOR
-        protected virtual void OnDrawGizmosSelected()
+    protected virtual void OnDrawGizmosSelected()
+    {
+        if (data.IsHoming && data.HomingRadius > 0)
         {
-            if (data.IsHoming && data.HomingRadius > 0)
-            {
-                Gizmos.color = Color.cyan;
-                Gizmos.DrawWireSphere(transform.position, data.HomingRadius);
-            }
-
-            if (homingTarget != null)
-            {
-                Gizmos.color = Color.red;
-                Gizmos.DrawLine(transform.position, homingTarget.position);
-            }
+            Gizmos.color = Color.cyan;
+            Gizmos.DrawWireSphere(transform.position, data.HomingRadius);
         }
+
+        if (homingTarget != null)
+        {
+            Gizmos.color = Color.red;
+            Gizmos.DrawLine(transform.position, homingTarget.position);
+        }
+    }
 #endif
 
-        #endregion
+    #endregion
 
 
 
-    }
+}

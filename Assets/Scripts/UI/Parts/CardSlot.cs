@@ -17,9 +17,8 @@ public class CardSlot : MonoBehaviour, IDropHandler
             if (_cardID == value) return;
             _cardID = value;
             
-            UpdateVisuals();
 
-            EventBus.Publish(new PlayerSlotCardChangedEvent
+            EventBus.Publish(new OnPlayerSkillEquippedEvent
             {
                 PlayerId = GameRoot.Instance.PlayerManager.GetLocalPlayerData().PlayerId,
                 SlotIndex = SlotIndex,

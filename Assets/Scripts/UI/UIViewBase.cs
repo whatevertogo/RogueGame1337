@@ -27,6 +27,7 @@ namespace UI
         /// </summary>
         public abstract bool CanBack { get; }
 
+
         #region Logic 管理
 
         public void AddLogic(IUILogic logic)
