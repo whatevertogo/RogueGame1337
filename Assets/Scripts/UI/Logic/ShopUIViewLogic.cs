@@ -14,9 +14,16 @@ namespace Game.UI
         private ShopType _recentShopType;
 
         private int _spendCoins;
+
         public virtual void Bind(UIViewBase view)
         {
             _view = view as ShopUIView;
+            ShopManager.Instance.OnItemPurchased += OnItemPurchasedMethod;
+        }
+
+        private void OnItemPurchasedMethod(string arg1, int arg2)
+        {
+            UpdateCoinText();
         }
 
         public virtual void OnOpen(UIArgs args)
@@ -24,23 +31,26 @@ namespace Game.UI
             var shopArg = args as ShopUIArg;
 
             if (_view is null) return;
-            if (shopArg is null)
+
+            // 记录最近的 ShopType 并消费金额
+            if (shopArg != null)
+            {
+                _recentShopType = shopArg.ShopType;
+                _spendCoins = shopArg.SpendCoins;
+                _view.SetShopType(shopArg.ShopMessage ?? string.Empty);
+            }
+            else
             {
                 _view.SetShopType(string.Empty);
-                return;
             }
-            // 记录最近的 ShopType 并消费金额
-            _recentShopType = shopArg.ShopType;
-            _spendCoins = shopArg.SpendCoins;
 
-            int coinNumber = InventoryManager.Instance != null ? InventoryManager.Instance.CoinsNumber : 0;
-            _view.SetCoinText($"Coins: {coinNumber}");
-            _view.SetShopType(shopArg.ShopMessage ?? string.Empty);
+            UpdateCoinText();
         }
 
         public virtual void OnClose()
         {
             // 关闭时清理
+            ShopManager.Instance.OnItemPurchased -= OnItemPurchasedMethod;
             _view = null;
         }
 
@@ -52,6 +62,16 @@ namespace Game.UI
         public virtual void OnResume()
         {
             // 从覆盖状态恢复时的默认处理（子类可重写）
+            UpdateCoinText();
+        }
+
+        private void UpdateCoinText()
+        {
+            if (_view != null)
+            {
+                int coinNumber = InventoryManager.Instance != null ? InventoryManager.Instance.CoinsNumber : 0;
+                _view.SetCoinText($"Coins: {coinNumber}");
+            }
         }
 
         public void OnButton1Clicked()
