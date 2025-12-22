@@ -1,6 +1,7 @@
 using UnityEngine;
 using Character;
 using Character.Player;
+using UI;
 
 [RequireComponent(typeof(AutoPickupComponent))]
 [RequireComponent(typeof(PlayerAnimator))]
@@ -247,7 +248,10 @@ public class PlayerController : CharacterBase
 		}
 
 		base.OnDeath();
+		//无法移动
 		Movement?.SetCanMove(false);
+
+		// UIManager.Instance.Show<DeadUIView>
 		// 播放死亡动画
 		playerAnim.PlayDie();
 		Debug.Log("💀 玩家死亡");
