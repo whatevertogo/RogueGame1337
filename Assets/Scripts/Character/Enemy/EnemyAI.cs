@@ -216,7 +216,7 @@ public class EnemyAI : MonoBehaviour
         if (enemyAnimator != null && stats != null)
         {
             bool isMoving = direction.sqrMagnitude > 0.01f;
-            enemyAnimator.SetMovementAnim(stats.MoveSpeed.Value, isMoving);
+            enemyAnimator.SetMovementAnim(isMoving);
         }
     }
 
@@ -225,7 +225,7 @@ public class EnemyAI : MonoBehaviour
     /// </summary>
     protected virtual void FindTarget()
     {
-        var p = FindObjectOfType<PlayerController>();
+        var p = FindFirstObjectByType<PlayerController>();
         if (p != null) target = p.transform;
     }
 

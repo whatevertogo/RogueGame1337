@@ -539,11 +539,11 @@ namespace RogueGame.Map
             switch (roomType)
             {
                 case RoomType.Normal:
-                    min = 5; max = 10; break;
+                    min = 2; max = 4; break;
                 case RoomType.Elite:
-                    min = 15; max = 20; break;
+                    min = 6; max = 10; break;
                 case RoomType.Boss:
-                    min = 20; max = 30; break;
+                    min = 12; max = 15; break;
                 default:
                     return;
             }

@@ -45,11 +45,21 @@ namespace Character.Player
             EventBus.Subscribe<PlayerSlotCardChangedEvent>(OnPlayerSlotCardChanged);
         }
 
+        private void OnDestroy()
+        {
+            EventBus.Unsubscribe<PlayerSlotCardChangedEvent>(OnPlayerSlotCardChanged);
+        }
+
         private void OnPlayerSlotCardChanged(PlayerSlotCardChangedEvent @event)
         {
-            var ps = PlayerManager.Instance?.GetLocalPlayerState();
-            if (ps == null) return;
-            if (@event.PlayerId != ps.PlayerId) return;
+            // 获取拥有此组件的 PlayerController
+            var pc = GetComponent<PlayerController>();
+            if (pc == null) return;
+
+            // 获取该 Controller 对应的运行时状态
+            var pr = PlayerManager.Instance?.GetPlayerRuntimeStateByController(pc);
+            // 如果找不到或者事件的 PlayerId 不匹配，则忽略
+            if (pr == null || @event.PlayerId != pr.PlayerId) return;
 
             int slotIndex = @event.SlotIndex;
             string newCardId = @event.NewCardId;

@@ -58,11 +58,10 @@ public class EnemyAnimator : MonoBehaviour
     /// </summary>
     /// <param name="moveSpeed">移动速度</param>
     /// <param name="isMoving">是否在移动</param>
-    public void SetMovementAnim(float moveSpeed, bool isMoving)
+    public void SetMovementAnim( bool isMoving)
     {
         if (animator != null)
         {
-            animator.SetFloat("MoveSpeed", isMoving ? moveSpeed : 0f);
             animator.SetBool("IsMoving", isMoving);
         }
     }

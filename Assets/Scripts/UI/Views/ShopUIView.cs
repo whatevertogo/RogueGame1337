@@ -19,7 +19,7 @@ namespace Game.UI
         [SerializeField] private TMP_Text ShopType;
         [SerializeField] private TMP_Text coinText;
         public override bool Exclusive => false;
-        public override bool CanBack => false;
+        public override bool CanBack => true;
 
         public override void OnCreate()
         {

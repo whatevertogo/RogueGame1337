@@ -14,7 +14,11 @@ public class CardSlot : MonoBehaviour, IDropHandler
         get => _cardID;
         set
         {
+            if (_cardID == value) return;
             _cardID = value;
+            
+            UpdateVisuals();
+
             EventBus.Publish(new PlayerSlotCardChangedEvent
             {
                 PlayerId = GameRoot.Instance.PlayerManager.GetLocalPlayerData().PlayerId,
@@ -23,6 +27,14 @@ public class CardSlot : MonoBehaviour, IDropHandler
             });
         }
     }
+
+    private Sprite _defaultSprite;
+    private void Awake()
+    {
+        var img = GetComponent<Image>();
+        if (img != null) _defaultSprite = img.sprite;
+    }
+
 
     private void Reset()
     {

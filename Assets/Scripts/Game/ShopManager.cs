@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using CDTU.Utils;
 using UnityEngine;
 
@@ -24,7 +25,7 @@ public class ShopManager : Singleton<ShopManager>
     /// <param name="spendCoins">消耗金币数</param>
     /// <param name="healAmount">恢复生命值</param>
     /// <returns>是否购买成功</returns>
-    public bool BuyBloods(int spendCoins, int healAmount = 20)
+    public bool BuyBloods(int spendCoins, int healAmount = 50)
     {
 
         // 使用原子操作消耗金币
@@ -92,6 +93,13 @@ public class ShopManager : Singleton<ShopManager>
         }
 
         string cardId = cardDatabase.GetRandomCardId();
+        if (InventoryManager.Instance.ActiveCardIdInfos.Any(info => info.cardId == cardId))
+        {
+            Debug.LogWarning("[ShopManager] Player already owns the card, refunding coins.");
+            inventoryManager.AddCoins(spendCoins); // 退款
+            OnPurchaseFailed?.Invoke("Card already owned");
+            return false;
+        }
         if (string.IsNullOrEmpty(cardId))
         {
             Debug.LogError("[ShopManager] Failed to get random card, refunding coins.");

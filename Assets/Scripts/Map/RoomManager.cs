@@ -20,7 +20,6 @@ namespace RogueGame.Map
         [SerializeField] private RoomWeightTable weightTable;
         [InlineEditor]
         [SerializeField] private List<RoomVariantSet> variantSets;
-        [SerializeField] private int roomsToUnlockBoss = 6;
         [SerializeField] private int seed = 12345;
 
         [Header("预制体")]
@@ -112,7 +111,7 @@ namespace RogueGame.Map
             _currentFloor = floor;
             StartRun(startMeta);
         }
-        
+
         public void StartRun(RoomMeta startMeta)
         {
             ClearAll();
@@ -125,11 +124,7 @@ namespace RogueGame.Map
 
         public int GetBossUnlockThreshold()
         {
-            if (weightTable != null)
-            {
-                try { return weightTable.BossAfterRooms; } catch { }
-            }
-            return roomsToUnlockBoss;
+            return weightTable.BossAfterRooms;
         }
 
         public bool TryEnterDoor(Direction dir)

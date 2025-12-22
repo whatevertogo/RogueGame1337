@@ -113,13 +113,25 @@ namespace Character.Components
             bool anyEnemyInMask = false;
             foreach (var ch in allChars)
             {
+                // 跳过已销毁或 null 的对象（防止在编辑器中访问已被销毁的 UnityEngine.Object 抛出 MissingReferenceException）
+                if (ch == null) continue;
+
                 if (ch.Team == TeamType.Enemy)
                 {
                     anyEnemyExist = true;
-                    if (((1 << ch.gameObject.layer) & hitMask.value) != 0)
+                    // 访问 gameObject.layer 前再次确保 ch 未被销毁
+                    try
                     {
-                        anyEnemyInMask = true;
-                        break;
+                        if (((1 << ch.gameObject.layer) & hitMask.value) != 0)
+                        {
+                            anyEnemyInMask = true;
+                            break;
+                        }
+                    }
+                    catch (UnityEngine.MissingReferenceException)
+                    {
+                        // 被销毁的对象，跳过
+                        continue;
                     }
                 }
             }
