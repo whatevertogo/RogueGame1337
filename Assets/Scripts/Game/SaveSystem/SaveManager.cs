@@ -94,25 +94,35 @@ namespace RogueGame.SaveSystem
         /// <summary>
         /// 保存当前 Run 进度
         /// </summary>
-        public void SaveRun()
+        /// <returns>是否保存成功</returns>
+        public bool SaveRun()
         {
             try
             {
                 var data = CreateRunSaveData();
                 if (data == null)
                 {
-                    Debug.LogWarning("[SaveManager] 无法创建 Run 存档数据");
-                    return;
+                    Debug.LogWarning("[SaveManager] 无法创建 Run 存档数据（缺少必要的游戏组件）");
+                    return false;
                 }
 
+                // 先保存文件，成功后再更新内部状态
+                if (!SaveToFile(RUN_AUTO_SAVE_FILE, data))
+                {
+                    CDTU.Utils.Logger.LogError("[SaveManager] Run 存档文件写入失败");
+                    return false;
+                }
+
+                // 仅在文件写入成功后才更新状态和触发事件
                 _currentRunSave = data;
-                SaveToFile(RUN_AUTO_SAVE_FILE, data);
                 OnRunSaved?.Invoke();
                 CDTU.Utils.Logger.Log("[SaveManager] Run 存档保存成功");
+                return true;
             }
             catch (Exception ex)
             {
                 CDTU.Utils.Logger.LogError($"[SaveManager] Run 存档保存失败: {ex.Message}");
+                return false;
             }
         }
 
@@ -165,12 +175,41 @@ namespace RogueGame.SaveSystem
         /// <summary>
         /// 创建当前 Run 存档数据
         /// </summary>
+        /// <returns>存档数据，如果缺少关键依赖则返回 null</returns>
         private RunSaveData CreateRunSaveData()
         {
+            // 验证关键依赖
+            var gsm = GameRoot.Instance?.GameStateManager;
+            var pm = PlayerManager.Instance;
+            var inv = InventoryManager.Instance;
+
+            // 检查关键组件是否存在
+            bool hasRequiredComponents = true;
+            if (gsm == null)
+            {
+                Debug.LogWarning("[SaveManager] GameStateManager not found");
+                hasRequiredComponents = false;
+            }
+            if (pm == null)
+            {
+                Debug.LogWarning("[SaveManager] PlayerManager not found");
+                hasRequiredComponents = false;
+            }
+            if (inv == null)
+            {
+                Debug.LogWarning("[SaveManager] InventoryManager not found");
+                hasRequiredComponents = false;
+            }
+
+            // 如果缺少关键组件，返回 null
+            if (!hasRequiredComponents)
+            {
+                return null;
+            }
+
             var saveData = new RunSaveData();
 
             // 获取游戏状态
-            var gsm = GameRoot.Instance?.GameStateManager;
             if (gsm != null)
             {
                 saveData.CurrentLayer = gsm.CurrentLayer;
@@ -178,7 +217,6 @@ namespace RogueGame.SaveSystem
             }
 
             // 获取玩家数据
-            var pm = PlayerManager.Instance;
             var player = pm?.GetLocalPlayerState();
             if (player?.Controller != null)
             {
@@ -198,14 +236,15 @@ namespace RogueGame.SaveSystem
                     };
                 }
 
-                // 获取装备的卡牌
+                // 获取装备的卡牌（改进空值检查）
                 var skillComp = player.Controller.GetComponent<PlayerSkillComponent>();
                 if (skillComp != null)
                 {
                     for (int i = 0; i < skillComp.PlayerSkillSlots.Length; i++)
                     {
                         var slot = skillComp.PlayerSkillSlots[i];
-                        if (slot?.Runtime?.CardId != null)
+                        // 使用 IsNullOrEmpty 检查 CardId
+                        if (slot?.Runtime != null && !string.IsNullOrEmpty(slot.Runtime.CardId))
                         {
                             saveData.EquippedCards.Add(new EquippedCardData
                             {
@@ -219,10 +258,9 @@ namespace RogueGame.SaveSystem
             }
 
             // 获取背包数据
-            var inv = InventoryManager.Instance;
             if (inv != null)
             {
-                saveData.Coins = inv.Coins;
+                saveData.Coins = inv.CoinsNumber;
 
                 // 使用扩展方法直接转换（零拷贝代码）
                 saveData.ActiveCards = inv.ActiveCardStates.ToSaveDataList();
@@ -248,7 +286,8 @@ namespace RogueGame.SaveSystem
         /// <summary>
         /// 保存元游戏数据
         /// </summary>
-        public void SaveMeta()
+        /// <returns>是否保存成功</returns>
+        public bool SaveMeta()
         {
             try
             {
@@ -260,13 +299,20 @@ namespace RogueGame.SaveSystem
                 // 更新时间戳
                 _metaSave.LastSaveTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
-                SaveToFile(META_SAVE_FILE, _metaSave);
+                if (!SaveToFile(META_SAVE_FILE, _metaSave))
+                {
+                    CDTU.Utils.Logger.LogError("[SaveManager] 元游戏存档文件写入失败");
+                    return false;
+                }
+
                 OnMetaSaved?.Invoke();
                 CDTU.Utils.Logger.Log("[SaveManager] 元游戏存档保存成功");
+                return true;
             }
             catch (Exception ex)
             {
                 CDTU.Utils.Logger.LogError($"[SaveManager] 元游戏存档保存失败: {ex.Message}");
+                return false;
             }
         }
 
@@ -355,13 +401,36 @@ namespace RogueGame.SaveSystem
         #region 底层文件操作
 
         /// <summary>
-        /// 将数据保存到文件
+        /// 将数据保存到文件（原子写入，防止崩溃损坏存档）
         /// </summary>
-        private void SaveToFile<T>(string fileName, T data)
+        /// <returns>是否保存成功</returns>
+        private bool SaveToFile<T>(string fileName, T data)
         {
-            string filePath = GetSaveFilePath(fileName);
-            string json = JsonUtility.ToJson(data, true);
-            File.WriteAllText(filePath, json);
+            try
+            {
+                string filePath = GetSaveFilePath(fileName);
+                string tempPath = filePath + ".tmp";
+                
+                // 序列化为 JSON
+                string json = JsonUtility.ToJson(data, true);
+                
+                // 先写入临时文件
+                File.WriteAllText(tempPath, json);
+                
+                // 原子替换（如果目标文件存在，会先删除）
+                if (File.Exists(filePath))
+                {
+                    File.Delete(filePath);
+                }
+                File.Move(tempPath, filePath);
+                
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[SaveManager] SaveToFile '{fileName}' failed: {ex.Message}");
+                return false;
+            }
         }
 
         /// <summary>

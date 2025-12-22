@@ -75,7 +75,7 @@ public sealed class TransitionController : MonoBehaviour
 
             if (playerRb != null)
             {
-                playerRb.velocity = Vector2.zero;
+                playerRb.linearVelocity = Vector2.zero;
                 playerRb.position = targetPos;
             }
             else

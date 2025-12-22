@@ -2,13 +2,19 @@
 using System;
 using UnityEngine;
 
-
+/// <summary>
+/// 被动卡牌配置
+/// </summary>
 [Serializable]
 public class PassiveCardConfig
 {
-    //存储所有被动Effect的SO
-
     [Tooltip("被动效果列表")]
     [InlineEditor]
     public StatusEffectDefinitionSO[] passiveEffects;
+    
+    
+    [Tooltip("是否可堆叠（拥有多张相同卡牌时）")]
+    public bool stackable = true;
+    
 }
+

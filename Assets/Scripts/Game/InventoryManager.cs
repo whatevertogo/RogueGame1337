@@ -54,8 +54,8 @@ public sealed class InventoryManager : Singleton<InventoryManager>
     public Action<string, int> OnActiveCardChargesChanged; // instanceId, new charges
 
     [ReadOnly]
-    [SerializeField] private int _coins = 0;
-    public int Coins => _coins;
+    [SerializeField] private int _coinsNumber = 0;
+    public int CoinsNumber => _coinsNumber;
     public event Action<int> OnCoinsChanged;
     protected override void Awake()
     {
@@ -238,23 +238,23 @@ public sealed class InventoryManager : Singleton<InventoryManager>
     public void AddCoins(int amount)
     {
         if (amount <= 0) return;
-        _coins += amount;
-        OnCoinsChanged?.Invoke(_coins);
+        _coinsNumber += amount;
+        OnCoinsChanged?.Invoke(_coinsNumber);
     }
     public bool SpendCoins(int amount)
     {
         if (amount <= 0) return true;
-        if (_coins < amount) return false;
-        _coins -= amount;
-        OnCoinsChanged?.Invoke(_coins);
+        if (_coinsNumber < amount) return false;
+        _coinsNumber -= amount;
+        OnCoinsChanged?.Invoke(_coinsNumber);
         return true;
     }
 
     public void SetCoins(int amount)
     {
         if (amount < 0) amount = 0;
-        _coins = amount;
-        OnCoinsChanged?.Invoke(_coins);
+        _coinsNumber = amount;
+        OnCoinsChanged?.Invoke(_coinsNumber);
     }
 
     #endregion

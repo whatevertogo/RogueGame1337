@@ -28,8 +28,11 @@ public class GameRoot : Singleton<GameRoot>
     public InventoryManager InventoryManager => inventoryManager;
     [SerializeField] private LootDropper lootDropper;
     public LootDropper LootDropper => lootDropper;
-    // [SerializeField] private SaveManager saveManager;
-    // public SaveManager SaveManager => saveManager;
+    [SerializeField] private SaveManager saveManager;
+    public SaveManager SaveManager => saveManager;
+
+    [SerializeField] private ShopManager shopManager;
+    public ShopManager ShopManager => shopManager;
 
     protected override void Awake()
     {
@@ -70,8 +73,9 @@ public class GameRoot : Singleton<GameRoot>
 
         playerManager.Initialize(roomManager);  
 
-        // saveManager.Initialize(gameStateManager, playerManager);
+        //SaveManager 初始化依赖于 PlayerManager 和 InventoryManager
 
+        shopManager.Initialize(inventoryManager);
     }
 
     private bool AssertNotNull(UnityEngine.Object obj, string name)

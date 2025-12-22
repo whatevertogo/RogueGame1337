@@ -279,7 +279,7 @@ namespace Character.Player
                 var existing = inv.GetFirstInstanceByCardId(cardId);
                 if (existing != null)
                 {
-                    instanceId = existing.instanceId;
+                    instanceId = existing.InstanceId;
                 }
                 else
                 {

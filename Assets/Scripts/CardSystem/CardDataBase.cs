@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
+
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -85,10 +87,31 @@ public class CardDataBase : ScriptableObject
     /// <summary>
     /// 获取所有卡牌定义
     /// </summary>
-    public IReadOnlyCollection<CardDefinition> GetAllDefinitions()
+    public IEnumerable<CardDefinition> GetAllDefinitions()
     {
         if (!_initialized) Initialize();
         return _cardid_cardDefinition_Map.Values;
+    }
+
+
+    public string GetRandomCardId()
+    {
+        if (AllCardDefinitions == null || !AllCardDefinitions.Any())
+        {
+            Debug.LogWarning("[CardDataBase] GetRandomCardId: No card definitions available.");
+            return null;
+        }
+
+        // 过滤 null 和空 ID，防止编辑器操作引入问题
+        var validCards = AllCardDefinitions.Where(x => x != null && !string.IsNullOrEmpty(x.CardId)).ToList();
+        if (validCards.Count == 0)
+        {
+            Debug.LogWarning("[CardDataBase] GetRandomCardId: No valid cards available.");
+            return null;
+        }
+
+        int randomIndex = Random.Range(0, validCards.Count);
+        return validCards[randomIndex].CardId;
     }
 
     /// <summary>

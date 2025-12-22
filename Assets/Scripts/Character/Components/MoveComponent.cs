@@ -36,14 +36,14 @@ namespace Character.Components
             if (knockbackTimer > 0)
             {
                 knockbackTimer -= Time.fixedDeltaTime;
-                rb.velocity = knockbackVelocity;
+                rb.linearVelocity = knockbackVelocity;
                 return;
             }
 
             // 控制效果检查
             if (!canMove || (statusEffects != null && (statusEffects.IsStunned || statusEffects.IsRooted)))
             {
-                rb.velocity = Vector2.zero;
+                rb.linearVelocity = Vector2.zero;
                 currentSpeed = 0;
                 return;
             }
@@ -53,9 +53,9 @@ namespace Character.Components
             float accel = stats?.Acceleration.Value ?? 10f;
 
             Vector2 desiredVelocity = inputDir.normalized * targetSpeed;
-            rb.velocity = Vector2.Lerp(rb.velocity, desiredVelocity, accel * Time.fixedDeltaTime);
+            rb.linearVelocity = Vector2.Lerp(rb.linearVelocity, desiredVelocity, accel * Time.fixedDeltaTime);
 
-            currentSpeed = rb.velocity.magnitude;
+            currentSpeed = rb.linearVelocity.magnitude;
 
             // 更新朝向
             if (inputDir.sqrMagnitude > 0.01f)
@@ -74,7 +74,7 @@ namespace Character.Components
             canMove = value;
             if (!value)
             {
-                rb.velocity = Vector2.zero;
+                rb.linearVelocity = Vector2.zero;
             }
         }
 
@@ -86,7 +86,7 @@ namespace Character.Components
 
         public void StopImmediately()
         {
-            rb.velocity = Vector2.zero;
+            rb.linearVelocity = Vector2.zero;
             inputDir = Vector2.zero;
             knockbackTimer = 0;
         }

@@ -115,7 +115,7 @@ using Character.Projectiles;
             // 设置初始速度
             if (rb != null)
             {
-                rb.velocity = currentDirection * data.Speed;
+                rb.linearVelocity = currentDirection * data.Speed;
             }
 
             // 设置旋转
@@ -157,7 +157,7 @@ using Character.Projectiles;
 
             if (rb != null)
             {
-                rb.velocity = Vector2.zero;
+                rb.linearVelocity = Vector2.zero;
                 rb.angularVelocity = 0f;
             }
         }
@@ -189,7 +189,7 @@ using Character.Projectiles;
         {
             if (!isInitialized || rb == null) return;
 
-            rb.velocity = currentDirection * data.Speed;
+            rb.linearVelocity = currentDirection * data.Speed;
         }
 
         protected void UpdateRotation()

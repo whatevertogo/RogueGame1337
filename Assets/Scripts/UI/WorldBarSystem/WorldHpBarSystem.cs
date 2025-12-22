@@ -7,7 +7,7 @@ public class WorldHpBarSystem : MonoBehaviour
     public static WorldHpBarSystem Instance { get; private set; }
 
     [SerializeField] private WorldHpBar barPrefab;
-    [SerializeField] private RectTransform barRoot; // should be a UI container under a Canvas
+    [SerializeField] private RectTransform barRoot; 
     [SerializeField] private int poolDefaultSize = 0; // 默认不预热，避免启动时大量 Instantiate，可在加载阶段分帧预热
 
     // use project's generic ObjectPool
