@@ -49,6 +49,12 @@ namespace RogueGame.Events
     {
         public int FromLayer;
         public int ToLayer;
+
+        public LayerTransitionEvent(int fromLayer, int toLayer)
+        {
+            FromLayer = fromLayer;
+            ToLayer = toLayer;
+        }
     }
 
     /// <summary>

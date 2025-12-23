@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using UI;
 using System.Threading.Tasks;
+using RogueGame.Events;
 
 namespace Game.UI
 {
@@ -14,11 +15,19 @@ namespace Game.UI
 
         private PlayerRuntimeState _myPlayerState;
         private bool _skillEventsSubscribed = false;
+
         public virtual void Bind(UIViewBase view)
         {
             _view = view as PlayingStateUIView;
             // 绑定 BagButton 点击事件
             _view?.BindBagButton(OnBagButtonClicked);
+            EventBus.Subscribe<LayerTransitionEvent>(OnLayerTransition);
+        }
+
+        private void OnLayerTransition(LayerTransitionEvent evt)
+        {
+            Debug.Log($"层过渡事件：从层 {evt.FromLayer} 到层 {evt.ToLayer}");
+            _view.SetLevelText($"第{evt.ToLayer}层");
         }
 
         //todo-后面联机可能改
@@ -51,6 +60,7 @@ namespace Game.UI
             }
             UnsubscribeFromPlayerHealthEvents();
             UnsubscribeFromSkillEvents();
+            EventBus.Unsubscribe<LayerTransitionEvent>(OnLayerTransition);
             _myPlayerState = null;
             _view = null;
         }

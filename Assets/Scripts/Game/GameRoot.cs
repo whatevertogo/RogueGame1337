@@ -12,17 +12,22 @@ public class GameRoot : Singleton<GameRoot>
     public CardDataBase CardDatabase => cardDatabase;
 
     [Header("Game Configs")]
-    [InlineEditor]
+    [InlineEditor, Tooltip("游戏充能平衡配置")]
     [SerializeField] private GameChargeBalanceConfig GameBalanceConfig;
 
     //技能充能Config
-    [InlineEditor]
+    [InlineEditor, Tooltip("游戏充能平衡配置")]
     public GameChargeBalanceConfig ChargeBalanceConfig => GameBalanceConfig;
 
     //游戏胜利奖励配置
-    [InlineEditor]
+    [InlineEditor, Tooltip("层间胜利奖励配置")]
     [SerializeField] private GameWinLayerRewardConfig gameWinLayerRewardConfig;
     public GameWinLayerRewardConfig GameWinLayerRewardConfig => gameWinLayerRewardConfig;
+
+    //主动卡去重配置
+    [InlineEditor, Tooltip("重复主动卡转换为金币的配置")]
+    [SerializeField] private ActiveCardDeduplicationConfig activeCardDeduplicationConfig;
+    public ActiveCardDeduplicationConfig ActiveCardDeduplicationConfig => activeCardDeduplicationConfig;
 
     [Header("Scene Managers")]
     [SerializeField] private GameFlowCoordinator gameFlowCoordinator;
@@ -133,6 +138,8 @@ public class GameRoot : Singleton<GameRoot>
             inventoryManager,
             gameWinLayerRewardConfig
         );
+
+
         FloorRewardSystemService.Subscribe();
 
         // 启动时加载元游戏存档

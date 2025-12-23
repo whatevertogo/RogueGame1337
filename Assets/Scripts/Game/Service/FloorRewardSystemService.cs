@@ -1,6 +1,7 @@
 using System;
 using Character.Components;
 using RogueGame.Events;
+using UnityEngine;
 
 /// <summary>
 /// 层间奖励系统服务
@@ -17,7 +18,9 @@ public sealed class FloorRewardSystemService
 
     public FloorRewardSystemService(
         PlayerManager playerManager,
-        InventoryManager inventoryManager,GameWinLayerRewardConfig gameWinLayerRewardConfig)
+        InventoryManager inventoryManager,
+        GameWinLayerRewardConfig gameWinLayerRewardConfig
+    )
     {
         this.playerManager = playerManager;
         this.inventoryManager = inventoryManager;
@@ -72,9 +75,18 @@ public sealed class FloorRewardSystemService
         // 2. 给予金币
         inventoryManager.AddCoins(gameWinLayerRewardConfig.layerRewardCoins);
 
-        // 3. 给予随机主动卡（临时方案，后续应该改为 UI 选择）
+        // 3. 给予随机主动卡（带去重检测）
         // TODO-UI选择有空再说
-        inventoryManager.AddRandomActiveCard();
+        var result = inventoryManager.AddRandomActiveCardSmart();
+
+        if (result.ConvertedToCoins)
+        {
+            Debug.Log($"[FloorRewardSystemService] 层间奖励卡牌重复，已转换为 {result.CoinsAmount} 金币");
+        }
+        else if (result.Added)
+        {
+            Debug.Log($"[FloorRewardSystemService] 层间奖励：获得主动卡 '{result.CardId}'");
+        }
     }
 
     /// <summary>

@@ -297,7 +297,7 @@ public sealed class GameFlowCoordinator : MonoBehaviour, IGameStateManager
         try
         {
             // 发布层间过渡事件
-            EventBus.Publish(new LayerTransitionEvent { FromLayer = from, ToLayer = CurrentLayer });
+            EventBus.Publish(new LayerTransitionEvent(from,CurrentLayer));
 
             // 触发层间奖励系统
             EventBus.Publish(new RewardSelectionRequestedEvent(
