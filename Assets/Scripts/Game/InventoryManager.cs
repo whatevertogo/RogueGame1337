@@ -460,7 +460,6 @@ public sealed class InventoryManager : Singleton<InventoryManager>
     /// </summary>
     /// <param name="cardId">卡牌ID</param>
     /// <param name="initialCharges">初始充能值</param>
-    /// <param name="dedupConfig">去重配置（可选，如果为null则使用默认配置）</param>
     /// <returns>返回值结构，包含是否添加、是否转换为金币等信息</returns>
     public ActiveCardAddResult AddActiveCardSmart(string cardId, int initialCharges)
     {
@@ -473,19 +472,31 @@ public sealed class InventoryManager : Singleton<InventoryManager>
             CoinsAmount = 0
         };
 
+        // 获取配置（带空检查）
+        var config = GetDeduplicationConfig();
+        if (config == null)
+        {
+            Debug.LogWarning("[InventoryManager] ActiveCardDeduplicationConfig 未设置，使用默认行为（不去重）");
+            // 配置为空时，直接添加卡牌
+            string instanceId = AddActiveCardInstance(cardId, initialCharges);
+            result.Success = !string.IsNullOrEmpty(instanceId);
+            result.Added = result.Success;
+            result.InstanceId = instanceId;
+            return result;
+        }
 
         // 检查是否启用去重
-        if (GameRoot.Instance.ActiveCardDeduplicationConfig.enableDeduplication && HasActiveCard(cardId))
+        if (config.enableDeduplication && HasActiveCard(cardId))
         {
             // 重复卡牌，转换为金币
-            int coins = GameRoot.Instance.ActiveCardDeduplicationConfig.duplicateToCoins;
+            int coins = config.duplicateToCoins;
             AddCoins(coins);
 
             result.Success = true;
             result.ConvertedToCoins = true;
             result.CoinsAmount = coins;
 
-            if (GameRoot.Instance.ActiveCardDeduplicationConfig.showDeduplicationLog)
+            if (config.showDeduplicationLog)
             {
                 Debug.Log($"[InventoryManager] 重复主动卡 '{cardId}' 已转换为 {coins} 金币");
             }
@@ -499,13 +510,22 @@ public sealed class InventoryManager : Singleton<InventoryManager>
             result.Added = result.Success;
             result.InstanceId = instanceId;
 
-            if (GameRoot.Instance.ActiveCardDeduplicationConfig.showDeduplicationLog && result.Success)
+            if (config.showDeduplicationLog && result.Success)
             {
                 Debug.Log($"[InventoryManager] 添加主动卡 '{cardId}' (实例ID: {instanceId})");
             }
         }
 
         return result;
+    }
+
+    /// <summary>
+    /// 安全获取去重配置
+    /// </summary>
+    private ActiveCardDeduplicationConfig GetDeduplicationConfig()
+    {
+        if (GameRoot.Instance == null) return null;
+        return GameRoot.Instance.ActiveCardDeduplicationConfig;
     }
 
     /// <summary>

@@ -88,6 +88,7 @@ public class GameRoot : Singleton<GameRoot>
         ok &= AssertNotNull(shopManager, nameof(shopManager));
         ok &= AssertNotNull(GameBalanceConfig, nameof(GameBalanceConfig));
         ok &= AssertNotNull(gameWinLayerRewardConfig, nameof(gameWinLayerRewardConfig));
+        ok &= AssertNotNull(activeCardDeduplicationConfig, nameof(activeCardDeduplicationConfig));
 
 
 
