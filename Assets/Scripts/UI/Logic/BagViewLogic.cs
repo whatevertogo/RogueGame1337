@@ -59,7 +59,6 @@ namespace Game.UI
 
         public void RefreshActiveCardViews()
         {
-
             var inv = InventoryManager.Instance;
             if (inv == null)
             {
@@ -67,18 +66,16 @@ namespace Game.UI
                 return;
             }
 
-            var cards = inv.GetAllActiveCardDefinitions();
-
-            foreach (var card in cards)
+            var states = inv.ActiveCardStates;
+            foreach (var st in states)
             {
-                if (card == null) continue;
-                _view.AddCardView(card.CardId, 1);
+                if (st == null) continue;
+                _view.AddCardView(st.CardId, 1);
             }
         }
 
         public void RefreshPassiveCardViews()
         {
-
             var inv = InventoryManager.Instance;
             if (inv == null)
             {
@@ -86,12 +83,11 @@ namespace Game.UI
                 return;
             }
 
-            var cards = inv.GetAllPassiveCardDefinitions();
-
-            foreach (var card in cards)
+            var passive = inv.PassiveCards;
+            foreach (var p in passive)
             {
-                if (card == null) continue;
-                _view.AddCardView(card.CardId);
+                if (p.Count <= 0) continue;
+                _view.AddCardView(p.CardId, p.Count);
             }
         }
 

@@ -93,7 +93,7 @@ public class ShopManager : Singleton<ShopManager>
         }
 
         string cardId = cardDatabase.GetRandomCardId();
-        if (InventoryManager.Instance.ActiveCardIdInfos.Any(info => info.cardId == cardId))
+        if (inventoryManager.ActiveCardStates.Any(info => info.CardId == cardId))
         {
             Debug.LogWarning("[ShopManager] Player already owns the card, refunding coins.");
             inventoryManager.AddCoins(spendCoins); // 退款

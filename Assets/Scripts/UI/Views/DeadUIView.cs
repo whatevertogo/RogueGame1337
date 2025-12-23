@@ -14,9 +14,6 @@ namespace Game.UI
         // UI Components
         [SerializeField] private Image panel;
         [SerializeField] private TMP_Text deadMessage;
-        [SerializeField] private Image saveViewButton;
-        [SerializeField] private Button saveView;
-        [SerializeField] private TMP_Text textTMP;
         [SerializeField] private Image retryButton;
         [SerializeField] private Button retry;
         [SerializeField] private TMP_Text textTMPTMP_Text;
@@ -33,20 +30,11 @@ namespace Game.UI
         {
             if (deadMessage != null) deadMessage.text = content;
         }
-        public void SetTextTMP(string content)
-        {
-            if (textTMP != null) textTMP.text = content;
-        }
         public void SetTextTMPTMP_Text(string content)
         {
             if (textTMPTMP_Text != null) textTMPTMP_Text.text = content;
         }
 
-        /// <summary>绑定 Button 事件</summary>
-        public void BindSaveViewButton(System.Action onClickAction)
-        {
-            if (saveView != null) { saveView.onClick.RemoveAllListeners(); if (onClickAction != null) { saveView.onClick.AddListener(() => onClickAction()); } }
-        }
         public void BindRetryButton(System.Action onClickAction)
         {
             if (retry != null) { retry.onClick.RemoveAllListeners(); if (onClickAction != null) { retry.onClick.AddListener(() => onClickAction()); } }

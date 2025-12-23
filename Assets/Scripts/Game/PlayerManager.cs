@@ -6,6 +6,8 @@ using RogueGame.Map;
 using RogueGame.Events;
 using CDTU.Utils;
 using Character.Player;
+using UI;
+using Game.UI;
 
 /// <summary>
 /// 玩家管理器：负责玩家注册、共享库存转发、技能管理
@@ -56,7 +58,11 @@ public class PlayerManager : Singleton<PlayerManager>
         EventBus.Subscribe<RoomEnteredEvent>(HandleRoomEnteredEvent);
         // 订阅实体击杀事件，用于分发技能能量
         EventBus.Subscribe<EntityKilledEvent>(HandleEntityKilledEvent);
+        // 订阅玩家死亡事件
+        EventBus.Subscribe<PlayerDiedEvent>(HandlePlayerDiedEvent);
     }
+
+
 
     public void Initialize(RoomManager roomManager)
     {
@@ -94,6 +100,8 @@ public class PlayerManager : Singleton<PlayerManager>
         ResetSkillUsageForAllPlayers();
     }
 
+
+
     /// <summary>
     /// 处理实体击杀事件
     /// 分发技能能量给击杀者
@@ -120,6 +128,28 @@ public class PlayerManager : Singleton<PlayerManager>
                 comp.OnRoomEnter();
             }
         }
+    }
+
+    /// <summary>
+    /// 处理玩家死亡事件
+    /// </summary>
+    /// <param name="event"></param>
+    /// <exception cref="NotImplementedException"></exception>
+    private void HandlePlayerDiedEvent(PlayerDiedEvent evt)
+    {
+        //TODO-处理玩家死亡后的逻辑，例如显示死亡UI等
+        var playerState = GetPlayerRuntimeStateByController(evt.Player);
+
+        //TODO 多人可能改
+        Time.timeScale = 0f; // 暂停游戏
+
+        //打开死亡UI
+        if (playerState != null && playerState.IsLocal)
+        {
+            //TODO-传递死亡信息
+            UIManager.Instance.Open<DeadUIView>(new DeadUIViewArgs("You have died."), UILayer.Top);
+        }
+
     }
 
     #region 公共api

@@ -179,7 +179,7 @@ namespace RogueGame.SaveSystem
         private RunSaveData CreateRunSaveData()
         {
             // 验证关键依赖
-            var gsm = GameRoot.Instance?.GameStateManager;
+            var gsm = GameRoot.Instance?.GameFlowCoordinator;
             var pm = PlayerManager.Instance;
             var inv = InventoryManager.Instance;
 
@@ -187,7 +187,7 @@ namespace RogueGame.SaveSystem
             bool hasRequiredComponents = true;
             if (gsm == null)
             {
-                Debug.LogWarning("[SaveManager] GameStateManager not found");
+                Debug.LogWarning("[SaveManager] GameFlowCoordinator not found");
                 hasRequiredComponents = false;
             }
             if (pm == null)
@@ -260,18 +260,18 @@ namespace RogueGame.SaveSystem
             // 获取背包数据
             if (inv != null)
             {
-                saveData.Coins = inv.CoinsNumber;
+                saveData.Coins = inv.Coins;
 
                 // 使用扩展方法直接转换（零拷贝代码）
                 saveData.ActiveCards = inv.ActiveCardStates.ToSaveDataList();
 
                 // 保存被动卡牌
-                foreach (var info in inv.PassiveCardIdInfos)
+                foreach (var info in inv.PassiveCards)
                 {
                     saveData.PassiveCards.Add(new PassiveCardSaveData
                     {
-                        CardId = info.cardId,
-                        Count = info.count
+                        CardId = info.CardId,
+                        Count = info.Count
                     });
                 }
             }

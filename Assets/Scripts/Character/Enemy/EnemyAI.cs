@@ -201,6 +201,7 @@ public class EnemyAI : MonoBehaviour
         {
             lastAttackTime = Time.time;
             OnAttackPerformed();
+            
         }
     }
 

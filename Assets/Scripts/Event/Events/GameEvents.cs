@@ -70,7 +70,7 @@ namespace RogueGame.Events
         public int InitialRoomId;
     }
 
-    // 由 GameStateManager 处理奖励选择逻辑（从事实事件触发）
+    // 由 GameFlowCoordinator 处理奖励选择逻辑（从事实事件触发）
     public class RewardSelectionRequestedEvent
     {
         public int RoomId;
@@ -142,11 +142,21 @@ namespace RogueGame.Events
         public string AttackerPlayerId;
     }
 
+    /// <summary>
+    /// 玩家技能能量变化事件：PlayerSkillComponent 在技能能量变化时发布此事件
+    /// </summary>
     public class OnPlayerSkillEquippedEvent
     {
         public string PlayerId;
         public int SlotIndex;
         public string NewCardId; // 可能为 null，表示槽位被清空
+
+        public OnPlayerSkillEquippedEvent(string playerId, int slotIndex, string newCardId)
+        {
+            PlayerId = playerId;
+            SlotIndex = slotIndex;
+            NewCardId = newCardId;
+        }
     }
 
     /// <summary>
@@ -155,6 +165,22 @@ namespace RogueGame.Events
     public class ClearAllSlotsRequestedEvent
     {
         public string PlayerId; // 可选：限定针对某玩家（若为空则对所有玩家生效）
+        public ClearAllSlotsRequestedEvent(string playerId = null)
+        {
+            PlayerId = playerId;
+        }
+    }
+
+    /// <summary>
+    /// 玩家死亡事件：PlayerController 在玩家死亡时发布此事件
+    /// </summary>
+    public class PlayerDiedEvent
+    {
+        public PlayerController Player;
+        public PlayerDiedEvent(PlayerController player)
+        {
+            Player = player;
+        }
     }
 
 }

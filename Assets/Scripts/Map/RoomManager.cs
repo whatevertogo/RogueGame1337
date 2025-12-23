@@ -66,7 +66,7 @@ namespace RogueGame.Map
         // 只读属性
         public RoomInstanceState CurrentRoom => _current;
         public int CurrentFloor => _currentFloor;
-        // 注意: 层级计数与 Boss 解锁由 GameStateManager 管理，RoomManager 仅保留当前层号作信息用途
+        // 注意: 层级计数与 Boss 解锁由 GameFlowCoordinator 管理，RoomManager 仅保留当前层号作信息用途
         public Vector2 CurrentRoomSize => _current?.CachedSize ?? new Vector2(defaultRoomWidth, defaultRoomHeight);
         public RoomController CurrentRoomController => _current?.Instance?.GetComponent<RoomController>();
 
@@ -80,7 +80,7 @@ namespace RogueGame.Map
             {
                 CDTU.Utils.Logger.LogWarning("[RoomManager] TransitionController not found in scene.");
             }
-            // RoomManager 不再订阅全局流程事件，流程由 GameStateManager 统一控制。
+            // RoomManager 不再订阅全局流程事件，流程由 GameFlowCoordinator 统一控制。
             // 订阅 EventBus，以响应 RoomController 发布的房间级事件
             EventBus.Subscribe<RoomEnteredEvent>(HandleRoomEnteredEvent);
             EventBus.Subscribe<CombatStartedEvent>(HandleCombatStartedEvent);
@@ -144,7 +144,7 @@ namespace RogueGame.Map
                 return false;
             }
 
-            // 不直接执行切换；将请求发布到 EventBus，由 GameStateManager 负责执行过渡
+            // 不直接执行切换；将请求发布到 EventBus，由 GameFlowCoordinator 负责执行过渡
             try
             {
                 EventBus.Publish(new DoorEnterRequestedEvent { Direction = dir, RoomId = _current?.Meta?.Index ?? 0, InstanceId = _current?.InstanceId ?? 0 });
@@ -401,13 +401,13 @@ namespace RogueGame.Map
 
         private void HandleRoomCleared(RoomController room)
         {
-            // 仅做本地回调与日志；层级统计与 Boss 解锁由 GameStateManager 负责
+            // 仅做本地回调与日志；层级统计与 Boss 解锁由 GameFlowCoordinator 负责
             OnRoomCleared?.Invoke(room);
             Log($"[RoomManager] 房间清理完成, 房间类型: {room?.RoomType}, InstanceId: {room?.RoomMeta?.Index}");
         }
 
         // ========== EventBus 事件处理（最小） ==========
-        // 已移除对全局事件的处理，流程由 GameStateManager 负责
+        // 已移除对全局事件的处理，流程由 GameFlowCoordinator 负责
 
         private void HandleEnemyKilled(RoomController room, int remaining)
         {

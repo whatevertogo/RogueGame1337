@@ -510,8 +510,7 @@ namespace Character.Player
                     if (state != null)
                     {
                         int maxCharges = cardDef.activeCardConfig.maxCharges;
-                        state.CurrentCharges = Mathf.Min(maxCharges, state.CurrentCharges + 1);
-                        inv.OnActiveCardChargesChanged?.Invoke(rt.InstanceId, state.CurrentCharges);
+                        inv.AddCharges(rt.InstanceId, 1, maxCharges);
                     }
                 }
             }

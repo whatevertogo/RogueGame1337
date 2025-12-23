@@ -31,7 +31,7 @@ namespace RogueGame.SaveSystem
             // 2. 恢复玩家状态
             RestorePlayerState(data);
 
-            // 3. 恢复 GameStateManager 状态（层级、房间）
+            // 3. 恢复 GameFlowCoordinator 状态（层级、房间）
             RestoreGameState(data);
 
             CDTU.Utils.Logger.Log("[SaveRestoreUtility] Run 存档已恢复");
@@ -53,7 +53,7 @@ namespace RogueGame.SaveSystem
             inv.SetCoins(data.Coins);
 
             // 清空现有卡牌池（通过事件通知）
-            EventBus.Publish(new ClearAllSlotsRequestedEvent());
+            EventBus.Publish(new ClearAllSlotsRequestedEvent(PlayerManager.Instance.GetLocalPlayerState().PlayerId));
 
             // 恢复主动卡牌
             foreach (var cardData in data.ActiveCards)
@@ -80,12 +80,7 @@ namespace RogueGame.SaveSystem
             {
                 foreach (var equipped in data.EquippedCards)
                 {
-                    EventBus.Publish(new OnPlayerSkillEquippedEvent
-                    {
-                        PlayerId = localPlayer.PlayerId,
-                        SlotIndex = equipped.SlotIndex,
-                        NewCardId = equipped.CardId
-                    });
+                    EventBus.Publish(new OnPlayerSkillEquippedEvent(localPlayer.PlayerId,equipped.SlotIndex,equipped.CardId));
                 }
             }
         }
@@ -121,14 +116,14 @@ namespace RogueGame.SaveSystem
         /// </summary>
         private static void RestoreGameState(RunSaveData data)
         {
-            var gsm = GameRoot.Instance?.GameStateManager;
+            var gsm = GameRoot.Instance?.GameFlowCoordinator;
             if (gsm == null)
             {
-                Debug.LogWarning("[SaveRestoreUtility] GameStateManager not found");
+                Debug.LogWarning("[SaveRestoreUtility] GameFlowCoordinator not found");
                 return;
             }
 
-            // 注意：这里需要根据你的 GameStateManager 实际 API 调整
+            // 注意：这里需要根据你的 GameFlowCoordinator 实际 API 调整
             // 可能需要通过 RoomManager 重新加载指定的层级和房间
             CDTU.Utils.Logger.Log($"[SaveRestoreUtility] 需要恢复到 Layer {data.CurrentLayer}, Room {data.CurrentRoomId}");
             // TODO: 实现房间恢复逻辑（可能需要与 RoomManager 配合）

@@ -2,6 +2,7 @@ using UnityEngine;
 using Character;
 using Character.Player;
 using UI;
+using RogueGame.Events;
 
 [RequireComponent(typeof(AutoPickupComponent))]
 [RequireComponent(typeof(PlayerAnimator))]
@@ -18,33 +19,33 @@ public class PlayerController : CharacterBase
 	// 转发器实现：在控制器内部维护一个小型转发器类以避免使用 lambda
 	private class PlayerSkillEventForwarder
 	{
-		private PlayerManager PlayerManager;
+		private PlayerManager playerManager;
 		private readonly string _playerId;
 
 		public PlayerSkillEventForwarder(PlayerManager owner, string playerId)
 		{
 			_playerId = playerId;
-			this.PlayerManager = owner;
+			this.playerManager = owner;
 		}
 
 		public void OnEnergyChanged(int slotIndex, float energy)
 		{
-			PlayerManager?.RaisePlayerSkillEnergyChanged(_playerId, slotIndex, energy);
+			playerManager?.RaisePlayerSkillEnergyChanged(_playerId, slotIndex, energy);
 		}
 
 		public void OnSkillUsed(int slotIndex)
 		{
-			PlayerManager?.RaisePlayerSkillUsed(_playerId, slotIndex);
+			playerManager?.RaisePlayerSkillUsed(_playerId, slotIndex);
 		}
 
 		public void OnSkillEquipped(int slotIndex, string cardId)
 		{
-			PlayerManager?.RaisePlayerSkillEquipped(_playerId, slotIndex, cardId);
+			playerManager?.RaisePlayerSkillEquipped(_playerId, slotIndex, cardId);
 		}
 
 		public void OnSkillUnequipped(int slotIndex)
 		{
-			PlayerManager?.RaisePlayerSkillUnequipped(_playerId, slotIndex);
+			playerManager?.RaisePlayerSkillUnequipped(_playerId, slotIndex);
 		}
 	}
 
@@ -251,7 +252,10 @@ public class PlayerController : CharacterBase
 		//无法移动
 		Movement?.SetCanMove(false);
 
-		// UIManager.Instance.Show<DeadUIView>
+		//通知PlayerManager玩家死亡
+		EventBus.Publish<PlayerDiedEvent>(new PlayerDiedEvent(this));
+
+		// TODO- UIManager.Instance.Show<DeadUIView>
 		// 播放死亡动画
 		playerAnim.PlayDie();
 		Debug.Log("💀 玩家死亡");

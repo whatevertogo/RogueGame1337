@@ -18,12 +18,7 @@ public class CardSlot : MonoBehaviour, IDropHandler
             _cardID = value;
             
 
-            EventBus.Publish(new OnPlayerSkillEquippedEvent
-            {
-                PlayerId = GameRoot.Instance.PlayerManager.GetLocalPlayerData().PlayerId,
-                SlotIndex = SlotIndex,
-                NewCardId = _cardID
-            });
+            EventBus.Publish(new OnPlayerSkillEquippedEvent(GameRoot.Instance.PlayerManager.GetLocalPlayerData().PlayerId,SlotIndex,CardID));
         }
     }
 

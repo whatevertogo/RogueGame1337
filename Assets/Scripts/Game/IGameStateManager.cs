@@ -2,7 +2,7 @@ using RogueGame.Map;
 using UI;
 
 /// <summary>
-/// GameStateManager 的抽象接口（最小），方便其它系统通过接口与之交互。
+/// GameFlowCoordinator 的抽象接口（最小），方便其它系统通过接口与之交互。
 /// </summary>
 public interface IGameStateManager
 {

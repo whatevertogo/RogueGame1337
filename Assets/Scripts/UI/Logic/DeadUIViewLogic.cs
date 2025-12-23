@@ -38,11 +38,6 @@ namespace Game.UI
             // 从覆盖状态恢复时的默认处理（子类可重写）
         }
 
-        public void OnSaveViewClicked()
-        {
-            UIManager.Instance.Close<DeadUIView>();
-            // UIManager.Instance.Show<SaveViewUIView>();
-        }
 
         public void OnRetryClicked()
         {
@@ -68,9 +63,6 @@ namespace Game.UI
             }
 
             _core.Bind(view);
-            // Auto-bind event for saveView
-            _view.BindSaveViewButton(OnSaveViewClicked);
-            // Auto-bind event for retry
             _view.BindRetryButton(OnRetryClicked);
         }
 
@@ -82,7 +74,6 @@ namespace Game.UI
         public void OnClose()
         {
             _core.OnClose();
-            if (_view != null) _view.BindSaveViewButton(null);
             if (_view != null) _view.BindRetryButton(null);
             _view = null;
         }
@@ -95,11 +86,6 @@ namespace Game.UI
         public void OnResume()
         {
             _core.OnResume();
-        }
-
-        private void OnSaveViewClicked()
-        {
-            _core.OnSaveViewClicked();
         }
 
         private void OnRetryClicked()

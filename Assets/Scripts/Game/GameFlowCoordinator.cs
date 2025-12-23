@@ -10,7 +10,7 @@ using Game.UI;
 /// 轻量级 GameStateManager：负责发布状态变更事件，保持最小实现以便快速验证流程。
 /// 使用已有的 EventBus 进行解耦。用于替代/补充现有的 GameFlowController。
 /// </summary>
-public sealed class GameStateManager : MonoBehaviour, IGameStateManager
+public sealed class GameFlowCoordinator : MonoBehaviour, IGameStateManager
 {
     public GameFlowState CurrentState { get; private set; } = GameFlowState.None;
 
@@ -26,7 +26,7 @@ public sealed class GameStateManager : MonoBehaviour, IGameStateManager
     public TransitionController TransitionController { get; set; }
     public UIManager UIManager { get; private set; }
 
-    public void Initialize( RoomManager roomManager, TransitionController transitionController, UIManager uiManager)
+    public void Initialize(RoomManager roomManager, TransitionController transitionController, UIManager uiManager)
     {
         this.RoomManager = roomManager;
         // 注入只读仓库接口，确保 StartRun 有可用的只读数据源
@@ -35,7 +35,7 @@ public sealed class GameStateManager : MonoBehaviour, IGameStateManager
         this.UIManager = uiManager;
         if (roomManager == null)
         {
-            CDTU.Utils.Logger.LogWarning("[GameStateManager] Initialize called with null RoomManager");
+            CDTU.Utils.Logger.LogWarning("[GameFlowCoordinator] Initialize called with null RoomManager");
         }
     }
 
@@ -58,7 +58,7 @@ public sealed class GameStateManager : MonoBehaviour, IGameStateManager
     {
         if (RoomManager == null || RoomRepository == null)
         {
-            CDTU.Utils.Logger.LogError("GameStateManager: RoomManager is not set. Cannot start run.");
+            CDTU.Utils.Logger.LogError("GameFlowCoordinator: RoomManager is not set. Cannot start run.");
             return;
         }
 
@@ -72,12 +72,12 @@ public sealed class GameStateManager : MonoBehaviour, IGameStateManager
             _subscribed = true;
         }
 
-        // 将层级初始化交由 GameStateManager 处理：设置 CurrentLayer 并委托 RoomManager 启动该层
+        // 将层级初始化交由 GameFlowCoordinator 处理：设置 CurrentLayer 并委托 RoomManager 启动该层
         CurrentLayer = 1;
         _roomsClearedThisLayer = 0;
         _bossUnlockedThisLayer = false;
         RoomManager.StartFloor(CurrentLayer, meta);
-        CDTU.Utils.Logger.Log("GameStateManager: StartRun called for Layer " + CurrentLayer);
+        CDTU.Utils.Logger.Log("GameFlowCoordinator: StartRun called for Layer " + CurrentLayer);
 
         // 初始化UI，由单独的ui入口使用
         // UIManager?.Open<PlayingStateUIView>(layer: UILayer.Normal);
@@ -166,7 +166,7 @@ public sealed class GameStateManager : MonoBehaviour, IGameStateManager
     }
 
     // NOTE: RoomController 发布 RoomClearedEvent/CombatStartedEvent as facts.
-    // GameStateManager 不再依赖外部直接调用以推进流程（例如 OnRoomCombatEnded），
+    // GameFlowCoordinator 不再依赖外部直接调用以推进流程（例如 OnRoomCombatEnded），
     // 一切流程推进应由订阅事实事件执行，保留此处为空以避免双向调用。
 
     private void HandleRoomEnteredEvent(RoomEnteredEvent evt)
@@ -203,19 +203,14 @@ public sealed class GameStateManager : MonoBehaviour, IGameStateManager
             if (!_bossUnlockedThisLayer && threshold > 0 && _roomsClearedThisLayer >= threshold)
             {
                 _bossUnlockedThisLayer = true;
-                try { EventBus.Publish(new BossUnlockedEvent { Layer = CurrentLayer }); } catch { }
+                EventBus.Publish(new BossUnlockedEvent { Layer = CurrentLayer });
             }
         }
 
         // 决定奖励与下一步流程 —— 奖励选择直接分发到 Reward 系统
-        try
-        {
-            EventBus.Publish(new RewardSelectionRequestedEvent { RoomId = evt.RoomId, InstanceId = evt.InstanceId, RoomType = evt.RoomType });
-        }
-        catch (System.Exception ex)
-        {
-            Debug.LogWarning("[GameStateManager] 发布 RewardSelectionRequestedEvent 失败: " + ex.Message);
-        }
+
+        EventBus.Publish(new RewardSelectionRequestedEvent { RoomId = evt.RoomId, InstanceId = evt.InstanceId, RoomType = evt.RoomType });
+
 
         // 若清理的是 Boss 房，则触发层间过渡
         if (evt.RoomType == RoomType.Boss)
@@ -294,5 +289,19 @@ public sealed class GameStateManager : MonoBehaviour, IGameStateManager
         Time.timeScale = 1f;
     }
 
+
+    public void EndGame()
+    {
+        // 结束游戏逻辑：清理状态，显示结算界面等
+        Time.timeScale = 1f;
+        CurrentState = GameFlowState.None;
+        CurrentLayer = 1;
+        CurrentRoomId = 0;
+        CurrentRoomInstanceId = 0;
+        _roomsClearedThisLayer = 0;
+        _bossUnlockedThisLayer = false;
+
+        // 额外逻辑：通知 UI/Audio，显示结算界面等
+    }
     #endregion
 }

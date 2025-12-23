@@ -13,8 +13,8 @@ public class GameRoot : Singleton<GameRoot>
     public CardDataBase CardDatabase => cardDatabase;
 
     [Header("Scene Managers")]
-    [SerializeField] private GameStateManager gameStateManager;
-    public GameStateManager GameStateManager => gameStateManager;
+    [SerializeField] private GameFlowCoordinator gameFlowCoordinator;
+    public GameFlowCoordinator GameFlowCoordinator => gameFlowCoordinator;
     [SerializeField] private RoomManager roomManager;
     public RoomManager RoomManager => roomManager;
     [SerializeField] private UIManager uiManager;
@@ -41,7 +41,7 @@ public class GameRoot : Singleton<GameRoot>
 
         bool ok = true;
         ok &= AssertNotNull(cardDatabase, nameof(cardDatabase));
-        ok &= AssertNotNull(gameStateManager, nameof(gameStateManager));
+        ok &= AssertNotNull(gameFlowCoordinator, nameof(gameFlowCoordinator));
         ok &= AssertNotNull(roomManager, nameof(roomManager));
         ok &= AssertNotNull(uiManager, nameof(uiManager));
         ok &= AssertNotNull(transitionController, nameof(transitionController));
@@ -64,7 +64,7 @@ public class GameRoot : Singleton<GameRoot>
         Debug.Log("[GameRoot] All required references assigned. Initializing CardDatabase.");
         cardDatabase.Initialize();
 
-        gameStateManager.Initialize(
+        gameFlowCoordinator.Initialize(
             roomManager,
             transitionController,
             uiManager
