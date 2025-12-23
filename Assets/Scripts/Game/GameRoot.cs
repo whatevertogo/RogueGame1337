@@ -1,4 +1,3 @@
-using System;
 using CDTU.Utils;
 using RogueGame.Map;
 using RogueGame.SaveSystem;
@@ -46,6 +45,10 @@ public class GameRoot : Singleton<GameRoot>
 
     [SerializeField] private ShopManager shopManager;
     public ShopManager ShopManager => shopManager;
+
+    [SerializeField] private GameInput gameInput;
+
+    public GameInput GameInput => gameInput;
 
     //Services
     // SlotService放UI根对象了

@@ -10,7 +10,7 @@ namespace UI.Loading
         public async Task<GameObject> LoadAsync<T>() where T : UIViewBase
         {
             string address = "UI/" + typeof(T).Name;
-            AsyncOperationHandle<T> handle = Addressables.LoadAssetAsync<T>(address);
+            AsyncOperationHandle<GameObject> handle = Addressables.LoadAssetAsync<GameObject>(address);
 
             try
             {
@@ -19,7 +19,7 @@ namespace UI.Loading
                 if (handle.Status == AsyncOperationStatus.Succeeded && handle.Result != null)
                 {
                     // 成功返回 Prefab，不释放 handle，让调用方管理或缓存
-                    return handle.Result.gameObject;
+                    return handle.Result;
                 }
                 else
                 {

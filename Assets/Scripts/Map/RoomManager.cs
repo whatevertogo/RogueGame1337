@@ -295,6 +295,8 @@ namespace RogueGame.Map
                 if (TransitionController != null)
                 {
                     TransitionController.TeleportPlayer(roomPrefab, entryDir);
+                    // 移动相机到新房间位置
+                    TransitionController.MoveCameraTo(roomPrefab.transform.position);
                 }
                 else
                 {
@@ -303,6 +305,9 @@ namespace RogueGame.Map
 
                 // 触发进入
                 roomController?.OnPlayerEnter(entryDir);
+
+                // 订阅门事件（必须异步完成后订阅，否则门会立即触发）
+                SubscribeToRoomDoors(roomPrefab);
             }
             catch (System.Exception ex)
             {

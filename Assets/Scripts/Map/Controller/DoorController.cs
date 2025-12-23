@@ -241,12 +241,11 @@ namespace RogueGame.Map
             if (_playerInRange == null) return;
 
             // 使用集中输入管理（GameInput）判断是否按下交互键
-            bool pressed = false;
-            try { pressed = GameInput.Instance != null && GameInput.Instance.InteractPressedThisFrame; } catch { pressed = false; }
 
-            if (pressed && currentState == DoorState.Open)
+            if (GameInput.Instance.InteractPressedThisFrame && currentState == DoorState.Open)
             {
                 OnPlayerEnterDoor?.Invoke(direction);
+                Log($"[Door-{direction}] 玩家通过门进入");
             }
         }
 

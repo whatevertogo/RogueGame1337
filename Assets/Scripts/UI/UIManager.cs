@@ -123,7 +123,7 @@ namespace UI
             }
 
             // 2. 加载新 UI
-            GameObject prefab = await UIAssetProvider.LoadAsync<T>();
+            GameObject prefab = await UIAssetProvider.LoadAsync<T>() as GameObject;
             if (prefab == null)
             {
                 Debug.LogError($"[UIManager] UI prefab not found: {type.Name}");
