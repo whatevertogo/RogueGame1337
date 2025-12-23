@@ -3,6 +3,9 @@ using UnityEngine;
 [CreateAssetMenu(
     fileName = "Alive Filter",
     menuName = "Skill/Targeting/Filters/Alive")]
+/// <summary>
+/// 存活过滤器：仅允许存活的目标通过
+/// </summary>
 public class AliveFliter : TargetFilterSO
 {
     public override bool IsValid(SkillTargetContext ctx, CharacterBase target)

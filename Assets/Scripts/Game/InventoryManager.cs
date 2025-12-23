@@ -7,7 +7,7 @@ using RogueGame.Map;
 
 public sealed class InventoryManager : Singleton<InventoryManager>
 {
-    #region ===== 数据结构 =====
+    #region 数据结构
 
     [Serializable]
     public class ActiveCardState
@@ -39,7 +39,7 @@ public sealed class InventoryManager : Singleton<InventoryManager>
 
     #endregion
 
-    #region ===== 内部状态 =====
+    #region 内部状态
 
     [SerializeField, ReadOnly]
     private int _coins = 0;
@@ -49,7 +49,7 @@ public sealed class InventoryManager : Singleton<InventoryManager>
 
     #endregion
 
-    #region ===== 事件 =====
+    #region 事件
 
     public event Action<int> OnCoinsChanged;
 
@@ -59,7 +59,7 @@ public sealed class InventoryManager : Singleton<InventoryManager>
 
     #endregion
 
-    #region ===== 对外只读访问 =====
+    #region 对外只读访问
 
     public int Coins => _coins;
 
@@ -79,7 +79,7 @@ public sealed class InventoryManager : Singleton<InventoryManager>
 
     #endregion
 
-    #region ===== 金币 =====
+    #region 金币
 
     public void AddCoins(int amount)
     {
@@ -99,8 +99,14 @@ public sealed class InventoryManager : Singleton<InventoryManager>
 
     #endregion
 
-    #region ===== 主动卡 =====
+    #region 主动卡
 
+    /// <summary>
+    /// 添加一个主动卡实例
+    /// </summary>
+    /// <param name="cardId"></param>
+    /// <param name="initialCharges"></param>
+    /// <returns></returns>
     public string AddActiveCardInstance(string cardId, int initialCharges)
     {
         var state = new ActiveCardState
@@ -118,9 +124,19 @@ public sealed class InventoryManager : Singleton<InventoryManager>
         return state.InstanceId;
     }
 
+    /// <summary>
+    /// 根据实例 ID 获取主动卡状态
+    /// </summary>
+    /// <param name="instanceId"></param>
+    /// <returns></returns>
     public ActiveCardState GetActiveCard(string instanceId)
         => _activeCards.Find(c => c.InstanceId == instanceId);
 
+    /// <summary>
+    ///     为指定实例标记装备状态
+    /// </summary>
+    /// <param name="instanceId"></param>
+    /// <param name="playerId"></param>
     public void EquipActiveCard(string instanceId, string playerId)
     {
         var st = GetActiveCard(instanceId);
@@ -132,6 +148,12 @@ public sealed class InventoryManager : Singleton<InventoryManager>
         OnActiveCardEquipChanged?.Invoke(instanceId);
     }
 
+    /// <summary>
+    ///   尝试消耗指定实例的充能
+    /// </summary>
+    /// <param name="instanceId"></param>
+    /// <param name="amount"></param>
+    /// <returns></returns>
     public bool TryConsumeCharge(string instanceId, int amount)
     {
         var st = GetActiveCard(instanceId);
@@ -143,6 +165,12 @@ public sealed class InventoryManager : Singleton<InventoryManager>
         return true;
     }
 
+    /// <summary>
+    /// 为指定实例添加充能
+    /// </summary>
+    /// <param name="instanceId"></param>
+    /// <param name="amount"></param>
+    /// <param name="max"></param>
     public void AddCharges(string instanceId, int amount, int max)
     {
         var st = GetActiveCard(instanceId);
@@ -187,6 +215,91 @@ public sealed class InventoryManager : Singleton<InventoryManager>
 
     #endregion
 
+    #region ===== 相关 API =====
+
+    /// <summary>
+    /// 清除所有卡牌（主动卡和被动卡）
+    /// </summary>
+    public void ClearAllCards()
+    {
+        _activeCards.Clear();
+        _passiveCards.Clear();
+    }
+
+    /// <summary>
+    /// 扣除金币
+    /// </summary>
+    /// <param name="amount">要扣除的数量</param>
+    public void RemoveCoins(int amount)
+    {
+        if (amount <= 0) return;
+        _coins = Mathf.Max(0, _coins - amount);
+        OnCoinsChanged?.Invoke(_coins);
+    }
+
+    /// <summary>
+    /// 移除被动卡
+    /// </summary>
+    /// <param name="cardId">卡牌ID</param>
+    /// <param name="count">移除数量</param>
+    public void RemovePassiveCard(string cardId, int count = 1)
+    {
+        if (count <= 0) return;
+
+        for (int i = 0; i < _passiveCards.Count; i++)
+        {
+            if (_passiveCards[i].CardId == cardId)
+            {
+                int newCount = _passiveCards[i].Count - count;
+                if (newCount > 0)
+                {
+                    _passiveCards[i] = new PassiveCardInfo
+                    {
+                        CardId = cardId,
+                        Count = newCount
+                    };
+                }
+                else
+                {
+                    _passiveCards.RemoveAt(i);
+                }
+                return;
+            }
+        }
+    }
+
+    /// <summary>
+    /// 移除主动卡实例（通过 instanceId）
+    /// </summary>
+    /// <param name="instanceId">实例ID</param>
+    public void RemoveActiveCardInstance(string instanceId)
+    {
+        var st = GetActiveCard(instanceId);
+        if (st != null)
+        {
+            _activeCards.Remove(st);
+        }
+    }
+
+    /// <summary>
+    /// 移除主动卡（通过 cardId，移除第一个匹配的实例）
+    /// 注：主动卡通常只有唯一实例，但技术上可以有多份
+    /// </summary>
+    /// <param name="cardId">卡牌ID</param>
+    /// <returns>是否成功移除</returns>
+    public bool RemoveActiveCardByCardId(string cardId)
+    {
+        var st = _activeCards.Find(c => c.CardId == cardId);
+        if (st != null)
+        {
+            _activeCards.Remove(st);
+            return true;
+        }
+        return false;
+    }
+
+    #endregion
+
     #region ===== 统一入口 =====
 
     public void AddCardById(string cardId)
@@ -207,9 +320,38 @@ public sealed class InventoryManager : Singleton<InventoryManager>
         }
     }
 
+    /// <summary>
+    /// 通过卡牌ID移除卡牌
+    /// - 主动卡：移除第一个匹配的实例（通常只有一个）
+    /// - 被动卡：移除指定数量（默认1）
+    /// </summary>
+    /// <param name="cardId">卡牌ID</param>
+    public void RemoveCardById(string cardId)
+    {
+        var db = GameRoot.Instance?.CardDatabase;
+        if (db == null) return;
+
+        var def = db.Resolve(cardId);
+        if (def == null) return;
+
+        if (def.CardType == CardType.Active)
+        {
+            // 主动卡：移除第一个匹配的实例
+            RemoveActiveCardByCardId(cardId);
+        }
+        else
+        {
+            // 被动卡：移除1个
+            RemovePassiveCard(cardId, 1);
+        }
+    }
+
     #endregion
 
-    #region ===== 兼容 API / 辅助方法 =====
+    #region  兼容 API / 辅助方法
+
+
+
 
     // 从存档恢复时直接设置金币数（兼容旧 API）
     public void SetCoins(int coins)
@@ -255,7 +397,7 @@ public sealed class InventoryManager : Singleton<InventoryManager>
     {
         if (string.IsNullOrEmpty(playerId)) return;
         var db = GameRoot.Instance?.CardDatabase;
-        var balance = GameRoot.Instance?.BalanceConfig;  // 获取配置
+        var balance = GameRoot.Instance?.ChargeBalanceConfig;  // 获取配置
         if (db == null || balance == null) return;
 
         // 从配置获取充能值
@@ -276,4 +418,18 @@ public sealed class InventoryManager : Singleton<InventoryManager>
     public int CoinsNumber => _coins;
 
     #endregion
+
+    /// <summary>
+    /// 随机获得一张主动卡牌
+    /// </summary>
+    public void AddRandomActiveCard()
+    {
+        var db = GameRoot.Instance?.CardDatabase;
+        if (db == null) return;
+
+        var activeCardID = db.GetRandomCardId();
+
+        AddActiveCardInstance(activeCardID, db.Resolve(activeCardID).activeCardConfig.chargesPerKill);
+    }
+
 }

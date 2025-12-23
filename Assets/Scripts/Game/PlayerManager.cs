@@ -303,8 +303,8 @@ public class PlayerManager : Singleton<PlayerManager>
         var prs = GetPlayerRuntimeStateByController(playerKiller);
         if (prs == null) return;
 
-        GameRoot.Instance.CombatRewardService
-            .GrantKillReward(prs.PlayerId, roomType);
+        GameRoot.Instance.CombatRewardEnergyService
+            .GrantKillRewardEnergy(prs.PlayerId, roomType);
     }
 
     #endregion

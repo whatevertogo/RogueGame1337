@@ -70,12 +70,22 @@ namespace RogueGame.Events
         public int InitialRoomId;
     }
 
-    // 由 GameFlowCoordinator 处理奖励选择逻辑（从事实事件触发）
+    // 由 GameFlowCoordinator 发布奖励选择（从事实事件触发）
+    // FloorRewardSystemService来实行
     public class RewardSelectionRequestedEvent
     {
         public int RoomId;
         public int InstanceId;
         public RoomType RoomType;
+        public int CurrentLayer;
+
+        public RewardSelectionRequestedEvent(int roomId, int instanceId, RoomType roomType,int currentLayer)
+        {
+            RoomId = roomId;
+            InstanceId = instanceId;
+            RoomType = roomType;
+            CurrentLayer = currentLayer;
+        }
     }
 
     /// <summary>

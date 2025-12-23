@@ -20,7 +20,7 @@ namespace Character.Components
         [ReadOnly][SerializeField] private Stat _maxHP = new(100);
         //生命恢复
         [ReadOnly][SerializeField] private Stat _hpRegen = new(0);
-        [ReadOnly][SerializeField] private float _currentHP;
+        [ReadOnly][SerializeField] private float _currentHP = 100;
         // 初始化期间抑制 HP 相关事件（避免 Awake/Initialize 触发订阅前的回调）
         private bool _suppressHPEvents = false;
 

@@ -424,50 +424,83 @@ namespace RogueGame.Map
         /// </summary>
         private void SpawnBoss()
         {
+            Log($"[RoomController] SpawnBoss 被调用，currentFloor: {currentFloor}");
+
             if (enemySpawnConfig == null)
             {
+                Log("[RoomController] enemySpawnConfig 为 null！");
                 CompleteCombat();
                 return;
             }
+
+            if (enemySpawnConfig.bosses == null || enemySpawnConfig.bosses.Count == 0)
+            {
+                Log("[RoomController] enemySpawnConfig.bosses 数组为空！");
+                CompleteCombat();
+                return;
+            }
+
+            Log($"[RoomController] Boss 配置数量: {enemySpawnConfig.bosses.Count}");
 
             var bossPrefab = enemySpawnConfig.SelectEnemy(enemySpawnConfig.bosses, currentFloor);
             if (bossPrefab != null)
             {
                 Vector3 bossPos = eliteAndbossSpawnPoint != null ?
                     eliteAndbossSpawnPoint.position : transform.position;
+                Log($"[RoomController] Boss 预制体: {bossPrefab.name}, 生成位置: {bossPos}");
                 SpawnEnemy(bossPrefab, bossPos);
+                Log($"[RoomController] SpawnEnemy 调用完成，当前敌人数量: {activeEnemies.Count}");
             }
             else
             {
-                Log("[RoomController] 没有 Boss 预制体！");
+                Log("[RoomController] SelectEnemy 返回 null！没有 Boss 预制体！");
                 CompleteCombat();
             }
         }
 
         private void SpawnEnemy(GameObject prefab, Vector3 position)
         {
-            if (prefab == null) return;
+            if (prefab == null)
+            {
+                Log("[RoomController] SpawnEnemy: prefab 为 null！");
+                return;
+            }
+
+            Log($"[RoomController] SpawnEnemy: 开始生成 {prefab.name} at {position}");
 
             // 使用 EnemyFactory 负责实例化与可选配置注入
-
             var enemy = RogueGame.Map.Factory.EnemyFactory.Spawn(prefab, position, transform, null, currentFloor);
-            if (enemy == null) return;
+
+            if (enemy == null)
+            {
+                Log("[RoomController] SpawnEnemy: EnemyFactory.Spawn 返回 null！");
+                return;
+            }
+
+            Log($"[RoomController] SpawnEnemy: 成功生成敌人 {enemy.name}");
+
+            // 检查必要组件
+            var stats = enemy.GetComponent<CharacterStats>();
+            var health = enemy.GetComponent<HealthComponent>();
+
+            if (stats == null || health == null)
+            {
+                Log($"[RoomController] SpawnEnemy: 错误 - 敌人 {enemy.name} 缺少必要组件 (CharacterStats: {stats != null}, HealthComponent: {health != null})，销毁对象！");
+                Destroy(enemy);
+                return;
+            }
 
             activeEnemies.Add(enemy);
 
-            var stats = enemy.GetComponent<CharacterStats>();
-            var health = enemy.GetComponent<HealthComponent>();
-            if (stats != null)
-            {
-                // 使用具名转发器，便于取消订阅与调试
-                var forwarder = new EnemyDeathForwarder(this, enemy);
-                Action deathHandler = forwarder.OnDeath;
-                Action<GameObject> deathWithAttackerHandler = forwarder.OnDeathWithAttacker;
-                stats.OnDeath += deathHandler;
-                health.OnDeathWithAttacker += deathWithAttackerHandler;
-                _enemyDeathHandlersDic[enemy] = deathHandler;
-                _enemyDeathWithAttackerHandlersDic[enemy] = deathWithAttackerHandler;
-            }
+            // 使用具名转发器，便于取消订阅与调试
+            var forwarder = new EnemyDeathForwarder(this, enemy);
+            Action deathHandler = forwarder.OnDeath;
+            Action<GameObject> deathWithAttackerHandler = forwarder.OnDeathWithAttacker;
+            stats.OnDeath += deathHandler;
+            health.OnDeathWithAttacker += deathWithAttackerHandler;
+            _enemyDeathHandlersDic[enemy] = deathHandler;
+            _enemyDeathWithAttackerHandlersDic[enemy] = deathWithAttackerHandler;
+            Log($"[RoomController] SpawnEnemy: 已订阅敌人 {enemy.name} 的死亡事件");
         }
 
         private Vector3 GetSpawnPosition(int index)
@@ -588,7 +621,6 @@ namespace RogueGame.Map
             UnityEditor.Handles.Label(transform.position + Vector3.up * 2f, stateText);
         }
 
-        // 注意：已移除自动查找出生点的实现，改为手动配置或通过 SetEnemySpawnPoints 设置。
         // ========== 工具 ==========
 
         private void Log(string message)

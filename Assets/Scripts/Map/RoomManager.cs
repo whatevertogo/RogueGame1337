@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-using RogueGame.Map.Loading;
 using RogueGame.Map.Data;
 using System;
 using System.Collections;
@@ -40,7 +39,7 @@ namespace RogueGame.Map
         #region 运行时状态
 
         private RoomSelector _selector;
-        private IRoomLoader _loader;
+        private IRoomLoaderAsync _loader;
 
         private int _nextInstanceId = 1;
 
@@ -75,7 +74,7 @@ namespace RogueGame.Map
 
         private void Awake()
         {
-            _loader = new ResourcesRoomLoader();
+            _loader = new AddressablesRoomLoader();
             if (TransitionController == null)
             {
                 CDTU.Utils.Logger.LogWarning("[RoomManager] TransitionController not found in scene.");
@@ -226,12 +225,12 @@ namespace RogueGame.Map
             }
         }
 
-        private void SpawnAndEnter(RoomMeta meta, Direction entryDir)
+        private async void SpawnAndEnter(RoomMeta meta, Direction entryDir)
         {
             if (meta == null) return;
 
             // 直接加载并实例化（不使用对象池）
-            var prefab = _loader.Load(meta);
+            var prefab = await _loader.LoadAsync(meta);
             if (prefab == null)
             {
                 Debug.LogError($"[RoomManager] 无法加载房间:  {meta.BundleName}");

@@ -240,11 +240,6 @@ public sealed class GameFlowCoordinator : MonoBehaviour, IGameStateManager
             }
         }
 
-        // 决定奖励与下一步流程 —— 奖励选择直接分发到 Reward 系统
-
-        EventBus.Publish(new RewardSelectionRequestedEvent { RoomId = evt.RoomId, InstanceId = evt.InstanceId, RoomType = evt.RoomType });
-
-
         // 若清理的是 Boss 房，则触发层间过渡
         if (evt.RoomType == RoomType.Boss)
         {
@@ -290,7 +285,7 @@ public sealed class GameFlowCoordinator : MonoBehaviour, IGameStateManager
 
     /// <summary>
     /// 触发层间过渡（击败 Boss 后）。
-    /// TODO:清理当前层级并加载新层级等复杂逻辑。或许还有奖励系统
+    /// 发放层间奖励（满血 + 40 金币 + 随机卡牌）并启动新层级
     /// </summary>
     public void TransitionToNextLayer()
     {
@@ -303,10 +298,18 @@ public sealed class GameFlowCoordinator : MonoBehaviour, IGameStateManager
         {
             // 发布层间过渡事件
             EventBus.Publish(new LayerTransitionEvent { FromLayer = from, ToLayer = CurrentLayer });
+
+            // 触发层间奖励系统
+            EventBus.Publish(new RewardSelectionRequestedEvent(
+                roomId: 0,
+                instanceId: 0,
+                roomType: RoomType.Start,
+                currentLayer: CurrentLayer
+            ));
         }
         catch { }
 
-        // 发放层间固定奖励（由上层系统处理；此处仅调用 RoomManager 启动新层）
+        // 启动新层级
         var startMeta = new RoomMeta { RoomType = RoomType.Start, Index = 0, BundleName = "Room_Start_0" };
         RoomManager?.StartFloor(CurrentLayer, startMeta);
     }

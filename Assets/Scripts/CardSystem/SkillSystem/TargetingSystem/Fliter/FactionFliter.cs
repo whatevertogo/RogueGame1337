@@ -14,6 +14,9 @@ public enum TargetFaction
 [CreateAssetMenu(
     fileName = "Faction Filter",
     menuName = "Skill/Targeting/Filters/Faction")]
+//// <summary>
+/// 阵营过滤器：根据目标阵营过滤目标
+/// </summary>
 public class FactionFliter : TargetFilterSO
 {
     [SerializeField] private TargetFaction targetFaction = TargetFaction.Enemy;

@@ -14,9 +14,16 @@ public class GameRoot : Singleton<GameRoot>
 
     [Header("Game Configs")]
     [InlineEditor]
-    [SerializeField] private GameBalanceConfig GameBalanceConfig;
+    [SerializeField] private GameChargeBalanceConfig GameBalanceConfig;
 
-    public GameBalanceConfig BalanceConfig => GameBalanceConfig;
+    //技能充能Config
+    [InlineEditor]
+    public GameChargeBalanceConfig ChargeBalanceConfig => GameBalanceConfig;
+
+    //游戏胜利奖励配置
+    [InlineEditor]
+    [SerializeField] private GameWinLayerRewardConfig gameWinLayerRewardConfig;
+    public GameWinLayerRewardConfig GameWinLayerRewardConfig => gameWinLayerRewardConfig;
 
     [Header("Scene Managers")]
     [SerializeField] private GameFlowCoordinator gameFlowCoordinator;
@@ -43,9 +50,15 @@ public class GameRoot : Singleton<GameRoot>
     //Services
     // SlotService放UI根对象了
     // public SlotService SlotService => GetComponent<SlotService>();
-    public CombatRewardService CombatRewardService { get; private set; }
 
+    //战斗奖励能量服务
+    public CombatRewardEnergyService CombatRewardEnergyService { get; private set; }
+
+    //战斗奖励技能服务
     public SkillChargeSyncService SkillChargeSyncService { get; private set; }
+
+    //层间奖励系统服务
+    public FloorRewardSystemService FloorRewardSystemService { get; private set; }
 
 
     protected override void Awake()
@@ -54,6 +67,7 @@ public class GameRoot : Singleton<GameRoot>
         Debug.Log("[GameRoot] Awake()");
 
         bool ok = true;
+
         ok &= AssertNotNull(cardDatabase, nameof(cardDatabase));
         ok &= AssertNotNull(gameFlowCoordinator, nameof(gameFlowCoordinator));
         ok &= AssertNotNull(roomManager, nameof(roomManager));
@@ -61,6 +75,13 @@ public class GameRoot : Singleton<GameRoot>
         ok &= AssertNotNull(transitionController, nameof(transitionController));
         ok &= AssertNotNull(playerManager, nameof(playerManager));
         ok &= AssertNotNull(inventoryManager, nameof(inventoryManager));
+        ok &= AssertNotNull(lootDropper, nameof(lootDropper));
+        ok &= AssertNotNull(saveManager, nameof(saveManager));
+        ok &= AssertNotNull(shopManager, nameof(shopManager));
+        ok &= AssertNotNull(GameBalanceConfig, nameof(GameBalanceConfig));
+        ok &= AssertNotNull(gameWinLayerRewardConfig, nameof(gameWinLayerRewardConfig));
+
+
 
         if (!ok)
         {
@@ -92,17 +113,24 @@ public class GameRoot : Singleton<GameRoot>
         shopManager.Initialize(inventoryManager);
 
         //Serivces 初始化
-        CombatRewardService = new CombatRewardService(
+        CombatRewardEnergyService = new CombatRewardEnergyService(
             cardDatabase,
             inventoryManager,
             GameBalanceConfig
-        ); ;
+        );
 
         SkillChargeSyncService = new SkillChargeSyncService(
             inventoryManager,
             playerManager,
             cardDatabase
         );
+
+        FloorRewardSystemService = new FloorRewardSystemService(
+            playerManager,
+            inventoryManager,
+            gameWinLayerRewardConfig
+        );
+        FloorRewardSystemService.Subscribe();
 
         // 启动时加载元游戏存档
         SaveManager.LoadMeta();
@@ -116,5 +144,14 @@ public class GameRoot : Singleton<GameRoot>
             return false;
         }
         return true;
+    }
+
+
+    public void OnDestroy()
+    {
+        Debug.Log("[GameRoot] OnDestroy() called.");
+
+        // 取消订阅 FloorRewardSystemService 的事件
+        FloorRewardSystemService?.Unsubscribe();
     }
 }

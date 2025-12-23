@@ -1,22 +1,22 @@
 using RogueGame.Map;
 
-public sealed class CombatRewardService
+public sealed class CombatRewardEnergyService
 {
     private readonly CardDataBase db;
     private readonly InventoryManager inv;
-    private readonly GameBalanceConfig balance;
+    private readonly GameChargeBalanceConfig balance;
 
-    public CombatRewardService(
+    public CombatRewardEnergyService(
         CardDataBase cardDataBase,
         InventoryManager inventoryManager,
-        GameBalanceConfig balanceConfig)
+        GameChargeBalanceConfig balanceConfig)
     {
         db = cardDataBase;
         inv = inventoryManager;
         balance = balanceConfig;
     }
 
-    public void GrantKillReward(string playerId, RoomType roomType)
+    public void GrantKillRewardEnergy(string playerId, RoomType roomType)
     {
         if (string.IsNullOrEmpty(playerId)) return;
         if (inv == null || db == null || balance == null) return;

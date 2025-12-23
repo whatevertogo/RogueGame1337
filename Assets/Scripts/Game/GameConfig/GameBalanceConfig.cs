@@ -2,7 +2,7 @@ using UnityEngine;
 using RogueGame.Map;
 
 [CreateAssetMenu(fileName = "GameBalanceConfig", menuName = "Game/Balance Config")]
-public class GameBalanceConfig : ScriptableObject
+public class GameChargeBalanceConfig : ScriptableObject
 {
     [Header("技能充能配置")]
     [Tooltip("击杀普通敌人获得的充能")]

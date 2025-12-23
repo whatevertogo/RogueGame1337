@@ -305,13 +305,17 @@ public class ProjectileBase : MonoBehaviour
     protected virtual void OnCollisionEnter2D(Collision2D collision)
     {
         if (enableDebugLog) Debug.Log($"[ProjectileBase] OnCollisionEnter2D collided with {collision?.gameObject?.name} (layer={LayerMask.LayerToName(collision.gameObject.layer)})");
-        TryHit(collision.gameObject);
-        //如果是墙壁就销毁
+
+        // 如果是墙壁，直接销毁（不调用 TryHit，避免双重回收）
         if (collision.gameObject.CompareTag("Wall"))
         {
             SpawnHitEffect();
             OnHitDestroy();
+            return;
         }
+
+        // 其他物体调用正常命中逻辑
+        TryHit(collision.gameObject);
     }
 
     bool IsAlreadyHit(GameObject target, out HealthComponent health)
