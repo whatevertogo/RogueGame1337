@@ -1,19 +1,40 @@
+using System.Threading.Tasks;
 using UnityEngine;
-
+using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace UI.Loading
 {
-    public static class UIAssetProvider
+    public class UIAssetProvider
     {
-        public static GameObject Load<T>() where T : UIViewBase
+        public async Task<GameObject> LoadAsync<T>() where T : UIViewBase
         {
-            // 假设 Resources/UI/ 下有对应 prefab
-            GameObject prefab = Resources.Load<GameObject>("UI/" + typeof(T).Name);
-            if (prefab == null)
+            string address = "UI/" + typeof(T).Name;
+            AsyncOperationHandle<T> handle = Addressables.LoadAssetAsync<T>(address);
+
+            try
             {
-                Debug.LogError($"UIAssetProvider: 找不到 {typeof(T).Name} 预制体");
+                await handle.Task;
+
+                if (handle.Status == AsyncOperationStatus.Succeeded && handle.Result != null)
+                {
+                    // 成功返回 Prefab，不释放 handle，让调用方管理或缓存
+                    return handle.Result.gameObject;
+                }
+                else
+                {
+                    Debug.LogError($"UIAssetProvider: Failed to load {typeof(T).Name}, Status: {handle.Status}");
+                    // 加载失败时释放
+                    if (handle.IsValid()) Addressables.Release(handle);
+                    return null;
+                }
             }
-            return prefab;
+            catch (System.Exception ex)
+            {
+                Debug.LogError($"UIAssetProvider: 加载 {typeof(T).Name} 时发生异常: {ex.Message}");
+                if (handle.IsValid()) Addressables.Release(handle);
+                return null;
+            }
         }
     }
 }

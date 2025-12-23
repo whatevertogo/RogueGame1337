@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using UI;
+using System.Threading.Tasks;
 
 namespace Game.UI
 {
@@ -183,9 +184,23 @@ namespace Game.UI
         private void OnBagButtonClicked()
         {
             //时间停止
-            UIManager.Instance.Open<BagViewView>(layer: UILayer.Normal);
+            // await UIManager.Instance.Open<BagViewView>(layer: UILayer.Normal);
             //停止游戏输入写在UILogic的 OnCovered 里
             //开启游戏输入写在UILogic的 OnResume 里
+            _ = OpenBagUIAsync();
+        }
+
+        private async Task<object> OpenBagUIAsync()
+        {
+            try
+            {
+                await UIManager.Instance.Open<BagViewView>(layer: UILayer.Normal);
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogError($"打开背包失败: {ex.Message}");
+            }
+            return null;
         }
     }
 

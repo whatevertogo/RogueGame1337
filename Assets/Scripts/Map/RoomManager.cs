@@ -3,6 +3,7 @@ using UnityEngine;
 using RogueGame.Map.Data;
 using System;
 using System.Collections;
+using System.Threading.Tasks;
 using Character.Interfaces;
 using RogueGame.Events;
 
@@ -117,7 +118,7 @@ namespace RogueGame.Map
             ResetRunState();
             RandomSeed();
             _selector = new RoomSelector(weightTable, BuildVariantDict(), seed);
-            SpawnAndEnter(startMeta, Direction.None);
+            _ = SpawnAndEnterAsync(startMeta, Direction.None);
         }
 
 
@@ -201,7 +202,7 @@ namespace RogueGame.Map
 
         #endregion
 
-        #region 公开api房间切换核心逻辑
+        #region ===== 公开 API：房间切换核心逻辑 =====
         // 对外暴露切换实现，注意：调用方应确保不会重入（RoomManager 也有内部保护）
         public void SwitchToNextRoom(Direction exitDir)
         {
@@ -217,7 +218,8 @@ namespace RogueGame.Map
                 UnsubscribeCurrentRoomDoors();
 
                 // 不销毁旧房间，只是不再是当前房间
-                SpawnAndEnter(nextMeta, entryDir);
+                // Fire and Forget：房间切换不需要等待异步完成
+                _ = SpawnAndEnterAsync(nextMeta, entryDir);
             }
             finally
             {
@@ -225,93 +227,87 @@ namespace RogueGame.Map
             }
         }
 
-        private async void SpawnAndEnter(RoomMeta meta, Direction entryDir)
+        /// <summary>
+        /// 异步加载并进入房间
+        /// </summary>
+        private async Task SpawnAndEnterAsync(RoomMeta meta, Direction entryDir)
         {
             if (meta == null) return;
 
-            // 直接加载并实例化（不使用对象池）
-            var prefab = await _loader.LoadAsync(meta);
-            if (prefab == null)
+            try
             {
-                Debug.LogError($"[RoomManager] 无法加载房间:  {meta.BundleName}");
-                return;
+                // 直接加载并实例化（不使用对象池）
+                var prefab = await _loader.LoadAsync(meta);
+                if (prefab == null)
+                {
+                    Debug.LogError($"[RoomManager] 无法加载房间: {meta.BundleName}");
+                    return;
+                }
+
+                var go = Instantiate(prefab, roomsRoot);
+                go.name = meta.BundleName;
+
+                var roomPrefab = go.GetComponent<RoomPrefab>();
+                var roomController = go.GetComponent<RoomController>();
+
+                if (roomPrefab == null)
+                {
+                    Debug.LogError($"[RoomManager] 房间缺少 RoomPrefab: {meta.BundleName}");
+                    Destroy(go);
+                    return;
+                }
+
+                // 初始化
+                int newInstanceId = _nextInstanceId++;
+                InitializeRoomController(roomController, meta, newInstanceId);
+
+                // 计算位置
+                Vector2 roomSize = GetRoomSize(go, meta);
+                Vector3 roomPos = CalculateRoomPosition(roomSize, entryDir);
+                go.transform.localPosition = roomPos;
+
+                // 创建状态
+                var state = new RoomInstanceState
+                {
+                    InstanceId = newInstanceId,
+                    Floor = _currentFloor,
+                    Meta = meta,
+                    Instance = go,
+                    WorldPosition = roomPos,
+                    CachedSize = roomSize
+                };
+
+                // 标记入口
+                if (entryDir != Direction.None)
+                {
+                    state.MarkVisited(entryDir);
+                }
+
+                //将入口的门标记为Locked
+                roomPrefab.GetDoor(entryDir)?.Lock();
+
+
+                // 保存到列表
+                _allRooms.Add(state);
+                _current = state;
+
+                // 传送玩家（优先使用 TransitionController）
+                if (TransitionController != null)
+                {
+                    TransitionController.TeleportPlayer(roomPrefab, entryDir);
+                }
+                else
+                {
+                    Debug.LogError("[RoomManager] 无 TransitionController：请在场景中添加 TransitionController 或在 GameManager 中注入。");
+                }
+
+                // 触发进入
+                roomController?.OnPlayerEnter(entryDir);
             }
-
-            var go = Instantiate(prefab, roomsRoot);
-            go.name = meta.BundleName;
-
-            var roomPrefab = go.GetComponent<RoomPrefab>();
-            var roomController = go.GetComponent<RoomController>();
-
-            if (roomPrefab == null)
+            catch (System.Exception ex)
             {
-                Debug.LogError($"[RoomManager] 房间缺少 RoomPrefab:  {meta.BundleName}");
-                Destroy(go);
-                return;
+                Debug.LogError($"[RoomManager] 房间生成失败: {ex.Message}\n{ex.StackTrace}");
             }
-
-            // 初始化
-            int newInstanceId = _nextInstanceId++;
-            InitializeRoomController(roomController, meta, newInstanceId);
-
-            // 计算位置
-            Vector2 roomSize = GetRoomSize(go, meta);
-            Vector3 roomPos = CalculateRoomPosition(roomSize, entryDir);
-            go.transform.localPosition = roomPos;
-
-            // 创建状态
-            var state = new RoomInstanceState
-            {
-                InstanceId = newInstanceId,
-                Floor = _currentFloor,
-                Meta = meta,
-                Instance = go,
-                WorldPosition = roomPos,
-                CachedSize = roomSize
-            };
-
-            // 标记入口
-            if (entryDir != Direction.None)
-            {
-                state.MarkVisited(entryDir);
-            }
-
-            //将入口的门标记为Locked
-            roomPrefab.GetDoor(entryDir)?.Lock();
-
-
-            // 保存到列表
-            _allRooms.Add(state);
-            _current = state;
-
-            // 传送玩家（优先使用 TransitionController）
-            if (TransitionController != null)
-            {
-                TransitionController.TeleportPlayer(roomPrefab, entryDir);
-            }
-            else
-            {
-                Debug.LogError("[RoomManager] 无 TransitionController：请在场景中添加 TransitionController 或在 GameManager 中注入。");
-            }
-
-            // 触发进入
-            roomController?.OnPlayerEnter(entryDir);
-
-            // 订阅门事件
-            SubscribeToRoomDoors(roomPrefab);
-
-
-            // 移动相机（由 TransitionController 承担）
-            if (TransitionController != null)
-            {
-                TransitionController.MoveCameraTo(roomPos);
-            }
-            else
-            {
-                Debug.LogError("[RoomManager] 无 TransitionController：请在场景中添加 TransitionController 或在 GameManager 中注入。");
-            }
-
-            Log($"[RoomManager] 进入房间: {meta.BundleName}, 总房间数: {_allRooms.Count}");
         }
 
         private void InitializeRoomController(RoomController controller, RoomMeta meta, int instanceId)

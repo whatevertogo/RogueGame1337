@@ -46,21 +46,15 @@ public class AddressablesRoomLoader : IRoomLoaderAsync
             else
             {
                 Debug.LogError($"[AddressablesRoomLoader] Failed to load: {address}, Status: {handle.Status}");
+                UnityEngine.AddressableAssets.Addressables.Release(handle);
                 return null;
             }
         }
         catch (System.Exception ex)
         {
             Debug.LogError($"[AddressablesRoomLoader] Exception while loading {address}: {ex.Message}");
+            UnityEngine.AddressableAssets.Addressables.Release(handle);
             return null;
-        }
-        finally
-        {
-            // 重要：即使加载失败也要释放 handle
-            if (handle.IsValid())
-            {
-                UnityEngine.AddressableAssets.Addressables.Release(handle);
-            }
         }
     }
 }

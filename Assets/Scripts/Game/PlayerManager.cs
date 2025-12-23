@@ -8,6 +8,7 @@ using CDTU.Utils;
 using Character.Player;
 using UI;
 using Game.UI;
+using System.Threading.Tasks;
 
 /// <summary>
 /// 玩家管理器：负责玩家注册、共享库存转发、技能管理
@@ -129,9 +130,25 @@ public class PlayerManager : Singleton<PlayerManager>
         if (playerState != null && playerState.IsLocal)
         {
             //TODO-传递死亡信息
-            UIManager.Instance.Open<DeadUIView>(new DeadUIViewArgs("You have died."), UILayer.Top);
+            _ = OpenDeadUIAsync();
         }
 
+    }
+
+    public async Task OpenDeadUIAsync(string message = null)
+    {
+        try
+        {
+            Debug.Log("[PlayerManager] 正在打开死亡 UI...");
+
+            await UIManager.Instance.Open<DeadUIView>(layer: UILayer.Popup);
+
+            Debug.Log("[PlayerManager] 死亡 UI 打开成功");
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"[PlayerManager] 打开死亡 UI 失败: {ex.Message}");
+        }
     }
 
     #region 公共api

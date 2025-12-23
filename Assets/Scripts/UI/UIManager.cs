@@ -4,6 +4,7 @@ using UnityEngine;
 using CDTU.Utils;
 using UI.Loading;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace UI
 {
@@ -35,6 +36,8 @@ namespace UI
         /// 每个 Layer 对应一个根节点
         /// </summary>
         private readonly Dictionary<UILayer, Transform> _layerRoots = new();
+
+        public static UIAssetProvider UIAssetProvider { get; } = new UIAssetProvider();
 
         protected override void Awake()
         {
@@ -73,7 +76,7 @@ namespace UI
         /// - 自动处理置顶（Bring To Front）
         /// - 自动管理层级栈
         /// </summary>
-        public T Open<T>(
+        public async Task<T> Open<T>(
             UIArgs args = null,
             UILayer layer = UILayer.Normal,
             params IUILogic[] logics
@@ -120,7 +123,7 @@ namespace UI
             }
 
             // 2. 加载新 UI
-            GameObject prefab = UIAssetProvider.Load<T>();
+            GameObject prefab = await UIAssetProvider.LoadAsync<T>();
             if (prefab == null)
             {
                 Debug.LogError($"[UIManager] UI prefab not found: {type.Name}");
