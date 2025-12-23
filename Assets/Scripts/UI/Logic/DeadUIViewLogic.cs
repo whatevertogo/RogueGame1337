@@ -41,8 +41,6 @@ namespace Game.UI
 
         public void OnRetryClicked()
         {
-
-            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
             GameRoot.Instance.GameFlowCoordinator.RestartGame();
         }
     }
