@@ -1,3 +1,4 @@
+using Character;
 using Character.Effects;
 using UnityEngine;
 
@@ -19,9 +20,9 @@ using UnityEngine;
         [Tooltip("攻击力倍率")]
         public float attackPowerMultiplier = 1f;
 
-        public override StatusEffectInstanceBase CreateInstance()
+        public override StatusEffectInstanceBase CreateInstance(CharacterBase caster = null)
         {
-            return new InstantDamageEffectInstance(this);
+            return new InstantDamageEffectInstance(this, caster);
         }
     }
 

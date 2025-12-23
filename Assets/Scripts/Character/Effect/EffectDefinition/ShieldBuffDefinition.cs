@@ -16,9 +16,9 @@ using UnityEngine;
         [Tooltip("修饰符类型")]
         public StatModType modifierType = StatModType.Flat;
 
-        public override StatusEffectInstanceBase CreateInstance()
+        public override StatusEffectInstanceBase CreateInstance(CharacterBase caster = null)
         {
-            return new ShieldBuffInstance(this);
+            return new ShieldBuffInstance(this, caster);
         }
     }
 

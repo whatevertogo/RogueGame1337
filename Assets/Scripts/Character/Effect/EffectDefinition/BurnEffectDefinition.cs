@@ -1,5 +1,6 @@
 using Character.Effects;
 using UnityEngine;
+using Character;
 
 
     /// <summary>
@@ -12,9 +13,9 @@ using UnityEngine;
         [Tooltip("每秒伤害")]
         public float damagePerSecond = 5f;
 
-        public override StatusEffectInstanceBase CreateInstance()
+        public override StatusEffectInstanceBase CreateInstance(CharacterBase caster = null)
         {
-            return new BurnEffectInstance(this);
+            return new BurnEffectInstance(this, caster);
         }
-    
+
 }

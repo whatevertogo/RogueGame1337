@@ -255,17 +255,20 @@ public sealed class InventoryManager : Singleton<InventoryManager>
     {
         if (string.IsNullOrEmpty(playerId)) return;
         var db = GameRoot.Instance?.CardDatabase;
-        if (db == null) return;
+        var balance = GameRoot.Instance?.BalanceConfig;  // 获取配置
+        if (db == null || balance == null) return;
+
+        // 从配置获取充能值
+        int chargeAmount = balance.GetChargeForRoomType(roomType);
 
         foreach (var st in _activeCards)
         {
             if (st == null || !st.IsEquipped || st.EquippedPlayerId != playerId) continue;
             var def = db.Resolve(st.CardId);
             if (def == null || def.activeCardConfig == null) continue;
-            int gain = def.activeCardConfig.chargesPerKill;
-            if (gain <= 0) continue;
+
             int max = Mathf.Max(1, def.activeCardConfig.maxCharges);
-            AddCharges(st.InstanceId, gain, max);
+            AddCharges(st.InstanceId, chargeAmount, max);
         }
     }
 

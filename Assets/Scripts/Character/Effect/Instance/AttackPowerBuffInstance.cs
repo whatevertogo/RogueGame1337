@@ -1,6 +1,6 @@
 using Character.Components;
 using Character.Effects;
-
+using Character;
 
 /// <summary>
 /// 攻击力增益效果实例
@@ -12,7 +12,7 @@ public class AttackPowerBuffInstance : StatusEffectInstanceBase
         private readonly AttackPowerBuffDefinition _def;
         private StatModifier _modifier;
 
-        public AttackPowerBuffInstance(AttackPowerBuffDefinition def)
+        public AttackPowerBuffInstance(AttackPowerBuffDefinition def, CharacterBase caster = null)
             : base(def.duration, def.isStackable)
         {
             _def = def;

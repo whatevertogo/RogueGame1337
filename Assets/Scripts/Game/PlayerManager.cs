@@ -13,10 +13,15 @@ using Game.UI;
 /// 玩家管理器：负责玩家注册、共享库存转发、技能管理
 /// 职责：
 /// 1. 玩家生命周期管理（注册/注销）
-/// 2. 共享库存事件转发（金币、卡牌）
-/// 3. 技能系统协调（能量、使用状态）
-/// 4. 事件总线集成
+/// 2. 事件总线集成
+/// 
+/// 
+/// 相关服务：
+/// - CombatRewardService：处理击杀奖励规则
+/// - SkillChargeSyncService：负责库存 → 技能状态同步
 /// </summary>
+/// public CombatRewardService CombatRewardService => GameRoot.Instance.CombatRewardService;
+/// public SkillChargeSyncService SkillChargeSyncService => GameRoot.Instance.SkillChargeSyncService;
 public class PlayerManager : Singleton<PlayerManager>
 {
     private readonly Dictionary<string, PlayerRuntimeState> _players = new();
@@ -24,11 +29,6 @@ public class PlayerManager : Singleton<PlayerManager>
     private PlayerLoader _playerLoader;
 
     private RoomManager RoomManager;
-
-    // 共享库存 (forwarded from RunInventory)
-    public event Action<int> OnCoinsChanged;
-    public event Action<string, int> OnPassiveCardChanged; // (cardId, count)
-    public event Action<string, int> OnActiveCardPoolChanged; // (cardId, count)
 
 
     // 玩家注册事件
@@ -44,15 +44,6 @@ public class PlayerManager : Singleton<PlayerManager>
     protected override void Awake()
     {
         base.Awake();
-
-        // 订阅共享库存事件
-        var inventoryManager = InventoryManager.Instance;
-        if (inventoryManager != null)
-        {
-            inventoryManager.OnCoinsChanged += OnRunInventoryCoinsChanged;
-            // ri.OnPassiveCardChanged += OnRunInventoryPassiveCardChanged;
-            inventoryManager.OnActiveCardChargesChanged += OnRunInventoryActiveCardChargesChanged;
-        }
 
         // 订阅房间进入事件
         EventBus.Subscribe<RoomEnteredEvent>(HandleRoomEnteredEvent);
@@ -71,20 +62,12 @@ public class PlayerManager : Singleton<PlayerManager>
 
     private void OnDestroy()
     {
-        // 取消订阅共享库存事件
-        var inventoryManager = InventoryManager.GetExistingInstance();
-        if (inventoryManager != null)
-        {
-            inventoryManager.OnCoinsChanged -= OnRunInventoryCoinsChanged;
-            // inventoryManager.OnPassiveCardChanged -= OnRunInventoryPassiveCardChanged;
-            inventoryManager.OnActiveCardChargesChanged -= OnRunInventoryActiveCardChargesChanged;
-        }
         try
         {
             EventBus.Unsubscribe<RoomEnteredEvent>(HandleRoomEnteredEvent);
-            EventBus.Unsubscribe<RogueGame.Events.EntityKilledEvent>(HandleEntityKilledEvent);
+            EventBus.Unsubscribe<EntityKilledEvent>(HandleEntityKilledEvent);
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
             Debug.LogError($"[PlayerManager] 取消订阅事件失败: {ex.Message}");
         }
@@ -141,7 +124,6 @@ public class PlayerManager : Singleton<PlayerManager>
         var playerState = GetPlayerRuntimeStateByController(evt.Player);
 
         //TODO 多人可能改
-        Time.timeScale = 0f; // 暂停游戏
 
         //打开死亡UI
         if (playerState != null && playerState.IsLocal)
@@ -267,54 +249,6 @@ public class PlayerManager : Singleton<PlayerManager>
 
     #endregion
 
-    #region 共享库存转发器
-
-    private void OnRunInventoryCoinsChanged(int coins) => OnCoinsChanged?.Invoke(coins);
-    private void OnRunInventoryPassiveCardChanged(string cardId, int count) => OnPassiveCardChanged?.Invoke(cardId, count);
-    private void OnRunInventoryActiveCardPoolChanged(string cardId, int avail) => OnActiveCardPoolChanged?.Invoke(cardId, avail);
-
-    // Inventory -> PlayerManager: active instance charges changed
-    private void OnRunInventoryActiveCardChargesChanged(string instanceId, int charges)
-    {
-        if (string.IsNullOrEmpty(instanceId)) return;
-
-        // 查找哪个玩家的哪个槽位正在使用该 instance
-        foreach (var kv in _players)
-        {
-            var state = kv.Value;
-            if (state?.Controller == null) continue;
-            var comp = state.Controller.GetComponent<PlayerSkillComponent>();
-            if (comp == null) continue;
-            var slots = comp.PlayerSkillSlots;
-            if (slots == null) continue;
-            for (int i = 0; i < slots.Length; i++)
-            {
-                var rt = slots[i]?.Runtime;
-                if (rt == null) continue;
-                if (rt.InstanceId == instanceId)
-                {
-                    // 计算归一化值
-                    var cd = GameRoot.Instance?.CardDatabase?.Resolve(rt.CardId);
-                    int max = cd != null ? cd.activeCardConfig.maxCharges : 1;
-                    float norm = max > 0 ? (float)charges / max : 0f;
-                    RaisePlayerSkillEnergyChanged(state.PlayerId, i, norm);
-                }
-            }
-        }
-    }
-
-    public void AddCoins(PlayerController controller, int amount)
-    {
-        InventoryManager.Instance?.AddCoins(amount);
-    }
-
-    public bool SpendCoins(PlayerController controller, int amount)
-    {
-        return InventoryManager.Instance?.SpendCoins(amount) ?? false;
-    }
-
-
-    #endregion
 
     #region 通知 / 辅助方法
 
@@ -340,6 +274,21 @@ public class PlayerManager : Singleton<PlayerManager>
         OnPlayerSkillUnequipped?.Invoke(playerId, slotIndex);
     }
 
+    public PlayerController ResolveAttacker(GameObject attacker)
+    {
+        if (attacker == null) return null;
+
+        // 1. 直接来自玩家
+        var player = attacker.GetComponent<PlayerController>();
+        if (player != null) return player;
+
+        // 2. 投射物来源
+        var projectile = attacker.GetComponent<ProjectileBase>();
+        if (projectile?.Owner == null) return null;
+
+        return projectile.Owner.GetComponentInParent<PlayerController>();
+    }
+
     /// <summary>
     /// 当敌人被击杀时通知，为击杀者添加能量
     /// </summary>
@@ -347,38 +296,15 @@ public class PlayerManager : Singleton<PlayerManager>
     {
         if (attacker == null || enemy == null) return;
 
-        // 查找攻击者玩家
-        PlayerController playerKiller = attacker.GetComponentInParent<PlayerController>();
-        if (playerKiller == null)
-        {
-            // 尝试通过投射物查找拥有者
-            var proj = attacker.GetComponent<ProjectileBase>();
-            if (proj?.Owner != null)
-            {
-                playerKiller = proj.Owner.GetComponentInParent<PlayerController>();
-            }
-        }
+        var playerKiller = ResolveAttacker(attacker);
 
         if (playerKiller == null) return;
 
-        // 根据房间类型给予不同能量奖励（数值可调整）
-        float energy = roomType switch
-        {
-            RoomType.Elite => 30f,
-            RoomType.Boss => 50f,
-            _ => 10f
-        };
+        var prs = GetPlayerRuntimeStateByController(playerKiller);
+        if (prs == null) return;
 
-        // 给击杀者的已装备主动卡添加充能（由 InventoryManager 管理）
-        var pr = GetPlayerRuntimeStateByController(playerKiller);
-        if (pr != null)
-        {
-            var inv = InventoryManager.Instance;
-            if (inv != null)
-            {
-                inv.AddChargesForKill(pr.PlayerId, roomType);
-            }
-        }
+        GameRoot.Instance.CombatRewardService
+            .GrantKillReward(prs.PlayerId, roomType);
     }
 
     #endregion

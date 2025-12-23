@@ -12,6 +12,12 @@ public class GameRoot : Singleton<GameRoot>
     [SerializeField] private CardDataBase cardDatabase;
     public CardDataBase CardDatabase => cardDatabase;
 
+    [Header("Game Configs")]
+    [InlineEditor]
+    [SerializeField] private GameBalanceConfig GameBalanceConfig;
+
+    public GameBalanceConfig BalanceConfig => GameBalanceConfig;
+
     [Header("Scene Managers")]
     [SerializeField] private GameFlowCoordinator gameFlowCoordinator;
     public GameFlowCoordinator GameFlowCoordinator => gameFlowCoordinator;
@@ -24,7 +30,7 @@ public class GameRoot : Singleton<GameRoot>
     [SerializeField] private PlayerManager playerManager;
     public PlayerManager PlayerManager => playerManager;
     [SerializeField] private InventoryManager inventoryManager;
-    
+
     public InventoryManager InventoryManager => inventoryManager;
     [SerializeField] private LootDropper lootDropper;
     public LootDropper LootDropper => lootDropper;
@@ -33,6 +39,14 @@ public class GameRoot : Singleton<GameRoot>
 
     [SerializeField] private ShopManager shopManager;
     public ShopManager ShopManager => shopManager;
+
+    //Services
+    // SlotService放UI根对象了
+    // public SlotService SlotService => GetComponent<SlotService>();
+    public CombatRewardService CombatRewardService { get; private set; }
+
+    public SkillChargeSyncService SkillChargeSyncService { get; private set; }
+
 
     protected override void Awake()
     {
@@ -71,11 +85,27 @@ public class GameRoot : Singleton<GameRoot>
         );
         roomManager.Initialize(transitionController);
 
-        playerManager.Initialize(roomManager);  
+        playerManager.Initialize(roomManager);
 
         //SaveManager 初始化依赖于 PlayerManager 和 InventoryManager
 
         shopManager.Initialize(inventoryManager);
+
+        //Serivces 初始化
+        CombatRewardService = new CombatRewardService(
+            cardDatabase,
+            inventoryManager,
+            GameBalanceConfig
+        ); ;
+
+        SkillChargeSyncService = new SkillChargeSyncService(
+            inventoryManager,
+            playerManager,
+            cardDatabase
+        );
+
+        // 启动时加载元游戏存档
+        SaveManager.LoadMeta();
     }
 
     private bool AssertNotNull(UnityEngine.Object obj, string name)

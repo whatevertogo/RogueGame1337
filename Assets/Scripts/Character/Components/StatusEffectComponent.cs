@@ -17,6 +17,11 @@ namespace Character.Components
         private CharacterStats stats;
         private bool _isUpdating;
 
+        // 控制状态引用计数（支持多个效果叠加）
+        private int _stunStacks = 0;
+        private int _silenceStacks = 0;
+        private int _rootStacks = 0;
+
         /// <summary>
         /// 是否处于眩晕状态
         /// </summary>
@@ -214,9 +219,26 @@ namespace Character.Components
             return count;
         }
 
-        // 控制效果设置
-        public void SetStunned(bool value) => IsStunned = value;
-        public void SetSilenced(bool value) => IsSilenced = value;
-        public void SetRooted(bool value) => IsRooted = value;
+        // 控制效果设置（使用引用计数支持叠加）
+        public void SetStunned(bool value)
+        {
+            if (value) _stunStacks++;
+            else _stunStacks = Mathf.Max(0, _stunStacks - 1);
+            IsStunned = _stunStacks > 0;
+        }
+
+        public void SetSilenced(bool value)
+        {
+            if (value) _silenceStacks++;
+            else _silenceStacks = Mathf.Max(0, _silenceStacks - 1);
+            IsSilenced = _silenceStacks > 0;
+        }
+
+        public void SetRooted(bool value)
+        {
+            if (value) _rootStacks++;
+            else _rootStacks = Mathf.Max(0, _rootStacks - 1);
+            IsRooted = _rootStacks > 0;
+        }
     }
 }

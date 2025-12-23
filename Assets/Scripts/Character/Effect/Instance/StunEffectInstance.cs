@@ -1,5 +1,5 @@
 using Character.Components;
-
+using Character;
 
 /// <summary>
 /// 眩晕效果实例（行为控制型效果）
@@ -11,7 +11,7 @@ public class StunEffectInstance : StatusEffectInstanceBase
 
     private readonly StunEffectDefinition _def;
 
-    public StunEffectInstance(StunEffectDefinition def)
+    public StunEffectInstance(StunEffectDefinition def, CharacterBase caster = null)
         : base(def.duration, def.isStackable)
     {
         _def = def;

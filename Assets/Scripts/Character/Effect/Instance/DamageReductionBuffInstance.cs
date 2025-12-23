@@ -1,5 +1,5 @@
 using Character.Components;
-
+using Character;
 
     /// <summary>
     /// 伤害减免效果实例
@@ -11,7 +11,7 @@ using Character.Components;
 
         private readonly DamageReductionBuffDefinition _def;
 
-        public DamageReductionBuffInstance(DamageReductionBuffDefinition def)
+        public DamageReductionBuffInstance(DamageReductionBuffDefinition def, CharacterBase caster = null)
             : base(def.duration, def.isStackable)
         {
             _def = def;

@@ -1,3 +1,4 @@
+using Character;
 using Character.Effects;
 using UnityEngine;
 
@@ -8,9 +9,9 @@ using UnityEngine;
     [CreateAssetMenu(fileName = "StunEffectDefinition", menuName = "Character/Effects/Stun Effect")]
     public class StunEffectDefinition : StatusEffectDefinitionSO
     {
-        public override StatusEffectInstanceBase CreateInstance()
+        public override StatusEffectInstanceBase CreateInstance(CharacterBase caster = null)
         {
-            return new StunEffectInstance(this);
+            return new StunEffectInstance(this, caster);
         }
     }
 

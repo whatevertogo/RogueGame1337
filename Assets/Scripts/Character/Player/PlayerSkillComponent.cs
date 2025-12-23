@@ -22,6 +22,8 @@ namespace Character.Player
         public event Action<int> OnSkillUsed;
         public event Action<int, string> OnSkillEquipped;
         public event Action<int> OnSkillUnequipped;
+
+        private EffectFactory effectFactory = new EffectFactory();
         private void Awake()
         {
             // 确保数组内的 SkillSlot 实例已初始化，避免 Inspector VS 运行期不一致
@@ -33,7 +35,7 @@ namespace Character.Player
                         _playerSkillSlots[i] = new SkillSlot();
                 }
             }
-            EventBus.Subscribe<ClearAllSlotsRequestedEvent>(evt => 
+            EventBus.Subscribe<ClearAllSlotsRequestedEvent>(evt =>
             {
                 // 清理所有槽位
                 for (int i = 0; i < _playerSkillSlots.Length; i++)
@@ -84,28 +86,28 @@ namespace Character.Player
             if (slotIndex < 0 || slotIndex >= _playerSkillSlots.Length) return false;
             var rt = _playerSkillSlots[slotIndex]?.Runtime;
             if (rt == null || rt.Skill == null) return false;
-            
+
             // 检查 1: 房间内是否已使用
             if (rt.UsedInCurrentRoom) return false;
-            
+
             // 检查 2: 冷却判断
             var baseCd = rt.Skill.cooldown;
             var stats = GetComponent<CharacterStats>();
             var reduction = stats != null ? stats.SkillCooldownReductionRate.Value : 0f;
             var effectiveCd = Mathf.Max(0f, baseCd * (1f - reduction));
             if (Time.time - rt.LastUseTime < effectiveCd) return false;
-            
+
             // 检查 3: 充能检查（如果卡牌需要充能）
             var cardDef = GameRoot.Instance?.CardDatabase?.Resolve(rt.CardId);
             if (cardDef != null && cardDef.activeCardConfig != null && cardDef.activeCardConfig.requiresCharge)
             {
                 var inv = InventoryManager.Instance;
                 if (inv == null || string.IsNullOrEmpty(rt.InstanceId)) return false;
-                
+
                 var state = inv.GetActiveCardState(rt.InstanceId);
                 if (state == null || state.CurrentCharges < 1) return false;
             }
-            
+
             // 检查 4: 状态效果（眩晕、沉默等）- 预留扩展
             var effectComp = GetComponent<StatusEffectComponent>();
             if (effectComp != null)
@@ -208,19 +210,13 @@ namespace Character.Player
                 {
                     if (effectDef == null) continue;
 
-                    var effectInstance = effectDef.CreateInstance();
+                    var effectInstance = effectFactory.CreateInstance(effectDef, caster);
                     if (effectInstance == null)
                     {
 #if UNITY_EDITOR
                         Debug.LogWarning($"[PlayerSkillComponent] Failed to create effect instance from {effectDef.GetType().Name}");
 #endif
                         continue;
-                    }
-
-                    // 使用接口设置伤害来源（替代反射调用，性能提升显著）
-                    if (effectInstance is IDamageSourceAware damageSourceAware)
-                    {
-                        damageSourceAware.SetDamageSource(caster);
                     }
 
                     statusComp.AddEffect(effectInstance);
@@ -309,26 +305,26 @@ namespace Character.Player
             }
 
             _playerSkillSlots[slotIndex].Equip(new ActiveSkillRuntime(cardId, skillDef, instanceId));
-            
+
             // 广播初始能量/充能状态
             if (cardDef.activeCardConfig != null && cardDef.activeCardConfig.requiresCharge)
             {
                 int max = Mathf.Max(1, cardDef.activeCardConfig.maxCharges);
                 int current = max; // default
-                
+
                 if (inv != null && !string.IsNullOrEmpty(instanceId))
                 {
                     var state = inv.GetActiveCardState(instanceId);
                     if (state != null) current = state.CurrentCharges;
                 }
-                
+
                 float norm = (float)current / max;
                 OnEnergyChanged?.Invoke(slotIndex, norm);
             }
             else
             {
                 // 非充能技能，默认满能量（可用）
-                 OnEnergyChanged?.Invoke(slotIndex, 1f);
+                OnEnergyChanged?.Invoke(slotIndex, 1f);
             }
 
             OnSkillEquipped?.Invoke(slotIndex, cardId);

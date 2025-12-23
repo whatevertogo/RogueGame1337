@@ -16,8 +16,8 @@ public class SlowDebuffDefinition : StatusEffectDefinitionSO
     [Tooltip("修饰符类型")]
     public StatModType modifierType = StatModType.PercentAdd;
 
-    public override StatusEffectInstanceBase CreateInstance()
+    public override StatusEffectInstanceBase CreateInstance(CharacterBase caster = null)
     {
-        return new SlowDebuffInstance(this);
+        return new SlowDebuffInstance(this, caster);
     }
 }

@@ -1,3 +1,4 @@
+using Character;
 using Character.Effects;
 using UnityEngine;
 
@@ -9,5 +10,5 @@ public abstract class StatusEffectDefinitionSO : ScriptableObject
     public bool isStackable;
     public float duration;
 
-    public abstract StatusEffectInstanceBase CreateInstance();
+    public abstract StatusEffectInstanceBase CreateInstance(CharacterBase caster = null);
 }

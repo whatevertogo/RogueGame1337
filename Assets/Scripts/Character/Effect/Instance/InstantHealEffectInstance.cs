@@ -1,5 +1,5 @@
 using Character.Components;
-
+using Character;
     /// <summary>
     /// 瞬时治疗效果实例
     /// 在 OnApply 时立即治疗，然后自动过期
@@ -11,7 +11,7 @@ using Character.Components;
         private readonly InstantHealEffectDefinition _def;
         private bool _healApplied;
 
-        public InstantHealEffectInstance(InstantHealEffectDefinition def)
+        public InstantHealEffectInstance(InstantHealEffectDefinition def, CharacterBase caster = null)
             : base(duration: 0f, isStackable: true) // duration=0 表示瞬时效果
         {
             _def = def;

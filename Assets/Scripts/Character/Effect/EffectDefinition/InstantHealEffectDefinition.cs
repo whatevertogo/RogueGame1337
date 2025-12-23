@@ -1,6 +1,6 @@
 using Character.Effects;
 using UnityEngine;
-
+using Character;
 
     /// <summary>
     /// 瞬时治疗效果定义
@@ -20,9 +20,9 @@ using UnityEngine;
         [Range(0f, 1f)]
         public float maxHPPercent = 0.1f;
 
-        public override StatusEffectInstanceBase CreateInstance()
+        public override StatusEffectInstanceBase CreateInstance(CharacterBase caster = null)
         {
-            return new InstantHealEffectInstance(this);
+            return new InstantHealEffectInstance(this, caster);
         }
     }
 

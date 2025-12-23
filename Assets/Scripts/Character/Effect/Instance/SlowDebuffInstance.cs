@@ -1,5 +1,5 @@
 using Character.Components;
-
+using Character;
 
     /// <summary>
     /// 减速减益效果实例
@@ -11,7 +11,7 @@ using Character.Components;
         private readonly SlowDebuffDefinition _def;
         private StatModifier _modifier;
 
-        public SlowDebuffInstance(SlowDebuffDefinition def)
+        public SlowDebuffInstance(SlowDebuffDefinition def, CharacterBase caster = null)
             : base(def.duration, def.isStackable)
         {
             _def = def;

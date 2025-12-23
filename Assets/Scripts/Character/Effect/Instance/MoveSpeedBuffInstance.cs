@@ -1,5 +1,5 @@
 using Character.Components;
-
+using Character;
 
     /// <summary>
     /// 移动速度增益效果实例（通过 StatModifier 实现）
@@ -11,7 +11,7 @@ using Character.Components;
         private readonly MoveSpeedBuffDefinition _def;
         private StatModifier _modifier;
 
-        public MoveSpeedBuffInstance(MoveSpeedBuffDefinition def)
+        public MoveSpeedBuffInstance(MoveSpeedBuffDefinition def, CharacterBase caster = null)
             : base(def.duration, def.isStackable)
         {
             _def = def;

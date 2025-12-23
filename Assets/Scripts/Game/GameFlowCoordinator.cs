@@ -1,10 +1,10 @@
 using UnityEngine;
 using RogueGame.Map;
-using CDTU.Utils;
 using RogueGame.Events;
 using System.Collections;
 using UI;
-using Game.UI;
+using RogueGame.SaveSystem;
+using UnityEngine.SceneManagement;
 
 /// <summary>
 /// 轻量级 GameStateManager：负责发布状态变更事件，保持最小实现以便快速验证流程。
@@ -45,8 +45,22 @@ public sealed class GameFlowCoordinator : MonoBehaviour, IGameStateManager
     private int _roomsClearedThisLayer = 0;
     private bool _bossUnlockedThisLayer = false;
 
+    private bool _restoredRunHandled = false;
+
     private void Start()
     {
+        // // 订阅 Run 存档加载事件，以便在存在上次 Run 存档时恢复并启动该 Run
+        // SaveManager.OnRunSaveLoaded += HandleRunSaveLoaded;
+
+        // // 如果 SaveManager 已经在其它地方（例如 SaveManager.Start）加载了 Run 存档，立即处理它
+        // var saveManager = GameRoot.Instance?.SaveManager;
+        // if (saveManager != null && saveManager.CurrentRunSave != null)
+        // {
+        //     HandleRunSaveLoaded(saveManager.CurrentRunSave);
+        //     return;
+        // }
+
+        // 否则按默认流程开启新的 Run
         var startMeta = new RoomMeta { RoomType = RoomType.Start, Index = 0, BundleName = "Room_Start_0" };
         StartRun(startMeta);
     }
@@ -102,6 +116,9 @@ public sealed class GameFlowCoordinator : MonoBehaviour, IGameStateManager
             EventBus.Unsubscribe<CombatStartedEvent>(HandleCombatStartedEvent);
             _subscribed = false;
         }
+
+        // 退订 Run 存档加载事件
+        try { SaveManager.OnRunSaveLoaded -= HandleRunSaveLoaded; } catch { }
     }
 
     private RoomInstanceState GetLatestInstanceFromRepository()
@@ -117,6 +134,22 @@ public sealed class GameFlowCoordinator : MonoBehaviour, IGameStateManager
             }
         }
         return latest;
+    }
+
+    private void HandleRunSaveLoaded(RunSaveData data)
+    {
+        if (data == null || _restoredRunHandled) return;
+        _restoredRunHandled = true;
+
+        // 应用最小恢复行为：设置层级并启动该层（详尽的房间恢复留给 SaveRestoreUtility.RestoreGameState）
+        CurrentLayer = Mathf.Max(1, data.CurrentLayer);
+        _roomsClearedThisLayer = 0;
+        _bossUnlockedThisLayer = false;
+
+        var startMeta = new RoomMeta { RoomType = RoomType.Start, Index = 0, BundleName = "Room_Start_0" };
+        RoomManager?.StartFloor(CurrentLayer, startMeta);
+
+        CDTU.Utils.Logger.Log($"GameFlowCoordinator: Restored Run to Layer {CurrentLayer} from save.");
     }
 
     public void ChangeState(GameFlowState newState)
@@ -268,6 +301,7 @@ public sealed class GameFlowCoordinator : MonoBehaviour, IGameStateManager
 
         try
         {
+            // 发布层间过渡事件
             EventBus.Publish(new LayerTransitionEvent { FromLayer = from, ToLayer = CurrentLayer });
         }
         catch { }
@@ -287,6 +321,31 @@ public sealed class GameFlowCoordinator : MonoBehaviour, IGameStateManager
     public void ResumeGame()
     {
         Time.timeScale = 1f;
+    }
+
+    public void RestartGame()
+    {
+        // 1. 📊 保存本局统计到元游戏存档
+        var saveManager = GameRoot.Instance?.SaveManager;
+        if (saveManager != null)
+        {
+            saveManager.SaveRunToMetaOnDeath();  // 需要实现这个方法
+            saveManager.ClearRunSave();          // 清空单局存档
+        }
+
+        //2. 重置时间缩放
+        Time.timeScale = 1f;
+
+        // 3. 重置状态(Scene自己会重置)
+        // CurrentState = GameFlowState.None;
+        // CurrentLayer = 1;
+        // CurrentRoomId = 0;
+        // CurrentRoomInstanceId = 0;
+        // _roomsClearedThisLayer = 0;
+        // _bossUnlockedThisLayer = false;
+
+
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
 

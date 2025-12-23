@@ -44,11 +44,12 @@ namespace RogueGame.SaveSystem
             EventBus.Subscribe<EntityKilledEvent>(OnEntityKilled);
         }
 
-        private void Start()
-        {
-            // 启动时加载元游戏存档
-            LoadMeta();
-        }
+        //由GameRoot加载元游戏存档
+        // private void Start()
+        // {
+        //     // 启动时加载元游戏存档
+        //     LoadMeta();
+        // }
 
         private void OnDestroy()
         {
@@ -358,7 +359,7 @@ namespace RogueGame.SaveSystem
         /// <summary>
         /// 记录 Run 结束（通关或死亡）
         /// </summary>
-        public void OnRunEnded(bool isVictory, int killsThisRun, int damageThisRun, int layerReached)
+        public void OnRunEnded(bool isVictory, int killsThisRun, int layerReached)
         {
             if (_metaSave == null) return;
 
@@ -373,7 +374,6 @@ namespace RogueGame.SaveSystem
 
             // 更新统计
             _metaSave.TotalKills += killsThisRun;
-            _metaSave.TotalDamageDealt += damageThisRun;
 
             // 更新最佳记录
             if (layerReached > _metaSave.HighestLayerReached)
@@ -383,10 +383,6 @@ namespace RogueGame.SaveSystem
             if (killsThisRun > _metaSave.MostKillsInOneRun)
             {
                 _metaSave.MostKillsInOneRun = killsThisRun;
-            }
-            if (damageThisRun > _metaSave.MostDamageInOneRun)
-            {
-                _metaSave.MostDamageInOneRun = damageThisRun;
             }
 
             // 清除单局存档
@@ -410,20 +406,20 @@ namespace RogueGame.SaveSystem
             {
                 string filePath = GetSaveFilePath(fileName);
                 string tempPath = filePath + ".tmp";
-                
+
                 // 序列化为 JSON
                 string json = JsonUtility.ToJson(data, true);
-                
+
                 // 先写入临时文件
                 File.WriteAllText(tempPath, json);
-                
+
                 // 原子替换（如果目标文件存在，会先删除）
                 if (File.Exists(filePath))
                 {
                     File.Delete(filePath);
                 }
                 File.Move(tempPath, filePath);
-                
+
                 return true;
             }
             catch (Exception ex)
@@ -511,6 +507,14 @@ namespace RogueGame.SaveSystem
             catch (Exception ex)
             {
                 CDTU.Utils.Logger.LogError($"[SaveManager] 删除存档失败: {ex.Message}");
+            }
+        }
+
+        public void SaveRunToMetaOnDeath()
+        {
+            if (_currentRunSave != null)
+            {
+                OnRunEnded(false, _currentRunSave.KillsThisRun, _currentRunSave.CurrentLayer);
             }
         }
 

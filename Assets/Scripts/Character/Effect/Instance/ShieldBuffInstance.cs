@@ -1,5 +1,5 @@
 using Character.Components;
-
+using Character;
 
     /// <summary>
     /// 护盾效果实例（通过临时增加护甲实现）
@@ -11,7 +11,7 @@ using Character.Components;
         private readonly ShieldBuffDefinition _def;
         private StatModifier _modifier;
 
-        public ShieldBuffInstance(ShieldBuffDefinition def)
+        public ShieldBuffInstance(ShieldBuffDefinition def, CharacterBase caster = null)
             : base(def.duration, def.isStackable)
         {
             _def = def;

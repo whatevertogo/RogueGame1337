@@ -16,9 +16,9 @@ using UnityEngine;
         [Tooltip("修饰符类型：Flat(固定加成) / PercentAdd(百分比累加) / PercentMult(百分比独立乘)")]
         public StatModType modifierType = StatModType.PercentAdd;
 
-        public override StatusEffectInstanceBase CreateInstance()
+        public override StatusEffectInstanceBase CreateInstance(CharacterBase caster = null)
         {
-            return new MoveSpeedBuffInstance(this);
+            return new MoveSpeedBuffInstance(this, caster);
         }
     }
 

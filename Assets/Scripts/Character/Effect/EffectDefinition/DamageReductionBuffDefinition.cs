@@ -1,6 +1,6 @@
 using Character.Effects;
 using UnityEngine;
-
+using Character;
 
     /// <summary>
     /// 伤害减免增益效果（通过修改受到伤害实现）
@@ -13,9 +13,9 @@ using UnityEngine;
         [Range(0f, 1f)]
         public float reductionPercent = 0.3f;
 
-        public override StatusEffectInstanceBase CreateInstance()
+        public override StatusEffectInstanceBase CreateInstance(CharacterBase caster = null)
         {
-            return new DamageReductionBuffInstance(this);
+            return new DamageReductionBuffInstance(this, caster);
         }
     }
 

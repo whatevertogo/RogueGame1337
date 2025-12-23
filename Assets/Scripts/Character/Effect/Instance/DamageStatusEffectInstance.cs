@@ -9,22 +9,23 @@ using UnityEngine;
 public class DamageStatusEffectInstance : StatusEffectInstanceBase, IDamageSourceAware
 {
     public override string EffectId => _def.effectId;
-    
+
     private readonly DamageStatusEffectDefinitionSO _def;
     private float _damageTimer;
     private bool _instantDamageApplied;
-    
+
     // 伤害来源引用
     private CharacterBase _damageSource;
-    
-    public DamageStatusEffectInstance(DamageStatusEffectDefinitionSO def) 
+
+    public DamageStatusEffectInstance(DamageStatusEffectDefinitionSO def, CharacterBase caster = null)
         : base(def.duration, def.isStackable)
     {
         _def = def;
         _damageTimer = 0f;
         _instantDamageApplied = false;
+        if (caster != null) SetDamageSource(caster);
     }
-    
+
     /// <summary>
     /// 设置伤害来源
     /// </summary>

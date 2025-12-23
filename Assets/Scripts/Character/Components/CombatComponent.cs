@@ -36,8 +36,8 @@ namespace Character.Components
 
         // 组件缓存
         private CharacterStats stats;
-        private StatusEffectComponent statusEffects;
         private CharacterBase characterBase;
+        private StatusEffectComponent statusEffects;
         private Animator anim;
 
         // 运行时状态

@@ -11,13 +11,14 @@ using Character.Components;
 
         private readonly InstantDamageEffectDefinition _def;
         private bool _damageApplied;
-        private CharacterBase _damageSource; // 新增：伤害来源
+        private CharacterBase _damageSource; // 伤害来源
 
-        public InstantDamageEffectInstance(InstantDamageEffectDefinition def)
+        public InstantDamageEffectInstance(InstantDamageEffectDefinition def, CharacterBase caster = null)
             : base(duration: 0f, isStackable: true) // duration=0 表示瞬时效果
         {
             _def = def;
             _damageApplied = false;
+            if (caster != null) SetDamageSource(caster);
         }
 
         /// <summary>

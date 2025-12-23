@@ -206,13 +206,11 @@ public class PlayerController : CharacterBase
 	{
 		//方案一类似以撒
 		// Vector2 moveDir = GameInput.Instance.MoveDir;
-
 		// // 如果正在移动，用移动方向
 		// if (moveDir.sqrMagnitude > 0.01f)
 		// {
 		// 	return moveDir.normalized;
 		// }
-
 		// // 否则用上次的朝向
 		// return lastFacingDirection;
 
@@ -238,6 +236,7 @@ public class PlayerController : CharacterBase
 		// 播放攻击动画
 		var playerAnim = GetComponent<PlayerAnimator>();
 		playerAnim?.PlayAttack();
+		// 攻击由Combat组件处理，这里只负责动画
 	}
 
 	protected override void OnDeath()
