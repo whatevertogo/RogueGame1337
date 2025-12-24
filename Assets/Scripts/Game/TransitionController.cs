@@ -17,12 +17,18 @@ public sealed class TransitionController : MonoBehaviour
     public float cameraSwitchDuration = 0.5f;
     public float teleportMovementDisableTime = 0.15f;
 
+    public PlayerManager pm;
+
+    public void Initialize(PlayerManager pm)
+    {
+        this.pm = pm;
+    }
+
     /// <summary>
     /// 锁定所有已注册玩家的移动（通过 PlayerManager 中的 PlayerData.Controller 查找 IPlayerMovement）
     /// </summary>
     public void LockAllPlayersMovement()
     {
-        var pm = PlayerManager.Instance;
         if (pm == null) return;
         foreach (var p in pm.GetAllPlayersData())
         {
@@ -34,7 +40,6 @@ public sealed class TransitionController : MonoBehaviour
 
     public void UnlockAllPlayersMovement()
     {
-        var pm = PlayerManager.Instance;
         if (pm == null) return;
         foreach (var p in pm.GetAllPlayersData())
         {
@@ -50,7 +55,6 @@ public sealed class TransitionController : MonoBehaviour
     public void TeleportPlayer(RoomPrefab room, Direction entryDir)
     {
         if (room == null) return;
-        var pm = PlayerManager.Instance;
         if (pm == null)
         {
             CDTU.Utils.CDLogger.LogWarning("[TransitionController] 找不到 PlayerManager，无法传送玩家。");

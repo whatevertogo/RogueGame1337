@@ -144,6 +144,8 @@ public class GameRoot : Singleton<GameRoot>
             transitionController,
             uiManager
         );
+
+        transitionController.Initialize(playerManager);
         roomManager.Initialize(transitionController);
 
         playerManager.Initialize(roomManager);

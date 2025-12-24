@@ -15,7 +15,7 @@ namespace Character.Components
         private Vector2 knockbackVelocity;
         private float knockbackTimer;
 
-        [Header("调试")]
+        [Header("调试"),ReadOnly]
         [SerializeField] private float currentSpeed;
         [SerializeField] private bool canMove = true;
 

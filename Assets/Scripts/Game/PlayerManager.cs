@@ -70,7 +70,7 @@ public class PlayerManager : Singleton<PlayerManager>
         }
         catch (Exception ex)
         {
-            CDTU.Utils.CDLogger.LogError($"[PlayerManager] 取消订阅事件失败: {ex.Message}");
+            CDLogger.LogError($"[PlayerManager] 取消订阅事件失败: {ex.Message}");
         }
         base.OnDestroy();
     }
@@ -139,15 +139,15 @@ public class PlayerManager : Singleton<PlayerManager>
     {
         try
         {
-            CDTU.Utils.CDLogger.Log("[PlayerManager] 正在打开死亡 UI...");
+            CDLogger.Log("[PlayerManager] 正在打开死亡 UI...");
 
             await UIManager.Instance.Open<DeadUIView>(layer: UILayer.Popup);
 
-            CDTU.Utils.CDLogger.Log("[PlayerManager] 死亡 UI 打开成功");
+            CDLogger.Log("[PlayerManager] 死亡 UI 打开成功");
         }
         catch (System.Exception ex)
         {
-            CDTU.Utils.CDLogger.LogError($"[PlayerManager] 打开死亡 UI 失败: {ex.Message}");
+            CDLogger.LogError($"[PlayerManager] 打开死亡 UI 失败: {ex.Message}");
         }
     }
 
@@ -166,7 +166,7 @@ public class PlayerManager : Singleton<PlayerManager>
         var playerPrefab = _playerLoader.Load("Player1");
         if (playerPrefab == null)
         {
-            CDTU.Utils.CDLogger.LogError("[PlayerManager]无法加载玩家预制体。");
+            CDLogger.LogError("[PlayerManager]无法加载玩家预制体。");
             return;
         }
         //TODO-以后在这里写LocalPlayer逻辑，现在是单人PlayerController自己设置为local
