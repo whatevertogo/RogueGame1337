@@ -3,29 +3,44 @@ using UnityEngine;
 namespace CDTU.Utils
 {
     /// <summary>
-    /// DontDestroyOnLoad 单例基类（安全版）
-    /// 规则：
-    /// - Instance 仅返回引用，不调用 Unity API
-    /// - 实例只在 Awake 中注册
-    /// - 不自动创建、不自动查找
+    /// DontDestroyOnLoad 懒加载单例基类（工程安全版）
+    /// 特性：
+    /// - 第一次访问 Instance 时创建
+    /// - 优先复用场景中已存在实例
+    /// - 自动 DontDestroyOnLoad
+    /// - 防止退出阶段误创建
     /// </summary>
-    public abstract class SingletonDD<T> : MonoBehaviour where T : MonoBehaviour
+    public abstract class SingletonDD<T> : MonoBehaviour
+        where T : SingletonDD<T>
     {
-        private static T _instance;
+        protected static T _instance;
         private static bool _isQuitting;
 
         public static T Instance
         {
             get
             {
-                if (_instance == null && !_isQuitting)
+                if (_isQuitting)
+                    return null;
+
+                if (_instance != null)
+                    return _instance;
+
+                // 1️⃣ 尝试从场景中查找
+                _instance = FindFirstObjectByType<T>();
+
+                if (_instance != null)
                 {
-                    Debug.LogError(
-                        $"[SingletonDD<{typeof(T).Name}>] Instance is null. " +
-                        $"Ensure the object exists in scene and Awake has been called."
-                    );
+                    DontDestroyOnLoad(_instance.gameObject);
+                    return _instance;
                 }
 
+                // 2️⃣ 创建新对象
+                GameObject go = new GameObject(typeof(T).Name);
+                _instance = go.AddComponent<T>();
+                DontDestroyOnLoad(go);
+
+                _instance.OnSingletonCreated();
                 return _instance;
             }
         }
@@ -36,18 +51,14 @@ namespace CDTU.Utils
         {
             if (_instance == null)
             {
-                _instance = this as T;
+                _instance = (T)this;
                 DontDestroyOnLoad(gameObject);
+                OnSingletonAwake();
             }
             else if (_instance != this)
             {
                 Destroy(gameObject);
             }
-        }
-
-        protected virtual void OnApplicationQuit()
-        {
-            _isQuitting = true;
         }
 
         protected virtual void OnDestroy()
@@ -56,6 +67,28 @@ namespace CDTU.Utils
             {
                 _instance = null;
             }
+
+            OnSingletonDestroyed();
         }
+
+        protected virtual void OnApplicationQuit()
+        {
+            _isQuitting = true;
+        }
+
+        /// <summary>
+        /// 懒加载创建时调用（仅一次）
+        /// </summary>
+        protected virtual void OnSingletonCreated() { }
+
+        /// <summary>
+        /// Awake 阶段调用（包括场景预放置）
+        /// </summary>
+        protected virtual void OnSingletonAwake() { }
+
+        /// <summary>
+        /// 销毁阶段（解绑事件）
+        /// </summary>
+        protected virtual void OnSingletonDestroyed() { }
     }
 }

@@ -119,8 +119,6 @@ public class GameRoot : Singleton<GameRoot>
             CDTU.Utils.CDLogger.LogWarning("[GameRoot] StatLimitConfig 未配置，将使用 Stat 类内部默认上限");
         }
 
-
-
         if (!ok)
         {
             CDTU.Utils.CDLogger.LogError("[GameRoot] Initialization aborted due to missing references.");
@@ -134,7 +132,7 @@ public class GameRoot : Singleton<GameRoot>
             CDTU.Utils.CDLogger.Log("[GameRoot] SlotService added to GameRoot at runtime");
         }
 
-        CDTU.Utils.CDLogger.Log("[GameRoot] All required references assigned. Initializing CardDatabase.");
+        CDLogger.Log("[GameRoot] All required references assigned. Initializing CardDatabase.");
         cardDatabase.Initialize();
         //SaveManager 初始化依赖于 PlayerManager 和 InventoryManager
         //TODO:项目最后来写保存游戏功能SaveManager
@@ -203,7 +201,7 @@ public class GameRoot : Singleton<GameRoot>
 
     protected override void OnDestroy()
     {
-        CDTU.Utils.CDLogger.Log("[GameRoot] OnDestroy() called.");
+        CDLogger.Log("[GameRoot] OnDestroy() called.");
 
         // 取消订阅服务的事件
         FloorRewardSystemService?.Unsubscribe();

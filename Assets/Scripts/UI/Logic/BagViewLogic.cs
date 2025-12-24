@@ -85,12 +85,27 @@ namespace Game.UI
                 return;
             }
 
-            var states = inv.ActiveCardStates;
-            foreach (var st in states)
+            // 按 CardId 分组，找到最高等级的实例
+            var cardGroups = new System.Collections.Generic.Dictionary<string, InventoryManager.ActiveCardState>();
+
+            foreach (var st in inv.ActiveCardStates)
             {
                 if (st == null) continue;
-                _view.AddCardView(st.CardId, 1);
+
+                // 如果该 CardId 还没有记录，或者当前实例等级更高，则更新
+                if (!cardGroups.ContainsKey(st.CardId) || st.Level > cardGroups[st.CardId].Level)
+                {
+                    cardGroups[st.CardId] = st;
+                }
             }
+
+            // 添加视图（每张卡只显示一次，显示最高等级）
+            foreach (var kvp in cardGroups)
+            {
+                _view.AddCardView(kvp.Value.CardId, kvp.Value.Level);
+            }
+
+            CDTU.Utils.CDLogger.Log($"[BagView] 刷新主动卡视图：{cardGroups.Count} 张卡");
         }
 
         // public void RefreshPassiveCardViews()

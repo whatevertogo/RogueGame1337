@@ -225,6 +225,10 @@ public sealed class GameFlowCoordinator : MonoBehaviour, IGameStateManager
         // 进入已清理状态
         ChangeState(GameFlowState.RoomCleared);
 
+        // ✅ 房间清理后解锁玩家移动
+        TransitionController?.UnlockAllPlayersMovement();
+        CDTU.Utils.CDLogger.Log($"[GameFlowCoordinator] 房间清理完成，已解锁玩家移动");
+
         // 统计本层已清理战斗房间数（仅对战斗房间计数；RoomClearedEvent 的 RoomType 可用于判断）
         if (evt.RoomType == RoomType.Normal || evt.RoomType == RoomType.Elite)
         {

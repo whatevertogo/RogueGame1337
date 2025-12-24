@@ -11,10 +11,13 @@ public class StunEffectInstance : StatusEffectInstanceBase
 
     private readonly StunEffectDefinition _def;
 
+    public readonly CharacterBase Caster;
+
     public StunEffectInstance(StunEffectDefinition def, CharacterBase caster = null)
         : base(def.duration, def.isStackable)
     {
         _def = def;
+        Caster = caster;
     }
 
     public override void OnApply(CharacterStats stats, StatusEffectComponent comp)

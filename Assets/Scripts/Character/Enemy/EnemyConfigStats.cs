@@ -1,5 +1,6 @@
 using System;
 using Character;
+using UnityEngine;
 
 [Serializable]
 public class EnemyConfigStats
@@ -12,7 +13,9 @@ public class EnemyConfigStats
     public bool isBoss;
     public EnemyAiType aiType;
 
+    [Range(0f, 1f)]
     public float PassiveDropChance;
+    [Range(0f, 1f)]
     public float ActiveDropChance;
     public string[] PassiveCardIds;
     public string[] ActiveCardIds;

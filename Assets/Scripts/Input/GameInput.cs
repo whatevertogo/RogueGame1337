@@ -10,6 +10,9 @@ public sealed class GameInput : Singleton<GameInput>
     private PlayerInputSystem playerInput;
 
     public Vector2 MoveDir { get; private set; }
+
+    [ReadOnly]
+    public Vector2 MoveDirRaw;
     // 仅保留 Attack
     public bool AttackPressedThisFrame => playerInput != null && playerInput.PlayerControl.Attack.WasPerformedThisFrame();
     public bool AttackReleasedThisFrame => playerInput != null && playerInput.PlayerControl.Attack.WasReleasedThisFrame();
@@ -40,7 +43,7 @@ public sealed class GameInput : Singleton<GameInput>
     private void Update()
     {
         MoveDir = playerInput != null ? playerInput.PlayerControl.Move.ReadValue<Vector2>() : Vector2.zero;
-
+        MoveDirRaw =MoveDir;
     }
 
     public void PausePlayerInput()

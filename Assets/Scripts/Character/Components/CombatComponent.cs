@@ -102,38 +102,6 @@ namespace Character.Components
                 return;
             }
 
-            // 如果场景中存在 Enemy，但都不在 hitMask 中，也提示可能的层/掩码错误
-            var allChars = ObjectCache.Instance.FindObjectsOfType<CharacterBase>();
-            bool anyEnemyExist = false;
-            bool anyEnemyInMask = false;
-            foreach (var ch in allChars)
-            {
-                // 跳过已销毁或 null 的对象（防止在编辑器中访问已被销毁的 UnityEngine.Object 抛出 MissingReferenceException）
-                if (ch == null) continue;
-
-                if (ch.Team == TeamType.Enemy)
-                {
-                    anyEnemyExist = true;
-                    // 访问 gameObject.layer 前再次确保 ch 未被销毁
-                    try
-                    {
-                        if (((1 << ch.gameObject.layer) & hitMask.value) != 0)
-                        {
-                            anyEnemyInMask = true;
-                            break;
-                        }
-                    }
-                    catch (UnityEngine.MissingReferenceException)
-                    {
-                        // 被销毁的对象，跳过
-                        continue;
-                    }
-                }
-            }
-            if (anyEnemyExist && !anyEnemyInMask)
-            {
-                CDTU.Utils.CDLogger.LogWarning($"[CombatComponent] {gameObject.name} hitMask 中没有包含任何 Enemy 的图层，请在 Inspector 中检查 Layer 和 HitMask 设置。");
-            }
         }
 
         // ========== 公共 API ==========

@@ -219,6 +219,31 @@ namespace Character.Components
             return count;
         }
 
+        /// <summary>
+        /// 尝试获得指定效果
+        /// </summary>
+        /// <param name="value"></param>
+        public bool TryGetEffectInstance<T>(string effectId, out T value) where T : class, IStatusEffect
+        {
+            var effect = _effects.Find(e => e.EffectId == effectId) as T;
+            if (effect != null)
+            {
+                value = effect;
+                return true;
+            }
+            value = null;
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        public IReadOnlyList<IStatusEffect> GetActiveEffects()
+        {
+            return _effects.AsReadOnly();
+        }
+
         // 控制效果设置（使用引用计数支持叠加）
         public void SetStunned(bool value)
         {

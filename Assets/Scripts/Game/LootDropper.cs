@@ -40,10 +40,7 @@ public sealed class LootDropper : Singleton<LootDropper>
 
     protected override void Awake()
     {
-        if (CoinPickupPrefab == null)
-        {
-            CDTU.Utils.CDLogger.LogWarning("LootDropper: CoinPickupPrefab 未在场景中分配。请在场景中创建 LootDropper 单例并分配 CoinPickupPrefab。");
-        }
+        base.Awake();
     }
 
     /// <summary>

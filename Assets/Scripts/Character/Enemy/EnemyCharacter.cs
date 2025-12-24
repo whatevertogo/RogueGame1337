@@ -9,10 +9,10 @@ public class EnemyCharacter : CharacterBase
 {
 
     [Header("Enemy特殊配置")]
-    [SerializeField, ]
+    [SerializeField,InlineEditor ]
     private EnemyConfigSO enemyConfig;
 
-    [SerializeField]
+    [SerializeField, ReadOnly]
     private EnemyConfigStats enemyConfigStats;
 
     private EnemyAnimator EnemyAnim => GetComponent<EnemyAnimator>();
