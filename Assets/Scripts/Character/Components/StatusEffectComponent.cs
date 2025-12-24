@@ -225,8 +225,7 @@ namespace Character.Components
         /// <param name="value"></param>
         public bool TryGetEffectInstance<T>(string effectId, out T value) where T : class, IStatusEffect
         {
-            var effect = _effects.Find(e => e.EffectId == effectId) as T;
-            if (effect != null)
+            if (_effects.Find(e => e.EffectId == effectId) is T effect)
             {
                 value = effect;
                 return true;
