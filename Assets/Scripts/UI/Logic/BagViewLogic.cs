@@ -3,6 +3,7 @@ using UnityEngine;
 using UI;
 using Character.Components;
 using Unity.VisualScripting;
+using Character.Player;
 
 namespace Game.UI
 {
@@ -18,6 +19,8 @@ namespace Game.UI
         private CharacterStats localCharacterStats;
         private PlayerController localplayerController;
 
+        private PlayerSkillComponent localPlayerSkillComponent;
+
 
         public virtual void Bind(UIViewBase view)
         {
@@ -32,18 +35,25 @@ namespace Game.UI
             playerManager = GameRoot.Instance.PlayerManager;
             localplayerController = playerManager.GetLocalPlayerData()?.Controller;
             localCharacterStats = localplayerController?.GetComponent<CharacterStats>();
+            localPlayerSkillComponent = localplayerController?.GetComponent<PlayerSkillComponent>();
             if (localCharacterStats != null)
             {
                 // 防止重复订阅：先移除再添加
                 localCharacterStats.OnStatsChanged -= SetAllPlayerStatsText;
                 localCharacterStats.OnStatsChanged += SetAllPlayerStatsText;
+
             }
             SetAllPlayerStatsText();
             //TODO- 设置玩家头像
             // _view.SetPlayerImage(localCharacterStats.Icon);
 
+
             // 初始化卡牌列表
             RefreshAllCardViews();
+
+            //TODO=初始化装备槽
+            // localPlayerSkillComponent.PlayerSkillSlots[1].Runtime.CardId
+            // localPlayerSkillComponent.PlayerSkillSlots[2].Runtime.CardId
         }
 
         public virtual void OnClose()
@@ -74,28 +84,28 @@ namespace Game.UI
             }
         }
 
-        public void RefreshPassiveCardViews()
-        {
-            var inv = InventoryManager.Instance;
-            if (inv == null)
-            {
-                Debug.LogWarning("[BagView] InventoryManager.Instance is null");
-                return;
-            }
+        // public void RefreshPassiveCardViews()
+        // {
+        //     var inv = InventoryManager.Instance;
+        //     if (inv == null)
+        //     {
+        //         Debug.LogWarning("[BagView] InventoryManager.Instance is null");
+        //         return;
+        //     }
 
-            var passive = inv.PassiveCards;
-            foreach (var p in passive)
-            {
-                if (p.Count <= 0) continue;
-                _view.AddCardView(p.CardId, p.Count);
-            }
-        }
+        //     var passive = inv.PassiveCards;
+        //     foreach (var p in passive)
+        //     {
+        //         if (p.Count <= 0) continue;
+        //         _view.AddCardView(p.CardId, p.Count);
+        //     }
+        // }
 
         public void RefreshAllCardViews()
         {
             _view.ClearCardViews();
             RefreshActiveCardViews();
-            RefreshPassiveCardViews();
+            // RefreshPassiveCardViews();
         }
 
         public void OnClearCardButtonClicked()

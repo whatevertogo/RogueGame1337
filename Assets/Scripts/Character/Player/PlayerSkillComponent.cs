@@ -157,7 +157,9 @@ namespace Character.Player
             // 播放 VFX（如果有）
             if (def.vfxPrefab != null)
             {
-                GameObject.Instantiate(def.vfxPrefab, origin, Quaternion.identity);
+                //TODO-临时用transform.position，后续可改为技能定义中的挂点
+                var vfx = Instantiate(def.vfxPrefab, transform.position, Quaternion.identity);
+                var vfxsr = vfx.GetComponent<SpriteRenderer>();
             }
 
             // 获取目标

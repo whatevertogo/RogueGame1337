@@ -332,7 +332,7 @@ public sealed class GameFlowCoordinator : MonoBehaviour, IGameStateManager
         var saveManager = GameRoot.Instance?.SaveManager;
         if (saveManager != null)
         {
-            saveManager.SaveRunToMetaOnDeath();  // 需要实现这个方法
+            saveManager.SaveRunToMetaOnDeath();  // 保存当前单局数据到元游戏存档
             saveManager.ClearRunSave();          // 清空单局存档
         }
 

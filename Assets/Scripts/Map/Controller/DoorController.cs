@@ -273,7 +273,7 @@ namespace RogueGame.Map
         {
             Gizmos.color = currentState switch
             {
-                DoorState.Open => Color.green,
+                DoorState.Open => Color.brown,
                 DoorState.Closed => Color.yellow,
                 DoorState.Locked => Color.red,
                 DoorState.Hidden => new Color(0.5f, 0.5f, 0.5f, 0.3f),

@@ -40,6 +40,15 @@ public class EnemyCharacter : CharacterBase
         // 设置阵营为敌人（如果尚未设置）
         SetTeam(Character.TeamType.Enemy);
 
+        // 自动设置 Layer 为 Enemy 层
+        int enemyLayer = LayerMask.NameToLayer("Enemy");
+        if (enemyLayer != -1 && gameObject.layer != enemyLayer)
+        {
+            gameObject.layer = enemyLayer;
+            // 同时递归设置所有子对象的 Layer
+            SetLayerRecursive(transform, enemyLayer);
+        }
+
         // 订阅死亡事件，处理掉落与击杀归属
         var health = GetComponent<HealthComponent>();
         if (health != null)
@@ -213,6 +222,18 @@ public class EnemyCharacter : CharacterBase
         yield return new WaitForSeconds(delay);
         // 触发移除流程：如果使用对象池，这里改为归还
         Destroy(gameObject);
+    }
+
+    /// <summary>
+    /// 递归设置游戏对象及其所有子对象的 Layer
+    /// </summary>
+    private void SetLayerRecursive(Transform t, int layer)
+    {
+        t.gameObject.layer = layer;
+        for (int i = 0; i < t.childCount; i++)
+        {
+            SetLayerRecursive(t.GetChild(i), layer);
+        }
     }
 
     protected override void OnDestroy()

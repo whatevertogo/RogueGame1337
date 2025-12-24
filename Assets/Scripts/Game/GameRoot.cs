@@ -4,6 +4,9 @@ using RogueGame.SaveSystem;
 using UI;
 using UnityEngine;
 
+/// <summary>
+/// 游戏根节点，管理全局单例和核心系统
+/// </summary>
 public class GameRoot : Singleton<GameRoot>
 {
     [Header("Game DataBases")]
@@ -147,7 +150,7 @@ public class GameRoot : Singleton<GameRoot>
         SaveManager.LoadMeta();
     }
 
-    private bool AssertNotNull(UnityEngine.Object obj, string name)
+    private bool AssertNotNull(Object obj, string name)
     {
         if (obj == null)
         {

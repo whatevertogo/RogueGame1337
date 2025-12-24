@@ -19,6 +19,7 @@ public class AreaDamageTargetAcquireSO : TargetAcquireSO
     
     [Header("过滤设置")]
     [Tooltip("目标过滤器组，用于筛选符合条件的目标")]
+    [InlineEditor]
     [SerializeField] private TargetFilterGroupSO filterGroup;
     
     /// <summary>
@@ -33,27 +34,28 @@ public class AreaDamageTargetAcquireSO : TargetAcquireSO
         // 确定检测中心点，优先使用AimPoint，否则使用Caster位置
         Vector3 detectionCenter = ctx.AimPoint != Vector3.zero ? ctx.AimPoint : ctx.CasterPosition;
         
-        // 使用Physics.OverlapSphere检测范围内的所有碰撞体
-        Collider[] hitColliders = Physics.OverlapSphere(detectionCenter, radius, targetLayerMask);
-        
+        // 使用Physics2D.OverlapCircle检测范围内的所有2D碰撞体
+        // 注意：2D游戏必须使用Physics2D，而不是Physics.OverlapSphere
+        Collider2D[] hitColliders = Physics2D.OverlapCircleAll(detectionCenter, radius, targetLayerMask);
+
         // 遍历检测到的碰撞体，提取CharacterBase组件
         foreach (var collider in hitColliders)
         {
             if (collider == null) continue;
-            
+
             CharacterBase character = collider.GetComponent<CharacterBase>();
             if (character == null) continue;
-            
+
             // 如果设置了过滤器组，应用过滤器
             if (filterGroup != null)
             {
                 if (!filterGroup.IsValid(ctx, character))
                     continue;
             }
-            
+
             resultTargets.Add(character);
         }
-        
+
         return resultTargets;
     }
     
