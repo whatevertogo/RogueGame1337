@@ -275,6 +275,5 @@ public class PlayerController : CharacterBase
 		// 播放受伤动画
 		playerAnim?.PlayHurt();
 
-		//TODO-飘伤害数字
 	}
 }

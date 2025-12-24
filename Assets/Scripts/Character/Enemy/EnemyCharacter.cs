@@ -56,7 +56,6 @@ public class EnemyCharacter : CharacterBase
             health.OnDeathWithAttacker += HandleDeathWithAttacker;
         }
 
-        //TODO-找个管理的地方注册自己？
 
         var rb = GetComponent<Rigidbody2D>();
         var col = GetComponent<Collider2D>();

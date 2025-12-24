@@ -18,9 +18,7 @@ namespace Character.Combat
 
         public override void Execute(AttackContext context)
         {
-            var config = useContextConfig ? context.ProjectileConfig : defaultConfig;
-
-            if (config == null || config.projectilePrefab == null)
+            if (defaultConfig == null || defaultConfig.projectilePrefab == null)
             {
                 Debug.LogError("[ProjectileAttackStrategy] 投射物配置无效！");
                 return;
@@ -32,7 +30,7 @@ namespace Character.Combat
 
             // 生成投射物（统一委托给 ProjectileSpawner，由其处理对象池/实例化与初始化）
             var projectile = ProjectileSpawner.Spawn(
-                config,
+                defaultConfig,
                 context.FirePosition,
                 context.AimDirection.normalized,
                 context.DamageInfo.Amount,

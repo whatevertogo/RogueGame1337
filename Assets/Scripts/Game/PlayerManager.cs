@@ -121,15 +121,14 @@ public class PlayerManager : Singleton<PlayerManager>
     /// <exception cref="NotImplementedException"></exception>
     private void HandlePlayerDiedEvent(PlayerDiedEvent evt)
     {
-        //TODO-处理玩家死亡后的逻辑，例如显示死亡UI等
         var playerState = GetPlayerRuntimeStateByController(evt.Player);
 
-        //TODO 多人可能改
 
         //打开死亡UI
         if (playerState != null && playerState.IsLocal)
         {
             //TODO-传递死亡信息
+
             _ = OpenDeadUIAsync();
         }
 

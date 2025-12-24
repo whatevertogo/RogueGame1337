@@ -3,8 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Character.Components;
 using RogueGame.Events;
-using RogueGame.GameConfig;
-using Character;
+using RogueGame.Map.Factory;
 
 namespace RogueGame.Map
 {
@@ -89,7 +88,6 @@ namespace RogueGame.Map
                 return true;
             }
         }
-
         public string GetCannotLeaveReason()
         {
             if (CanPlayerLeave) return null;
@@ -450,7 +448,7 @@ namespace RogueGame.Map
             }
 
             // 使用 EnemyFactory 负责实例化与可选配置注入
-            var enemy = RogueGame.Map.Factory.EnemyFactory.Spawn(prefab, position, transform, null, currentFloor);
+            var enemy = EnemyFactory.Spawn(prefab, position, transform, null, currentFloor);
 
             if (enemy == null)
             {

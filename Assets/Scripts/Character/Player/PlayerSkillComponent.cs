@@ -17,6 +17,9 @@ namespace Character.Player
 
         public SkillSlot[] PlayerSkillSlots => _playerSkillSlots;
 
+        // 技能限制器：根据房间规则限制技能使用
+        public PlayerSkillLimiter SkillLimiter { get; private set; }
+
         // 保留事件签名以兼容现有绑定，但不触发任何事件
         public event Action<int, float> OnEnergyChanged;
         public event Action<int> OnSkillUsed;
@@ -24,8 +27,12 @@ namespace Character.Player
         public event Action<int> OnSkillUnequipped;
 
         private EffectFactory effectFactory = new EffectFactory();
+
         private void Awake()
         {
+            // 初始化技能限制器
+            SkillLimiter = new PlayerSkillLimiter();
+
             // 确保数组内的 SkillSlot 实例已初始化，避免 Inspector VS 运行期不一致
             if (_playerSkillSlots != null)
             {
@@ -87,17 +94,28 @@ namespace Character.Player
             var rt = _playerSkillSlots[slotIndex]?.Runtime;
             if (rt == null || rt.Skill == null) return false;
 
-            // 检查 1: 房间内是否已使用
-            if (rt.UsedInCurrentRoom) return false;
+            // 检查 0: 房间规则限制（通过 SkillLimiter）
+            if (!SkillLimiter.CanUseSkill(slotIndex))
+            {
+                return false;
+            }
+
+            // 检查 1: 房间内是否已使用（保留旧逻辑以兼容，实际已被 SkillLimiter 替代）
+            // if (rt.UsedInCurrentRoom) return false;
 
             // 检查 2: 冷却判断
             var baseCd = rt.Skill.cooldown;
-            var stats = GetComponent<CharacterStats>();
-            var reduction = stats != null ? stats.SkillCooldownReductionRate.Value : 0f;
-            var effectiveCd = Mathf.Max(0f, baseCd * (1f - reduction));
-            if (Time.time - rt.LastUseTime < effectiveCd) return false;
 
-            // 检查 3: 充能检查（如果卡牌需要充能）
+            // 检查无冷却模式（测试用）
+            if (!SkillLimiter.IsNoCooldown)
+            {
+                var stats = GetComponent<CharacterStats>();
+                var reduction = stats != null ? stats.SkillCooldownReductionRate.Value : 0f;
+                var effectiveCd = Mathf.Max(0f, baseCd * (1f - reduction));
+                if (Time.time - rt.LastUseTime < effectiveCd) return false;
+            }
+
+            // 检查 3: 能量检查（如果卡牌需要能量）
             var cardDef = GameRoot.Instance?.CardDatabase?.Resolve(rt.CardId);
             if (cardDef != null && cardDef.activeCardConfig != null && cardDef.activeCardConfig.requiresCharge)
             {
@@ -105,16 +123,20 @@ namespace Character.Player
                 if (inv == null || string.IsNullOrEmpty(rt.InstanceId)) return false;
 
                 var state = inv.GetActiveCardState(rt.InstanceId);
-                if (state == null || state.CurrentCharges < 1) return false;
+                if (state == null) return false;
+
+                // ✅ 符合策划案：能量需要达到阈值才能使用
+                int requiredEnergy = cardDef.activeCardConfig.energyThreshold;
+                if (state.CurrentCharges < requiredEnergy) return false;
             }
 
-            // 检查 4: 状态效果（眩晕、沉默等）- 预留扩展
-            var effectComp = GetComponent<StatusEffectComponent>();
-            if (effectComp != null)
-            {
-                // TODO: 检查是否被沉默（无法使用技能）
-                // if (effectComp.HasEffectOfType("Silence")) return false;
-            }
+            // //TODO 检查 4: 状态效果（眩晕、沉默等）- 预留扩展
+            // var effectComp = GetComponent<StatusEffectComponent>();
+            // if (effectComp != null)
+            // {
+            //     // : 检查是否被沉默（无法使用技能）
+            //     // if (effectComp.HasEffectOfType("Silence")) return false;
+            // }
 
             return true;
         }
@@ -296,7 +318,7 @@ namespace Character.Player
             // 广播初始能量/充能状态
             if (cardDef.activeCardConfig != null && cardDef.activeCardConfig.requiresCharge)
             {
-                int max = Mathf.Max(1, cardDef.activeCardConfig.maxCharges);
+                int max = Mathf.Max(1, cardDef.activeCardConfig.maxEnergy);
                 int current = max; // default
 
                 if (inv != null && !string.IsNullOrEmpty(instanceId))
@@ -374,27 +396,31 @@ namespace Character.Player
 
             if (requiresCharge)
             {
-                // 检查并消耗实例充能（由 InventoryManager 管理）
+                // 消耗技能能量（符合策划案：释放后清零或减少阈值）
                 var inv = InventoryManager.Instance;
                 if (inv == null || string.IsNullOrEmpty(rt.InstanceId)) yield break;
 
-                // 试着消耗 1 个充能（用失败表示不可施法）
-                if (!inv.TryConsumeCharge(rt.InstanceId, 1, out int remaining))
+                // 使用新的能量消耗方法
+                if (!inv.ConsumeSkillEnergy(rt.InstanceId))
                 {
                     yield break;
                 }
 
-                // 通知 UI 当前剩余充能（归一化到 0..1）
-                var cd2 = GameRoot.Instance?.CardDatabase?.Resolve(rt.CardId);
-                int max = 1;
-                if (cd2 != null && cd2.activeCardConfig != null)
-                    max = Mathf.Max(1, cd2.activeCardConfig.maxCharges);
-                float norm = max > 0 ? (float)remaining / max : 0f;
-                OnEnergyChanged?.Invoke(slotIndex, norm);
+                // 通知 UI 当前剩余能量（归一化到 0..1）
+                var state = inv.GetActiveCardState(rt.InstanceId);
+                if (state != null)
+                {
+                    var cardDef = GameRoot.Instance?.CardDatabase?.Resolve(rt.CardId);
+                    int maxEnergy = cardDef?.activeCardConfig?.maxEnergy ?? 100;
+                    float norm = maxEnergy > 0 ? (float)state.CurrentCharges / maxEnergy : 0f;
+                    OnEnergyChanged?.Invoke(slotIndex, norm);
+                }
             }
 
             // 标记为本房间已使用（房间内一次性规则）并记录使用时间（用于冷却计算）
-            rt.UsedInCurrentRoom = true;
+            // 使用 SkillLimiter 而不是直接设置 rt.UsedInCurrentRoom
+            SkillLimiter.MarkSkillUsed(slotIndex);
+            rt.UsedInCurrentRoom = true; // 保留旧字段以兼容其他可能的引用
             rt.LastUseTime = Time.time;
 
             // 触发已使用事件（UI/上层监听）
@@ -489,13 +515,9 @@ namespace Character.Player
                 var cardDef = GameRoot.Instance?.CardDatabase?.Resolve(rt.CardId);
                 if (inv != null && cardDef != null && cardDef.activeCardConfig != null && cardDef.activeCardConfig.requiresCharge)
                 {
-                    var state = inv.GetActiveCardState(rt.InstanceId);
-                    if (state != null)
-                    {
-                        int maxCharges = cardDef.activeCardConfig.maxCharges;
-                        int AddCharges = cardDef.activeCardConfig.chargesPerKill;
-                        inv.AddCharges(rt.InstanceId, AddCharges, maxCharges);
-                    }
+                    // 退还能量阈值（用于打断技能时返还消耗的能量）
+                    int refundAmount = cardDef.activeCardConfig.energyThreshold;
+                    inv.AddEnergy(rt.InstanceId, refundAmount);
                 }
             }
 

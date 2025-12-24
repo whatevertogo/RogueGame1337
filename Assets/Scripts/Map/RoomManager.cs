@@ -2,9 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using RogueGame.Map.Data;
 using System;
-using System.Collections;
 using System.Threading.Tasks;
-using Character.Interfaces;
 using RogueGame.Events;
 
 namespace RogueGame.Map
@@ -160,6 +158,12 @@ namespace RogueGame.Map
         public Vector2 GetCurrentRoomPosition()
         {
             return _current?.Instance.transform.position ?? Vector2.zero;
+        }
+
+        // 获得当前房间RoomController
+        public RoomController GetCurrentRoomController()
+        {
+            return _current?.Instance?.GetComponent<RoomController>();
         }
 
         // IReadOnlyRoomRepository 实现 - 只读查询接口

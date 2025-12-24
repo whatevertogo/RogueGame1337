@@ -136,7 +136,6 @@ public class ProjectileBase : MonoBehaviour
 
     /// <summary>
     /// 便捷初始化方法（兼容旧代码）
-    //TODO-在这里添加暴击，但我不想有暴击后面可以更改如果需要
     /// </summary>
     public void Init(ProjectileConfig config, Vector2 direction, float damage,
         TeamType ownerTeam, Transform owner, LayerMask hitMask, StatusEffectDefinitionSO[] effects = null, bool isCrit = false)

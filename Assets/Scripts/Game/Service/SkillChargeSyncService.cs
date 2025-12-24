@@ -33,7 +33,7 @@ public sealed class SkillChargeSyncService
                 if (rt?.InstanceId != instanceId) continue;
 
                 var def = db.Resolve(rt.CardId);
-                int max = def?.activeCardConfig.maxCharges ?? 1;
+                int max = def?.activeCardConfig.maxEnergy ?? 100;
                 float norm = (float)charges / max;
 
                 playerManager.RaisePlayerSkillEnergyChanged(

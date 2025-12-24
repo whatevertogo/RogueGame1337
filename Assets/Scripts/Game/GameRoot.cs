@@ -1,5 +1,6 @@
 using CDTU.Utils;
 using RogueGame.GameConfig;
+using RogueGame.Game.Service.SkillLimit;
 using RogueGame.Map;
 using RogueGame.SaveSystem;
 using UI;
@@ -77,6 +78,9 @@ public class GameRoot : Singleton<GameRoot>
     //充能服务
     public CombatRewardEnergyService CombatRewardEnergyService { get; private set; }
 
+    //RoomPlayerSkillLimitService房间技能限制服务
+    public RoomPlayerSkillLimitService RoomPlayerSkillLimitService { get; private set; }
+
 
     protected override void Awake()
     {
@@ -150,9 +154,19 @@ public class GameRoot : Singleton<GameRoot>
             cardDatabase
         );
 
+        RoomPlayerSkillLimitService = new RoomPlayerSkillLimitService(
+            playerManager,
+            roomManager
+        );
+
         CombatRewardEnergyService = new CombatRewardEnergyService(inventoryManager);
+
+
+        
         FloorRewardSystemService.Subscribe();
         PassiveCardApplicationService.Subscribe();
+        RoomPlayerSkillLimitService.Subscribe();
+
         // 启动时加载元游戏存档
         SaveManager.LoadMeta();
     }
@@ -175,5 +189,6 @@ public class GameRoot : Singleton<GameRoot>
         // 取消订阅服务的事件
         FloorRewardSystemService?.Unsubscribe();
         PassiveCardApplicationService?.Unsubscribe();
+        RoomPlayerSkillLimitService?.Unsubscribe();
     }
 }
