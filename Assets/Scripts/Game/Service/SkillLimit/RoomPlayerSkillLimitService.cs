@@ -42,7 +42,7 @@ namespace RogueGame.Game.Service.SkillLimit
             EventBus.Subscribe<RoomClearedEvent>(OnRoomCleared);
             _subscribed = true;
 
-            Debug.Log("[RoomPlayerSkillLimitService] 已订阅房间事件");
+            CDTU.Utils.Logger.Log("[RoomPlayerSkillLimitService] 已订阅房间事件");
         }
 
         /// <summary>
@@ -68,7 +68,7 @@ namespace RogueGame.Game.Service.SkillLimit
             var localPlayer = GetLocalPlayer();
             if (localPlayer == null)
             {
-                Debug.LogWarning("[RoomPlayerSkillLimitService] 没有本地玩家");
+                CDTU.Utils.Logger.LogWarning("[RoomPlayerSkillLimitService] 没有本地玩家");
                 return;
             }
 
@@ -76,7 +76,7 @@ namespace RogueGame.Game.Service.SkillLimit
             var roomController = GetRoomController(evt.RoomId, evt.InstanceId);
             if (roomController == null)
             {
-                Debug.LogWarning($"[RoomPlayerSkillLimitService] 找不到房间控制器 (RoomId={evt.RoomId}, InstanceId={evt.InstanceId})");
+                CDTU.Utils.Logger.LogWarning($"[RoomPlayerSkillLimitService] 找不到房间控制器 (RoomId={evt.RoomId}, InstanceId={evt.InstanceId})");
                 return;
             }
 
@@ -93,7 +93,7 @@ namespace RogueGame.Game.Service.SkillLimit
 
             // 房间清理完成后，技能限制仍然生效，但玩家可以在背包中切换技能
             // 这里不做任何操作，只是记录日志
-            Debug.Log($"[RoomPlayerSkillLimitService] 房间清理完成 (RoomId={evt.RoomId})");
+            CDTU.Utils.Logger.Log($"[RoomPlayerSkillLimitService] 房间清理完成 (RoomId={evt.RoomId})");
         }
 
         /// <summary>
@@ -111,7 +111,7 @@ namespace RogueGame.Game.Service.SkillLimit
             var skillLimiter = player.GetComponent<PlayerSkillComponent>()?.SkillLimiter;
             if (skillLimiter == null)
             {
-                Debug.LogError("[RoomPlayerSkillLimitService] 玩家没有 PlayerSkillLimiter");
+                CDTU.Utils.Logger.LogError("[RoomPlayerSkillLimitService] 玩家没有 PlayerSkillLimiter");
                 return;
             }
 
@@ -126,27 +126,27 @@ namespace RogueGame.Game.Service.SkillLimit
             {
                 case RoomSkillRule.DisableAllSkills:
                     skillLimiter.DisableAll();
-                    Debug.Log($"[RoomPlayerSkillLimitService] 房间 {room.RoomMeta.Index}: 禁用所有技能");
+                    CDTU.Utils.Logger.Log($"[RoomPlayerSkillLimitService] 房间 {room.RoomMeta.Index}: 禁用所有技能");
                     break;
 
                 case RoomSkillRule.OneTimePerRoom:
                     skillLimiter.SetOneTimeLimit();
-                    Debug.Log($"[RoomPlayerSkillLimitService] 房间 {room.RoomMeta.Index}: 每个房间只能使用一次技能");
+                    CDTU.Utils.Logger.Log($"[RoomPlayerSkillLimitService] 房间 {room.RoomMeta.Index}: 每个房间只能使用一次技能");
                     break;
 
                 case RoomSkillRule.ResetOnEnter:
                     ResetSkillEnergy(player);
-                    Debug.Log($"[RoomPlayerSkillLimitService] 房间 {room.RoomMeta.Index}: 重置技能充能");
+                    CDTU.Utils.Logger.Log($"[RoomPlayerSkillLimitService] 房间 {room.RoomMeta.Index}: 重置技能充能");
                     break;
 
                 case RoomSkillRule.NoCooldown:
                     skillLimiter.SetNoCooldownMode();
-                    Debug.Log($"[RoomPlayerSkillLimitService] 房间 {room.RoomMeta.Index}: 无冷却模式（测试用）");
+                    CDTU.Utils.Logger.Log($"[RoomPlayerSkillLimitService] 房间 {room.RoomMeta.Index}: 无冷却模式（测试用）");
                     break;
 
                 case RoomSkillRule.None:
                 default:
-                    Debug.Log($"[RoomPlayerSkillLimitService] 房间 {room.RoomMeta.Index}: 无技能限制");
+                    CDTU.Utils.Logger.Log($"[RoomPlayerSkillLimitService] 房间 {room.RoomMeta.Index}: 无技能限制");
                     break;
             }
         }

@@ -34,7 +34,7 @@ namespace Game.UI
         {
             if (_view == null)
             {
-                Debug.LogError("[BagViewLogicCore] OnOpen() 中 _view 是 null！Bind() 可能没有被正确调用");
+                CDTU.Utils.Logger.LogError("[BagViewLogicCore] OnOpen() 中 _view 是 null！Bind() 可能没有被正确调用");
                 return;
             }
 
@@ -78,13 +78,13 @@ namespace Game.UI
             var inv = InventoryManager.Instance;
             if (inv == null)
             {
-                Debug.LogWarning("[BagView] InventoryManager.Instance is null");
+                CDTU.Utils.Logger.LogWarning("[BagView] InventoryManager.Instance is null");
                 return;
             }
 
             if (_view == null)
             {
-                Debug.LogError("[BagView] _view 是 null！无法添加卡牌视图");
+                CDTU.Utils.Logger.LogError("[BagView] _view 是 null！无法添加卡牌视图");
                 return;
             }
 
@@ -101,7 +101,7 @@ namespace Game.UI
         //     var inv = InventoryManager.Instance;
         //     if (inv == null)
         //     {
-        //         Debug.LogWarning("[BagView] InventoryManager.Instance is null");
+        //         CDTU.Utils.Logger.LogWarning("[BagView] InventoryManager.Instance is null");
         //         return;
         //     }
 
@@ -124,7 +124,7 @@ namespace Game.UI
 
         public void OnClearCardButtonClicked()
         {
-            Debug.Log("[BagViewLogic] OnClearCardButtonClicked invoked");
+            CDTU.Utils.Logger.Log("[BagViewLogic] OnClearCardButtonClicked invoked");
             RefreshAllCardViews();
 
             // 发布事件请求，由 SlotService 或其他订阅方执行具体清理（实现解耦）

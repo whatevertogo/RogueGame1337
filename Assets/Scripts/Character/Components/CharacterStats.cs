@@ -124,7 +124,7 @@ namespace Character.Components
             }
             else
             {
-                Debug.LogWarning($"[CharacterStats] {gameObject.name} 没有配置 CharacterStatsSO，使用默认值！");
+                CDTU.Utils.Logger.LogWarning($"[CharacterStats] {gameObject.name} 没有配置 CharacterStatsSO，使用默认值！");
             }
 
             // 初始化当前生命为满血

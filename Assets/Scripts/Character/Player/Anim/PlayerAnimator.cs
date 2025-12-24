@@ -12,7 +12,7 @@ public class PlayerAnimator : MonoBehaviour
     [SerializeField] private float transitionDuration = 0.1f; // 动画过渡时间
 
     [Header("调试")]
-    [SerializeField] private bool enableDebugLog = false;
+    [SerializeField] private bool enableCDTU.Utils.LoggerLog = false;
 
     private Animator animator;
     private PlayerStateMachine stateMachine;
@@ -39,7 +39,7 @@ public class PlayerAnimator : MonoBehaviour
 
         if (animator == null)
         {
-            Debug.LogError("PlayerAnimator: 未找到Animator组件！", gameObject);
+            CDTU.Utils.Logger.LogError("PlayerAnimator: 未找到Animator组件！", gameObject);
             return;
         }
 
@@ -47,7 +47,7 @@ public class PlayerAnimator : MonoBehaviour
         stateMachine = GetComponent<PlayerStateMachine>();
         if (stateMachine == null)
         {
-            Debug.LogWarning("PlayerAnimator: 未找到CharacterStateMachine组件，将无法自动同步状态！", gameObject);
+            CDTU.Utils.Logger.LogWarning("PlayerAnimator: 未找到CharacterStateMachine组件，将无法自动同步状态！", gameObject);
         }
     }
 
@@ -96,9 +96,9 @@ public class PlayerAnimator : MonoBehaviour
         animator.SetBool(IS_MOVING_PARAM, isMoving);
 
 
-        if (enableDebugLog && isMoving)
+        if (enableCDTU.Utils.LoggerLog && isMoving)
         {
-            Debug.Log($"PlayerAnimator: 设置移动参数 - 方向: {moveVector}, 移动: {isMoving}, 当前动画: {GetCurrentAnimationInfo()}");
+            CDTU.Utils.Logger.Log($"PlayerAnimator: 设置移动参数 - 方向: {moveVector}, 移动: {isMoving}, 当前动画: {GetCurrentAnimationInfo()}");
         }
     }
 
@@ -117,7 +117,7 @@ public class PlayerAnimator : MonoBehaviour
 
         if (string.IsNullOrEmpty(stateName))
         {
-            Debug.LogWarning($"PlayerAnimator: 未找到状态 {state} 对应的动画名称！");
+            CDTU.Utils.Logger.LogWarning($"PlayerAnimator: 未找到状态 {state} 对应的动画名称！");
             return;
         }
 
@@ -125,9 +125,9 @@ public class PlayerAnimator : MonoBehaviour
         animator.CrossFade(stateName, transitionDuration);
         lastPlayedState = state;
 
-        if (enableDebugLog)
+        if (enableCDTU.Utils.LoggerLog)
         {
-            Debug.Log($"PlayerAnimator: 播放状态动画 - {stateName}");
+            CDTU.Utils.Logger.Log($"PlayerAnimator: 播放状态动画 - {stateName}");
         }
     }
 
@@ -141,9 +141,9 @@ public class PlayerAnimator : MonoBehaviour
         animator.SetTrigger(ATTACK_TRIGGER);
         OnAttackAnimationStart?.Invoke();
 
-        if (enableDebugLog)
+        if (enableCDTU.Utils.LoggerLog)
         {
-            Debug.Log("PlayerAnimator: 播放攻击动画");
+            CDTU.Utils.Logger.Log("PlayerAnimator: 播放攻击动画");
         }
     }
 
@@ -157,9 +157,9 @@ public class PlayerAnimator : MonoBehaviour
         animator.SetTrigger(HURT_TRIGGER);
         OnHurtAnimationStart?.Invoke();
 
-        if (enableDebugLog)
+        if (enableCDTU.Utils.LoggerLog)
         {
-            Debug.Log("PlayerAnimator: 播放受伤动画");
+            CDTU.Utils.Logger.Log("PlayerAnimator: 播放受伤动画");
         }
     }
 
@@ -173,9 +173,9 @@ public class PlayerAnimator : MonoBehaviour
         animator.SetTrigger(DIE_TRIGGER);
         OnDieAnimationStart?.Invoke();
 
-        if (enableDebugLog)
+        if (enableCDTU.Utils.LoggerLog)
         {
-            Debug.Log("PlayerAnimator: 播放死亡动画");
+            CDTU.Utils.Logger.Log("PlayerAnimator: 播放死亡动画");
         }
     }
 
@@ -190,9 +190,9 @@ public class PlayerAnimator : MonoBehaviour
         animator.ResetTrigger(HURT_TRIGGER);
         animator.ResetTrigger(DIE_TRIGGER);
 
-        if (enableDebugLog)
+        if (enableCDTU.Utils.LoggerLog)
         {
-            Debug.Log("PlayerAnimator: 重置所有触发器");
+            CDTU.Utils.Logger.Log("PlayerAnimator: 重置所有触发器");
         }
     }
 
@@ -221,7 +221,7 @@ public class PlayerAnimator : MonoBehaviour
             case CharacterState.Dead:
                 return "Dead";
             default:
-                Debug.LogWarning($"PlayerAnimator: 未知状态 {state}");
+                CDTU.Utils.Logger.LogWarning($"PlayerAnimator: 未知状态 {state}");
                 return null;
         }
     }
@@ -272,9 +272,9 @@ public class PlayerAnimator : MonoBehaviour
     {
         OnAttackAnimationEnd?.Invoke();
 
-        if (enableDebugLog)
+        if (enableCDTU.Utils.LoggerLog)
         {
-            Debug.Log("PlayerAnimator: 攻击动画结束");
+            CDTU.Utils.Logger.Log("PlayerAnimator: 攻击动画结束");
         }
     }
 }

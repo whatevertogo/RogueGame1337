@@ -29,7 +29,7 @@ namespace Character.Projectiles
         {
             if (ProjectilePool.Instance == null)
             {
-                Debug.LogWarning("[ProjectilePoolWarmer] ProjectilePool 不存在！");
+                CDTU.Utils.Logger.LogWarning("[ProjectilePoolWarmer] ProjectilePool 不存在！");
                 return;
             }
 

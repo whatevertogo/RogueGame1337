@@ -19,7 +19,7 @@ public sealed class LootDropper : Singleton<LootDropper>
     {
         if (CoinPickupPrefab == null)
         {
-            Debug.LogWarning("LootDropper: CoinPickupPrefab not assigned");
+            CDTU.Utils.Logger.LogWarning("LootDropper: CoinPickupPrefab not assigned");
             return;
         }
         var go = Instantiate(CoinPickupPrefab, position, Quaternion.identity);
@@ -42,7 +42,7 @@ public sealed class LootDropper : Singleton<LootDropper>
     {
         if (CoinPickupPrefab == null)
         {
-            Debug.LogWarning("LootDropper: CoinPickupPrefab 未在场景中分配。请在场景中创建 LootDropper 单例并分配 CoinPickupPrefab。");
+            CDTU.Utils.Logger.LogWarning("LootDropper: CoinPickupPrefab 未在场景中分配。请在场景中创建 LootDropper 单例并分配 CoinPickupPrefab。");
         }
     }
 
@@ -55,7 +55,7 @@ public sealed class LootDropper : Singleton<LootDropper>
     {
         if (CardPickupPrefab == null)
         {
-            Debug.LogWarning("LootDropper: CardPickupPrefab not assigned");
+            CDTU.Utils.Logger.LogWarning("LootDropper: CardPickupPrefab not assigned");
             return;
         }
         if (string.IsNullOrEmpty(cardId)) return;

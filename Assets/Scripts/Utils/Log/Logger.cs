@@ -34,8 +34,8 @@ namespace CDTU.Utils
         public static void LogError(object message, Object context = null)
         {
             // Error 在所有情况下都输出
-            if (context != null) Debug.LogError($"{message}", context);
-            else Debug.LogError($"{message}");
+            if (context != null) CDTU.Utils.Logger.LogError($"{message}", context);
+            else CDTU.Utils.Logger.LogError($"{message}");
         }
     }
 }

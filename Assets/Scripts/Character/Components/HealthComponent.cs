@@ -32,7 +32,7 @@ public class HealthComponent : MonoBehaviour, IDamageable, IHealable
 
             if (stats == null)
             {
-                Debug.LogError($"[HealthComponent] {gameObject.name} 缺少 CharacterStats 组件！");
+                CDTU.Utils.Logger.LogError($"[HealthComponent] {gameObject.name} 缺少 CharacterStats 组件！");
             }
             else
             {

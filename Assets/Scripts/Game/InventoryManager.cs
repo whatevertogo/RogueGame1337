@@ -672,7 +672,7 @@ public sealed class InventoryManager : Singleton<InventoryManager>
                 result.NewLevel = newLevel;
                 result.InstanceId = existingCard.InstanceId;
 
-                Debug.Log($"[InventoryManager] 技能 '{cardId}' 升级：Lv{oldLevel} → Lv{newLevel}");
+                CDTU.Utils.Logger.Log($"[InventoryManager] 技能 '{cardId}' 升级：Lv{oldLevel} → Lv{newLevel}");
                 return result;
             }
             else
@@ -691,7 +691,7 @@ public sealed class InventoryManager : Singleton<InventoryManager>
 
                     if (config.showDeduplicationLog)
                     {
-                        Debug.Log($"[InventoryManager] 技能 '{cardId}' 已达最大等级 Lv{maxLevel}，转换为 {coins} 金币");
+                        CDTU.Utils.Logger.Log($"[InventoryManager] 技能 '{cardId}' 已达最大等级 Lv{maxLevel}，转换为 {coins} 金币");
                     }
                     return result;
                 }
@@ -699,7 +699,7 @@ public sealed class InventoryManager : Singleton<InventoryManager>
                 {
                     // 不启用去重，无法添加
                     result.Success = false;
-                    Debug.LogWarning($"[InventoryManager] 技能 '{cardId}' 已达最大等级且未启用去重转换");
+                    CDTU.Utils.Logger.LogWarning($"[InventoryManager] 技能 '{cardId}' 已达最大等级且未启用去重转换");
                     return result;
                 }
             }
@@ -714,7 +714,7 @@ public sealed class InventoryManager : Singleton<InventoryManager>
 
         if (result.Success)
         {
-            Debug.Log($"[InventoryManager] 添加新技能 '{cardId}' (Lv1)");
+            CDTU.Utils.Logger.Log($"[InventoryManager] 添加新技能 '{cardId}' (Lv1)");
         }
 
         return result;

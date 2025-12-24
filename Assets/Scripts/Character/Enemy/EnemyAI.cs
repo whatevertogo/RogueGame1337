@@ -1,70 +1,79 @@
 using UnityEngine;
 using Character.Components;
 using System.Collections;
-using Unity.VisualScripting.Antlr3.Runtime.Misc;
 
 /// <summary>
-/// 增强敌人 AI 基类：提供通用的敌人行为框架
-/// 支持状态管理、玩家检测、死亡处理等核心功能
+/// 通用敌人 AI 基类
+/// 负责：目标感知 / 状态调度 / 移动与攻击调用
+/// 不负责：具体攻击形式、特殊行为
 /// </summary>
 [RequireComponent(typeof(MovementComponent))]
 [RequireComponent(typeof(CombatComponent))]
 [RequireComponent(typeof(HealthComponent))]
-[RequireComponent(typeof(EnemyAnimator))]
 [RequireComponent(typeof(CharacterStats))]
+[RequireComponent(typeof(EnemyAnimator))]
 public class EnemyAI : MonoBehaviour
 {
-    private static readonly WaitForSeconds _waitForSeconds0_1 = new WaitForSeconds(0.1f);
+    private static readonly WaitForSeconds HitStunWait = new WaitForSeconds(0.1f);
+
+    #region Components
+
     protected MovementComponent movement;
     protected CombatComponent combat;
-    protected CharacterStats stats;
-    protected Transform target;
     protected HealthComponent health;
+    protected CharacterStats stats;
     protected EnemyAnimator enemyAnimator;
 
-    [Header("AI 基础设置")]
-    [Tooltip("当找不到玩家时的巡逻速度（可为0）")]
+    protected Transform target;
+
+    #endregion
+
+    #region Inspector
+
+    [Header("AI 基础")]
+    [Tooltip("无目标时的移动速度（0 表示原地待机）")]
     public float idleSpeed = 0f;
 
-    [Tooltip("寻找玩家的最大距离，超过将不追逐（0 表示无限）")]
+    [Tooltip("仇恨距离（0 表示无限）")]
     public float aggroRange = 10f;
 
-    [Tooltip("AI更新间隔（秒），0表示每帧更新")]
-    public float updateInterval = 0.01f;
+    [Tooltip("AI Tick 间隔（0 表示每帧）")]
+    public float updateInterval = 0.05f;
 
-    [Header("战斗设置")]
-    [Tooltip("攻击范围（如未设置则使用角色属性）")]
+    [Header("战斗")]
     public float attackRange = 0f;
-
-    [Tooltip("攻击冷却时间（如未设置则使用角色属性）")]
     public float attackCooldown = 0f;
 
-    [Header("状态效果")]
-    [Tooltip("死亡时是否播放死亡动画")]
+    [Header("死亡表现")]
     public bool playDeathAnimation = true;
-
-    [Tooltip("死亡特效预制体")]
     public GameObject deathEffect;
 
-    // 状态管理
-    protected bool isDead = false;
-    protected bool isStunned = false;
-    protected float lastAttackTime;
-    protected float lastUpdateTime;
+    #endregion
 
-    // 事件
-    public System.Action OnDeath;
-    public System.Action<float> OnDamaged;
+    #region State
+
+    protected bool isDead;
+    protected bool isStunned;
+
+    private float _lastAttackTime;
+    private float _lastUpdateTime;
+
+    private float _nextTargetSearchTime;
+    private Vector2 _idleDirection;
+    private float _nextIdleDirTime;
+
+    #endregion
+
+    #region Unity
 
     protected virtual void Awake()
     {
         movement = GetComponent<MovementComponent>();
         combat = GetComponent<CombatComponent>();
-        stats = GetComponent<CharacterStats>();
         health = GetComponent<HealthComponent>();
+        stats = GetComponent<CharacterStats>();
         enemyAnimator = GetComponent<EnemyAnimator>();
 
-        // 订阅生命值事件
         if (stats != null)
         {
             stats.OnDeath += HandleDeath;
@@ -74,253 +83,23 @@ public class EnemyAI : MonoBehaviour
 
     protected virtual void Start()
     {
-        // 优先使用场景中的本地玩家（单人场景）
-        FindTarget();
-        
-        // 初始化攻击参数
-        if (attackRange <= 0f && stats != null && stats.AttackRange != null)
-        {
-            attackRange = stats.AttackRange.Value;
-        }
-        
-        if (attackCooldown <= 0f && stats != null && stats.AttackSpeed != null)
-        {
-            attackCooldown = 1f / stats.AttackSpeed.Value; // 攻击速度转换为冷却时间
-        }
+        InitCombatParams();
+        TryFindTarget();
     }
 
     protected virtual void Update()
     {
         if (isDead) return;
 
-        // 根据间隔更新AI逻辑
-        if (updateInterval > 0f)
-        {
-            if (Time.time >= lastUpdateTime + updateInterval)
-            {
-                UpdateAI();
-                lastUpdateTime = Time.time;
-            }
-        }
-        else
-        {
-            UpdateAI();
-        }
-    }
-
-    protected virtual void UpdateAI()
-    {
-        if (stats == null || movement == null || combat == null) return;
-
-        // 尝试查找玩家目标
-        if (target == null)
-        {
-            FindTarget();
-            if (target == null)
-            {
-                // 无玩家：闲置或巡逻
-                HandleIdleState();
-                return;
-            }
-        }
-
-        // 检查是否处于控制状态
-        if (isStunned)
-        {
-            movement.SetInput(Vector2.zero);
+        if (updateInterval > 0f && Time.time < _lastUpdateTime + updateInterval)
             return;
-        }
 
-        Vector2 toPlayer = (target.position - transform.position);
-        float dist = toPlayer.magnitude;
-
-        // 距离判断：若设置了 aggroRange 且超过则不追
-        if (aggroRange > 0f && dist > aggroRange)
-        {
-            HandleIdleState();
-            return;
-        }
-
-        // 执行战斗或移动逻辑
-        HandleCombatState(toPlayer, dist);
-    }
-
-    /// <summary>
-    /// 处理闲置状态
-    /// </summary>
-    protected virtual void HandleIdleState()
-    {
-        if (idleSpeed > 0f)
-        {
-            // 简单的巡逻逻辑（子类可重写）
-            Vector2 randomDirection = new Vector2(
-                Mathf.PerlinNoise(Time.time * 0.5f, 0) * 2 - 1,
-                Mathf.PerlinNoise(0, Time.time * 0.5f) * 2 - 1
-            ).normalized;
-            
-            movement.SetInput(randomDirection * idleSpeed);
-        }
-        else
-        {
-            movement.SetInput(Vector2.zero);
-        }
-    }
-
-    /// <summary>
-    /// 处理战斗状态
-    /// </summary>
-    protected virtual void HandleCombatState(Vector2 toPlayer, float distance)
-    {
-        // 如果在攻击范围内，停止移动并攻击；否则移动靠近
-        if (distance <= attackRange && Time.time >= lastAttackTime + attackCooldown)
-        {
-            HandleAttack(toPlayer.normalized);
-        }
-        else if (distance > attackRange)
-        {
-            HandleMovement(toPlayer.normalized);
-        }
-        else
-        {
-            // 在攻击范围内但冷却中
-            movement.SetInput(Vector2.zero);
-            combat.SetAim(toPlayer.normalized);
-        }
-    }
-
-    /// <summary>
-    /// 处理攻击逻辑
-    /// </summary>
-    protected virtual void HandleAttack(Vector2 direction)
-    {
-        movement.SetInput(Vector2.zero);
-        combat.SetAim(direction);
-        
-        // 尝试发起攻击（CombatComponent 会处理冷却）
-        if (combat.TryAttack())
-        {
-            lastAttackTime = Time.time;
-            OnAttackPerformed();
-            
-        }
-    }
-
-    /// <summary>
-    /// 处理移动逻辑
-    /// </summary>
-    protected virtual void HandleMovement(Vector2 direction)
-    {
-        movement.SetInput(direction);
-        combat.SetAim(direction);
-
-        // 更新移动动画
-        if (enemyAnimator != null && stats != null)
-        {
-            bool isMoving = direction.sqrMagnitude > 0.01f;
-            enemyAnimator.SetMovementAnim(isMoving);
-        }
-    }
-
-    /// <summary>
-    /// 查找玩家目标
-    /// </summary>
-    protected virtual void FindTarget()
-    {
-        var p = FindFirstObjectByType<PlayerController>();
-        if (p != null) target = p.transform;
-    }
-
-    /// <summary>
-    /// 攻击执行回调（子类可重写）
-    /// </summary>
-    protected virtual void OnAttackPerformed()
-    {
-        // 子类可添加攻击特效、音效等
-    }
-
-    /// <summary>
-    /// 处理受到伤害
-    /// </summary>
-    protected virtual void HandleDamaged(float damageAmount)
-    {
-        // 播放受伤动画
-        if (enemyAnimator != null)
-        {
-            enemyAnimator.PlayTakeDamageAnim();
-        }
-
-        // 受伤时的反应（如短暂停顿）
-        if (!isStunned)
-        {
-            StartCoroutine(HitStunRoutine());
-        }
-    }
-
-    /// <summary>
-    /// 处理死亡
-    /// </summary>
-    protected virtual void HandleDeath()
-    {
-        if (isDead) return;
-        
-        isDead = true;
-        
-        // 停止所有移动和攻击
-        if (movement != null)
-            movement.SetInput(Vector2.zero);
-        
-        // 播放死亡特效
-        if (deathEffect != null)
-        {
-            Instantiate(deathEffect, transform.position, Quaternion.identity);
-        }
-        
-        // 延迟销毁对象
-        StartCoroutine(DeathRoutine());
-    }
-
-    /// <summary>
-    /// 受击硬直协程
-    /// </summary>
-    protected virtual IEnumerator HitStunRoutine()
-    {
-        isStunned = true;
-        yield return _waitForSeconds0_1; // 100ms硬直
-        isStunned = false;
-    }
-
-    /// <summary>
-    /// 死亡处理协程
-    /// </summary>
-    protected virtual IEnumerator DeathRoutine()
-    {
-        if (playDeathAnimation)
-        {
-            // 简单的死亡动画（子类可重写）
-            float duration = 0.5f;
-            Vector3 startScale = transform.localScale;
-            
-            for (float t = 0; t < duration; t += Time.deltaTime)
-            {
-                float progress = t / duration;
-                transform.localScale = Vector3.Lerp(startScale, Vector3.zero, progress);
-                yield return null;
-            }
-        }
-        
-        // 通知房间控制器敌人已死亡
-        var roomController = GetComponentInParent<RogueGame.Map.RoomController>();
-        if (roomController != null)
-        {
-            roomController.OnEnemyDeath(this.gameObject);
-        }
-        
-        Destroy(gameObject);
+        _lastUpdateTime = Time.time;
+        TickAI();
     }
 
     protected virtual void OnDestroy()
     {
-        // 清理事件订阅
         if (stats != null)
         {
             stats.OnDeath -= HandleDeath;
@@ -328,7 +107,197 @@ public class EnemyAI : MonoBehaviour
         }
     }
 
-    // 可视化调试
+    #endregion
+
+    #region AI Core
+
+    protected virtual void TickAI()
+    {
+        if (target == null)
+        {
+            TryFindTarget();
+            if (target == null)
+            {
+                TickIdle();
+                return;
+            }
+        }
+
+        if (isStunned)
+        {
+            movement.SetInput(Vector2.zero);
+            return;
+        }
+
+        Vector2 toTarget = target.position - transform.position;
+        float distance = toTarget.magnitude;
+
+        if (aggroRange > 0f && distance > aggroRange)
+        {
+            TickIdle();
+            return;
+        }
+
+        TickCombat(toTarget, distance);
+    }
+
+    protected virtual void TickCombat(Vector2 toTarget, float distance)
+    {
+        Vector2 dir = toTarget.normalized;
+
+        if (distance <= attackRange && Time.time >= _lastAttackTime + attackCooldown)
+        {
+            TryAttack(dir);
+        }
+        else if (distance > attackRange)
+        {
+            MoveTowards(dir);
+        }
+        else
+        {
+            movement.SetInput(Vector2.zero);
+            combat.SetAim(dir);
+        }
+    }
+
+    #endregion
+
+    #region Behavior
+
+    protected virtual void TryAttack(Vector2 direction)
+    {
+        movement.SetInput(Vector2.zero);
+        combat.SetAim(direction);
+
+        if (combat.TryAttack())
+        {
+            _lastAttackTime = Time.time;
+            OnAttackPerformed();
+        }
+    }
+
+    protected virtual void MoveTowards(Vector2 direction)
+    {
+        movement.SetInput(direction);
+        combat.SetAim(direction);
+
+        enemyAnimator?.SetMovementAnim(true);
+    }
+
+    protected virtual void TickIdle()
+    {
+        if (idleSpeed <= 0f)
+        {
+            movement.SetInput(Vector2.zero);
+            enemyAnimator?.SetMovementAnim(false);
+            return;
+        }
+
+        if (Time.time >= _nextIdleDirTime)
+        {
+            _idleDirection = Random.insideUnitCircle.normalized;
+            _nextIdleDirTime = Time.time + 1.5f;
+        }
+
+        movement.SetInput(_idleDirection * idleSpeed);
+        enemyAnimator?.SetMovementAnim(true);
+    }
+
+    #endregion
+
+    #region Target
+
+    protected virtual void TryFindTarget()
+    {
+        if (Time.time < _nextTargetSearchTime) return;
+
+        _nextTargetSearchTime = Time.time + 0.5f;
+        var player = FindFirstObjectByType<PlayerController>();
+        if (player != null)
+        {
+            target = player.transform;
+        }
+    }
+
+    #endregion
+
+    #region Combat Params
+
+    protected virtual void InitCombatParams()
+    {
+        if (stats == null) return;
+
+        if (attackRange <= 0f && stats.AttackRange != null)
+            attackRange = stats.AttackRange.Value;
+
+        if (attackCooldown <= 0f && stats.AttackSpeed != null)
+            attackCooldown = 1f / Mathf.Max(0.01f, stats.AttackSpeed.Value);
+    }
+
+    #endregion
+
+    #region Damage & Death
+
+    protected virtual void HandleDamaged(float damage)
+    {
+        enemyAnimator?.PlayTakeDamageAnim();
+
+        if (!isStunned)
+            StartCoroutine(HitStunRoutine());
+    }
+
+    protected virtual IEnumerator HitStunRoutine()
+    {
+        isStunned = true;
+        yield return HitStunWait;
+        isStunned = false;
+    }
+
+    protected virtual void HandleDeath()
+    {
+        if (isDead) return;
+        isDead = true;
+
+        movement.SetInput(Vector2.zero);
+
+        if (deathEffect != null)
+            Instantiate(deathEffect, transform.position, Quaternion.identity);
+
+        StartCoroutine(DeathRoutine());
+    }
+
+    protected virtual IEnumerator DeathRoutine()
+    {
+        if (playDeathAnimation)
+        {
+            float t = 0f;
+            float duration = 0.4f;
+            Vector3 start = transform.localScale;
+
+            while (t < duration)
+            {
+                t += Time.deltaTime;
+                transform.localScale = Vector3.Lerp(start, Vector3.zero, t / duration);
+                yield return null;
+            }
+        }
+
+        Destroy(gameObject);
+    }
+
+    #endregion
+
+    #region Hooks
+
+    /// <summary>
+    /// 攻击成功回调（子类扩展）
+    /// </summary>
+    protected virtual void OnAttackPerformed() { }
+
+    #endregion
+
+    #region Gizmos
+
     protected virtual void OnDrawGizmosSelected()
     {
         if (attackRange > 0f)
@@ -336,11 +305,13 @@ public class EnemyAI : MonoBehaviour
             Gizmos.color = Color.red;
             Gizmos.DrawWireSphere(transform.position, attackRange);
         }
-        
+
         if (aggroRange > 0f)
         {
             Gizmos.color = Color.yellow;
             Gizmos.DrawWireSphere(transform.position, aggroRange);
         }
     }
+
+    #endregion
 }

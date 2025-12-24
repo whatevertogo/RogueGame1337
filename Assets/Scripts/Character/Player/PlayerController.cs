@@ -82,7 +82,7 @@ public class PlayerController : CharacterBase
 			GameInput.Instance.OnSkillEPressed += () => TryActivateSkill(1); // 1 = E技能槽
 		}
 
-		Debug.Log($"[PlayerController] Awake: {gameObject.name}, tag={gameObject.tag}, layer={LayerMask.LayerToName(gameObject.layer)}, Rigidbody2D={(rb != null ? "Yes" : "No")}, Collider2D={(col != null ? "Yes" : "No")}");
+		CDTU.Utils.Logger.Log($"[PlayerController] Awake: {gameObject.name}, tag={gameObject.tag}, layer={LayerMask.LayerToName(gameObject.layer)}, Rigidbody2D={(rb != null ? "Yes" : "No")}, Collider2D={(col != null ? "Yes" : "No")}");
 	}
 
 	 void OnEnable()
@@ -179,11 +179,11 @@ public class PlayerController : CharacterBase
 
 			// if (success)
 			// {
-			// 	Debug.Log(" 攻击输入成功！");
+			// 	CDTU.Utils.Logger.Log(" 攻击输入成功！");
 			// }
 			// else
 			// {
-			// 	Debug.Log($"攻击失败 - CanAttack: {Combat.CanAttack}, IsOnCooldown: {Combat.IsOnCooldown}, IsDisabled: {Combat.IsDisabled}");
+			// 	CDTU.Utils.Logger.Log($"攻击失败 - CanAttack: {Combat.CanAttack}, IsOnCooldown: {Combat.IsOnCooldown}, IsDisabled: {Combat.IsDisabled}");
 			// }
 		}
 	}
@@ -231,7 +231,7 @@ public class PlayerController : CharacterBase
 
 	private void OnAttackPerformed()
 	{
-		// Debug.Log("🔫 攻击动作执行！");
+		// CDTU.Utils.Logger.Log("🔫 攻击动作执行！");
 
 		// 播放攻击动画
 		var playerAnim = GetComponent<PlayerAnimator>();
@@ -257,7 +257,7 @@ public class PlayerController : CharacterBase
 		// TODO- UIManager.Instance.Show<DeadUIView>
 		// 播放死亡动画
 		playerAnim.PlayDie();
-		Debug.Log("💀 玩家死亡");
+		CDTU.Utils.Logger.Log("💀 玩家死亡");
 	}
 
 	private void OnDisable()

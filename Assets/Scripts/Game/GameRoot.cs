@@ -85,7 +85,7 @@ public class GameRoot : Singleton<GameRoot>
     protected override void Awake()
     {
         base.Awake();
-        Debug.Log("[GameRoot] Awake()");
+        CDTU.Utils.Logger.Log("[GameRoot] Awake()");
 
         bool ok = true;
 
@@ -107,7 +107,7 @@ public class GameRoot : Singleton<GameRoot>
 
         if (!ok)
         {
-            Debug.LogError("[GameRoot] Initialization aborted due to missing references.");
+            CDTU.Utils.Logger.LogError("[GameRoot] Initialization aborted due to missing references.");
             return;
         }
 
@@ -115,10 +115,10 @@ public class GameRoot : Singleton<GameRoot>
         if (GetComponent<SlotService>() == null)
         {
             gameObject.AddComponent<SlotService>();
-            Debug.Log("[GameRoot] SlotService added to GameRoot at runtime");
+            CDTU.Utils.Logger.Log("[GameRoot] SlotService added to GameRoot at runtime");
         }
 
-        Debug.Log("[GameRoot] All required references assigned. Initializing CardDatabase.");
+        CDTU.Utils.Logger.Log("[GameRoot] All required references assigned. Initializing CardDatabase.");
         cardDatabase.Initialize();
 
         gameFlowCoordinator.Initialize(
@@ -162,7 +162,7 @@ public class GameRoot : Singleton<GameRoot>
         CombatRewardEnergyService = new CombatRewardEnergyService(inventoryManager);
 
 
-        
+
         FloorRewardSystemService.Subscribe();
         PassiveCardApplicationService.Subscribe();
         RoomPlayerSkillLimitService.Subscribe();
@@ -175,7 +175,7 @@ public class GameRoot : Singleton<GameRoot>
     {
         if (obj == null)
         {
-            Debug.LogError($"[GameRoot] {name} is not assigned.");
+            CDTU.Utils.Logger.LogError($"[GameRoot] {name} is not assigned.");
             return false;
         }
         return true;
@@ -184,7 +184,7 @@ public class GameRoot : Singleton<GameRoot>
 
     public void OnDestroy()
     {
-        Debug.Log("[GameRoot] OnDestroy() called.");
+        CDTU.Utils.Logger.Log("[GameRoot] OnDestroy() called.");
 
         // 取消订阅服务的事件
         FloorRewardSystemService?.Unsubscribe();

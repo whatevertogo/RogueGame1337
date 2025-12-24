@@ -62,7 +62,7 @@ namespace UI
                 try { logic.OnOpen(args); }
                 catch (System.Exception e)
                 {
-                    Debug.LogException(e, this);
+                    CDTU.Utils.Logger.LogException(e, this);
                 }
             }
         }
@@ -82,7 +82,7 @@ namespace UI
                 try { logic.OnClose(); }
                 catch (System.Exception e)
                 {
-                    Debug.LogException(e, this);
+                    CDTU.Utils.Logger.LogException(e, this);
                 }
             }
         }
@@ -99,7 +99,7 @@ namespace UI
             // 默认行为：通知逻辑层被覆盖（可重写以定制行为）
             foreach (var logic in _logics)
             {
-                try { logic.OnCovered(); } catch (System.Exception e) { Debug.LogException(e, this); }
+                try { logic.OnCovered(); } catch (System.Exception e) { CDTU.Utils.Logger.LogException(e, this); }
             }
         }
 
@@ -111,7 +111,7 @@ namespace UI
             // 默认行为：通知逻辑层恢复（可重写以定制行为）
             foreach (var logic in _logics)
             {
-                try { logic.OnResume(); } catch (System.Exception e) { Debug.LogException(e, this); }
+                try { logic.OnResume(); } catch (System.Exception e) { CDTU.Utils.Logger.LogException(e, this); }
             }
         }
 
@@ -146,7 +146,7 @@ namespace UI
             }
             catch (System.Exception e)
             {
-                Debug.LogException(e, this);
+                CDTU.Utils.Logger.LogException(e, this);
             }
         }
 

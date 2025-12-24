@@ -244,4 +244,22 @@ namespace RogueGame.Events
         }
     }
 
+    /// <summary>
+    /// 玩家技能释放事件：PlayerSkillComponent 在释放技能时发布此事件
+    /// 用于被动卡牌（例如暴风骤雨）监听技能释放并触发效果
+    /// </summary>
+    public class PlayerSkillCastEvent
+    {
+        public string PlayerId;
+        public int SlotIndex; // 0=Q技能, 1=E技能
+        public string CardId; // 释放的技能卡牌ID
+
+        public PlayerSkillCastEvent(string playerId, int slotIndex, string cardId)
+        {
+            PlayerId = playerId;
+            SlotIndex = slotIndex;
+            CardId = cardId;
+        }
+    }
+
 }

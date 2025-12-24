@@ -244,7 +244,7 @@ namespace RogueGame.Map
                 var prefab = await _loader.LoadAsync(meta);
                 if (prefab == null)
                 {
-                    Debug.LogError($"[RoomManager] 无法加载房间: {meta.BundleName}");
+                    CDTU.Utils.Logger.LogError($"[RoomManager] 无法加载房间: {meta.BundleName}");
                     return;
                 }
 
@@ -256,7 +256,7 @@ namespace RogueGame.Map
 
                 if (roomPrefab == null)
                 {
-                    Debug.LogError($"[RoomManager] 房间缺少 RoomPrefab: {meta.BundleName}");
+                    CDTU.Utils.Logger.LogError($"[RoomManager] 房间缺少 RoomPrefab: {meta.BundleName}");
                     Destroy(go);
                     return;
                 }
@@ -304,7 +304,7 @@ namespace RogueGame.Map
                 }
                 else
                 {
-                    Debug.LogError("[RoomManager] 无 TransitionController：请在场景中添加 TransitionController 或在 GameManager 中注入。");
+                    CDTU.Utils.Logger.LogError("[RoomManager] 无 TransitionController：请在场景中添加 TransitionController 或在 GameManager 中注入。");
                 }
 
                 // 触发进入
@@ -315,7 +315,7 @@ namespace RogueGame.Map
             }
             catch (System.Exception ex)
             {
-                Debug.LogError($"[RoomManager] 房间生成失败: {ex.Message}\n{ex.StackTrace}");
+                CDTU.Utils.Logger.LogError($"[RoomManager] 房间生成失败: {ex.Message}\n{ex.StackTrace}");
             }
         }
 

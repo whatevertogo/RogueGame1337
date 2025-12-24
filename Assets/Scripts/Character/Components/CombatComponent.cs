@@ -87,18 +87,18 @@ namespace Character.Components
         {
             if (attackStrategy == null)
             {
-                Debug.LogWarning($"[CombatComponent] {gameObject.name} 没有设置攻击策略！");
+                CDTU.Utils.Logger.LogWarning($"[CombatComponent] {gameObject.name} 没有设置攻击策略！");
             }
 
             if (stats == null)
             {
-                Debug.LogError($"[CombatComponent] {gameObject.name} 缺少 CharacterStats 组件！");
+                CDTU.Utils.Logger.LogError($"[CombatComponent] {gameObject.name} 缺少 CharacterStats 组件！");
             }
 
             // HitMask 可能为空，导致攻击不会命中任何目标，提示开发者检查层设置
             if (hitMask == 0)
             {
-                Debug.LogWarning($"[CombatComponent] {gameObject.name} hitMask 为空，这会导致攻击无法命中任何目标（请在 Inspector 设置可命中图层）。");
+                CDTU.Utils.Logger.LogWarning($"[CombatComponent] {gameObject.name} hitMask 为空，这会导致攻击无法命中任何目标（请在 Inspector 设置可命中图层）。");
                 return;
             }
 
@@ -132,7 +132,7 @@ namespace Character.Components
             }
             if (anyEnemyExist && !anyEnemyInMask)
             {
-                Debug.LogWarning($"[CombatComponent] {gameObject.name} hitMask 中没有包含任何 Enemy 的图层，请在 Inspector 中检查 Layer 和 HitMask 设置。");
+                CDTU.Utils.Logger.LogWarning($"[CombatComponent] {gameObject.name} hitMask 中没有包含任何 Enemy 的图层，请在 Inspector 中检查 Layer 和 HitMask 设置。");
             }
         }
 
@@ -158,7 +158,7 @@ namespace Character.Components
 
             if (enableDebugLog)
             {
-                Debug.Log($"[CombatComponent] 切换攻击策略:  {strategy?.strategyName ?? "null"}");
+                CDTU.Utils.Logger.Log($"[CombatComponent] 切换攻击策略:  {strategy?.strategyName ?? "null"}");
             }
 
         }
@@ -180,13 +180,13 @@ namespace Character.Components
 
             if (stats == null)
             {
-                Debug.LogError("[CombatComponent] CharacterStats 为空！");
+                CDTU.Utils.Logger.LogError("[CombatComponent] CharacterStats 为空！");
                 return false;
             }
 
             if (attackStrategy == null)
             {
-                Debug.LogWarning("[CombatComponent] 没有设置攻击策略！");
+                CDTU.Utils.Logger.LogWarning("[CombatComponent] 没有设置攻击策略！");
                 return false;
             }
 
@@ -211,11 +211,11 @@ namespace Character.Components
             }
             else if (enableDebugLog)
             {
-                Debug.LogWarning($"[CombatComponent] {gameObject.name} Animator 未设置，跳过设置 AttackSpeed。");
+                CDTU.Utils.Logger.LogWarning($"[CombatComponent] {gameObject.name} Animator 未设置，跳过设置 AttackSpeed。");
             }
             if (attackClip == null && enableDebugLog)
             {
-                Debug.LogWarning($"[CombatComponent] {gameObject.name} attackClip 未分配，使用 AttackCooldown({AttackCooldown:F3}) 作为动画时长替代。");
+                CDTU.Utils.Logger.LogWarning($"[CombatComponent] {gameObject.name} attackClip 未分配，使用 AttackCooldown({AttackCooldown:F3}) 作为动画时长替代。");
             }
 
             // 4. 执行攻击策略

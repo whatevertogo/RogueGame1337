@@ -26,7 +26,7 @@ namespace Game.UI
 
         private void OnLayerTransition(LayerTransitionEvent evt)
         {
-            Debug.Log($"层过渡事件：从层 {evt.FromLayer} 到层 {evt.ToLayer}");
+            CDTU.Utils.Logger.Log($"层过渡事件：从层 {evt.FromLayer} 到层 {evt.ToLayer}");
             _view.SetLevelText($"第{evt.ToLayer}层");
         }
 
@@ -121,7 +121,7 @@ namespace Game.UI
 
             // 保存引用并订阅生命值与技能事件
             _myPlayerState = state;
-            Debug.Log("玩家注册：" + state.PlayerId);
+            CDTU.Utils.Logger.Log("玩家注册：" + state.PlayerId);
             SubscribeToPlayerHealthEvents();
             SubscribeToSkillEvents();
             // TODO-刷新技能槽初始显示
@@ -155,7 +155,7 @@ namespace Game.UI
 
         private void OnPlayerHealthChanged(float currentHealth, float maxHealth)
         {
-            Debug.Log($"玩家血量变化，当前血量：{currentHealth}");
+            CDTU.Utils.Logger.Log($"玩家血量变化，当前血量：{currentHealth}");
             _view?.SetHealthNormalized(currentHealth / Math.Max(1f, maxHealth));
         }
 
@@ -208,7 +208,7 @@ namespace Game.UI
             }
             catch (System.Exception ex)
             {
-                Debug.LogError($"打开背包失败: {ex.Message}");
+                CDTU.Utils.Logger.LogError($"打开背包失败: {ex.Message}");
             }
             return null;
         }

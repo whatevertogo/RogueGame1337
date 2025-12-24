@@ -53,7 +53,7 @@ public class CardUIPrefab : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         canvasGroup.blocksRaycasts = false;
 
 
-        Debug.Log($"[CardUIPrefab] BeginDrag: {CardId}, originalParent={originalParent.name}");
+        CDTU.Utils.Logger.Log($"[CardUIPrefab] BeginDrag: {CardId}, originalParent={originalParent.name}");
     }
 
     public void OnDrag(PointerEventData eventData)

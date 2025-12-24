@@ -43,7 +43,7 @@ namespace UI
         {
             base.Awake();
             CreateLayerRoots();
-            Debug.Log("[UIManager] Initialized (List-Based)");
+            CDTU.Utils.Logger.Log("[UIManager] Initialized (List-Based)");
         }
 
         #region Layer 管理
@@ -93,7 +93,7 @@ namespace UI
                 // 安全检查：如果层级不匹配，通常保持原层级或报警告
                 if (existEntry.Layer != layer)
                 {
-                    Debug.LogWarning($"[UIManager] Try to open {type.Name} on {layer}, but it's already on {existEntry.Layer}. Keeping original layer.");
+                    CDTU.Utils.Logger.LogWarning($"[UIManager] Try to open {type.Name} on {layer}, but it's already on {existEntry.Layer}. Keeping original layer.");
                     layer = existEntry.Layer;
                     stack = _layerStacks[layer];
                 }
@@ -126,7 +126,7 @@ namespace UI
             GameObject prefab = await UIAssetProvider.LoadAsync<T>() as GameObject;
             if (prefab == null)
             {
-                Debug.LogError($"[UIManager] UI prefab not found: {type.Name}");
+                CDTU.Utils.Logger.LogError($"[UIManager] UI prefab not found: {type.Name}");
                 return null;
             }
 
@@ -137,7 +137,7 @@ namespace UI
             T view = instance.GetComponent<T>();
             if (view == null)
             {
-                Debug.LogError($"[UIManager] {type.Name} missing UIViewBase");
+                CDTU.Utils.Logger.LogError($"[UIManager] {type.Name} missing UIViewBase");
                 Destroy(instance);
                 return null;
             }

@@ -107,7 +107,7 @@ namespace RogueGame.Map
 
         public void OpenAllDoors()
         {
-            Debug.Log($"[RoomPrefab] OpenAllDoors 调用，门数量: {Doors.Count}");
+            CDTU.Utils.Logger.Log($"[RoomPrefab] OpenAllDoors 调用，门数量: {Doors.Count}");
             foreach (var door in Doors)
             {
                 if (door != null)
@@ -119,7 +119,7 @@ namespace RogueGame.Map
 
         public void CloseAllDoors()
         {
-            Debug.Log($"[RoomPrefab] CloseAllDoors 调用，门数量: {Doors.Count}");
+            CDTU.Utils.Logger.Log($"[RoomPrefab] CloseAllDoors 调用，门数量: {Doors.Count}");
             foreach (var door in Doors)
             {
                 if (door != null)
@@ -134,7 +134,7 @@ namespace RogueGame.Map
         /// </summary>
         public void LockAllDoors()
         {
-            Debug.Log($"[RoomPrefab] LockAllDoors 调用，门数量: {Doors.Count}");
+            CDTU.Utils.Logger.Log($"[RoomPrefab] LockAllDoors 调用，门数量: {Doors.Count}");
             foreach (var door in Doors)
             {
                 if (door != null)
@@ -177,7 +177,7 @@ namespace RogueGame.Map
         // FullReset 保留以便对象池场景可以重置门的视觉/交互状态
         public void FullReset()
         {
-            Debug.Log("[RoomPrefab] FullReset 调用（已移除访问标记逻辑，保留门重置）");
+            CDTU.Utils.Logger.Log("[RoomPrefab] FullReset 调用（已移除访问标记逻辑，保留门重置）");
             foreach (var door in Doors)
             {
                 door?.Reset();

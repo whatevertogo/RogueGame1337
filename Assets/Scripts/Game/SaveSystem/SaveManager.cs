@@ -103,7 +103,7 @@ namespace RogueGame.SaveSystem
                 var data = CreateRunSaveData();
                 if (data == null)
                 {
-                    Debug.LogWarning("[SaveManager] 无法创建 Run 存档数据（缺少必要的游戏组件）");
+                    CDTU.Utils.Logger.LogWarning("[SaveManager] 无法创建 Run 存档数据（缺少必要的游戏组件）");
                     return false;
                 }
 
@@ -188,17 +188,17 @@ namespace RogueGame.SaveSystem
             bool hasRequiredComponents = true;
             if (gsm == null)
             {
-                Debug.LogWarning("[SaveManager] GameFlowCoordinator not found");
+                CDTU.Utils.Logger.LogWarning("[SaveManager] GameFlowCoordinator not found");
                 hasRequiredComponents = false;
             }
             if (pm == null)
             {
-                Debug.LogWarning("[SaveManager] PlayerManager not found");
+                CDTU.Utils.Logger.LogWarning("[SaveManager] PlayerManager not found");
                 hasRequiredComponents = false;
             }
             if (inv == null)
             {
-                Debug.LogWarning("[SaveManager] InventoryManager not found");
+                CDTU.Utils.Logger.LogWarning("[SaveManager] InventoryManager not found");
                 hasRequiredComponents = false;
             }
 
@@ -424,7 +424,7 @@ namespace RogueGame.SaveSystem
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[SaveManager] SaveToFile '{fileName}' failed: {ex.Message}");
+                CDTU.Utils.Logger.LogError($"[SaveManager] SaveToFile '{fileName}' failed: {ex.Message}");
                 return false;
             }
         }

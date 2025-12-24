@@ -23,7 +23,7 @@ namespace UI.Loading
                 }
                 else
                 {
-                    Debug.LogError($"UIAssetProvider: Failed to load {typeof(T).Name}, Status: {handle.Status}");
+                    CDTU.Utils.Logger.LogError($"UIAssetProvider: Failed to load {typeof(T).Name}, Status: {handle.Status}");
                     // 加载失败时释放
                     if (handle.IsValid()) Addressables.Release(handle);
                     return null;
@@ -31,7 +31,7 @@ namespace UI.Loading
             }
             catch (System.Exception ex)
             {
-                Debug.LogError($"UIAssetProvider: 加载 {typeof(T).Name} 时发生异常: {ex.Message}");
+                CDTU.Utils.Logger.LogError($"UIAssetProvider: 加载 {typeof(T).Name} 时发生异常: {ex.Message}");
                 if (handle.IsValid()) Addressables.Release(handle);
                 return null;
             }

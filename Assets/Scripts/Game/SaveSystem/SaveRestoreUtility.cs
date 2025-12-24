@@ -21,7 +21,7 @@ namespace RogueGame.SaveSystem
         {
             if (data == null)
             {
-                Debug.LogError("[SaveRestoreUtility] RunSaveData is null");
+                CDTU.Utils.Logger.LogError("[SaveRestoreUtility] RunSaveData is null");
                 return;
             }
 
@@ -45,7 +45,7 @@ namespace RogueGame.SaveSystem
             var inv = InventoryManager.Instance;
             if (inv == null)
             {
-                Debug.LogWarning("[SaveRestoreUtility] InventoryManager not found");
+                CDTU.Utils.Logger.LogWarning("[SaveRestoreUtility] InventoryManager not found");
                 return;
             }
 
@@ -94,7 +94,7 @@ namespace RogueGame.SaveSystem
             var localPlayer = pm?.GetLocalPlayerState();
             if (localPlayer?.Controller == null)
             {
-                Debug.LogWarning("[SaveRestoreUtility] PlayerController not found");
+                CDTU.Utils.Logger.LogWarning("[SaveRestoreUtility] PlayerController not found");
                 return;
             }
 
@@ -119,7 +119,7 @@ namespace RogueGame.SaveSystem
             var gsm = GameRoot.Instance?.GameFlowCoordinator;
             if (gsm == null)
             {
-                Debug.LogWarning("[SaveRestoreUtility] GameFlowCoordinator not found");
+                CDTU.Utils.Logger.LogWarning("[SaveRestoreUtility] GameFlowCoordinator not found");
                 return;
             }
 
@@ -136,7 +136,7 @@ namespace RogueGame.SaveSystem
         {
             if (data == null)
             {
-                Debug.LogError("[SaveRestoreUtility] MetaSaveData is null");
+                CDTU.Utils.Logger.LogError("[SaveRestoreUtility] MetaSaveData is null");
                 return;
             }
 

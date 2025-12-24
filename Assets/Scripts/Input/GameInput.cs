@@ -25,14 +25,14 @@ public sealed class GameInput : Singleton<GameInput>
     protected override void Awake()
     {
         base.Awake();
-        Debug.Log("GameInput Awake called");
+        CDTU.Utils.Logger.Log("GameInput Awake called");
         
         try {
             playerInput = new PlayerInputSystem();
             playerInput.Enable();
-            Debug.Log("PlayerInputSystem enabled successfully");
+            CDTU.Utils.Logger.Log("PlayerInputSystem enabled successfully");
         } catch (System.Exception ex) {
-            Debug.LogError($"[GameInput] 初始化输入系统失败: {ex.Message}");
+            CDTU.Utils.Logger.LogError($"[GameInput] 初始化输入系统失败: {ex.Message}");
             // 尝试继续运行，但记录错误
         }
     }

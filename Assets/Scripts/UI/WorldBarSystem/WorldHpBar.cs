@@ -17,7 +17,7 @@ public class WorldHpBar : MonoBehaviour
         }
         if (fillImage == null)
         {
-            Debug.LogWarning("[WorldHpBar] fillImage 未绑定");
+            CDTU.Utils.Logger.LogWarning("[WorldHpBar] fillImage 未绑定");
         }
     }
 

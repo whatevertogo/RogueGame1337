@@ -27,21 +27,11 @@ public class ShopManager : Singleton<ShopManager>
     /// <returns>是否购买成功</returns>
     public bool BuyBloods(int spendCoins, int healAmount = 50)
     {
-
-        // 使用原子操作消耗金币
-        if (!inventoryManager.SpendCoins(spendCoins))
-        {
-            Debug.LogWarning("[ShopManager] Not enough coins to buy bloods.");
-            OnPurchaseFailed?.Invoke("Not enough coins");
-            return false;
-        }
-
-        // 获取玩家并恢复生命
+        // 获取玩家并检查是否需要治疗
         var playerState = PlayerManager.Instance?.GetLocalPlayerData();
         if (playerState?.Controller == null)
         {
-            Debug.LogError("[ShopManager] Player not found, refunding coins.");
-            inventoryManager.AddCoins(spendCoins); // 退款
+            CDTU.Utils.Logger.LogWarning("[ShopManager] Player not found.");
             OnPurchaseFailed?.Invoke("Player not found");
             return false;
         }
@@ -49,19 +39,35 @@ public class ShopManager : Singleton<ShopManager>
         var health = playerState.Controller.GetComponent<HealthComponent>();
         if (health == null)
         {
-            Debug.LogError("[ShopManager] Player has no HealthComponent, refunding coins.");
-            inventoryManager.AddCoins(spendCoins); // 退款
+            CDTU.Utils.Logger.LogWarning("[ShopManager] Player has no HealthComponent.");
             OnPurchaseFailed?.Invoke("Health component missing");
             return false;
         }
 
+        // 检查是否满血
+        if (health.CurrentHP >= health.MaxHP)
+        {
+            CDTU.Utils.Logger.Log("[ShopManager] Player is already at full health. No purchase needed.");
+            OnPurchaseFailed?.Invoke("Already at full health");
+            return false;
+        }
+
+        // 使用原子操作消耗金币
+        if (!inventoryManager.SpendCoins(spendCoins))
+        {
+            CDTU.Utils.Logger.LogWarning("[ShopManager] Not enough coins to buy bloods.");
+            OnPurchaseFailed?.Invoke("Not enough coins");
+            return false;
+        }
+
+        // 恢复生命
         health.Heal(healAmount);
         OnItemPurchased?.Invoke("Bloods", spendCoins);
         return true;
     }
 
     /// <summary>
-    /// 购买随机卡牌
+    /// 购买随机卡牌（符合策划案：重复获得自动升级或转换为金币）
     /// </summary>
     /// <param name="spendCoins">消耗金币数</param>
     /// <returns>是否购买成功</returns>
@@ -69,7 +75,7 @@ public class ShopManager : Singleton<ShopManager>
     {
         if (inventoryManager == null)
         {
-            Debug.LogError("[ShopManager] InventoryManager is not initialized.");
+            CDTU.Utils.Logger.LogError("[ShopManager] InventoryManager is not initialized.");
             OnPurchaseFailed?.Invoke("System not initialized");
             return false;
         }
@@ -77,7 +83,7 @@ public class ShopManager : Singleton<ShopManager>
         // 使用原子操作消耗金币
         if (!inventoryManager.SpendCoins(spendCoins))
         {
-            Debug.LogWarning("[ShopManager] Not enough coins to buy cards.");
+            CDTU.Utils.Logger.LogWarning("[ShopManager] Not enough coins to buy cards.");
             OnPurchaseFailed?.Invoke("Not enough coins");
             return false;
         }
@@ -86,30 +92,75 @@ public class ShopManager : Singleton<ShopManager>
         var cardDatabase = GameRoot.Instance?.CardDatabase;
         if (cardDatabase == null)
         {
-            Debug.LogError("[ShopManager] CardDatabase not found, refunding coins.");
+            CDTU.Utils.Logger.LogError("[ShopManager] CardDatabase not found, refunding coins.");
             inventoryManager.AddCoins(spendCoins); // 退款
             OnPurchaseFailed?.Invoke("Card database missing");
             return false;
         }
 
         string cardId = cardDatabase.GetRandomCardId();
-        if (inventoryManager.ActiveCardStates.Any(info => info.CardId == cardId))
-        {
-            Debug.LogWarning("[ShopManager] Player already owns the card, refunding coins.");
-            inventoryManager.AddCoins(spendCoins); // 退款
-            OnPurchaseFailed?.Invoke("Card already owned");
-            return false;
-        }
         if (string.IsNullOrEmpty(cardId))
         {
-            Debug.LogError("[ShopManager] Failed to get random card, refunding coins.");
+            CDTU.Utils.Logger.LogError("[ShopManager] Failed to get random card, refunding coins.");
             inventoryManager.AddCoins(spendCoins); // 退款
             OnPurchaseFailed?.Invoke("No cards available");
             return false;
         }
 
-        inventoryManager.AddCardById(cardId);
-        OnItemPurchased?.Invoke($"Card:{cardId}", spendCoins);
-        return true;
+        // 获取卡牌定义
+        var cardDef = cardDatabase.Resolve(cardId);
+        if (cardDef == null)
+        {
+            CDTU.Utils.Logger.LogError($"[ShopManager] Failed to resolve card '{cardId}', refunding coins.");
+            inventoryManager.AddCoins(spendCoins); // 退款
+            OnPurchaseFailed?.Invoke("Card definition missing");
+            return false;
+        }
+
+        // 使用智能添加逻辑：处理重复卡升级和金币转换
+        if (cardDef.CardType == CardType.Active)
+        {
+            // 主动卡：使用 AddActiveCardSmart 处理重复升级和金币转换
+            var result = inventoryManager.AddActiveCardSmart(cardId, cardDef.activeCardConfig.energyPerKill);
+
+            if (result.Success)
+            {
+                string purchaseInfo;
+                if (result.Added)
+                {
+                    purchaseInfo = $"New Card:{cardId} (Lv1)";
+                }
+                else if (result.Upgraded)
+                {
+                    purchaseInfo = $"Upgraded:{cardId} to Lv{result.NewLevel}";
+                }
+                else if (result.ConvertedToCoins)
+                {
+                    purchaseInfo = $"Max Level:{cardId} → +{result.CoinsAmount} Coins";
+                }
+                else
+                {
+                    purchaseInfo = $"Card:{cardId}";
+                }
+
+                OnItemPurchased?.Invoke(purchaseInfo, spendCoins);
+                return true;
+            }
+            else
+            {
+                // 添加失败（不应该发生，因为已经处理了重复和满级情况）
+                CDTU.Utils.Logger.LogError($"[ShopManager] Failed to add card '{cardId}', refunding coins.");
+                inventoryManager.AddCoins(spendCoins); // 退款
+                OnPurchaseFailed?.Invoke("Failed to add card");
+                return false;
+            }
+        }
+        else
+        {
+            // 被动卡：直接添加（可无限叠加）
+            inventoryManager.AddCardById(cardId);
+            OnItemPurchased?.Invoke($"Passive Card:{cardId}", spendCoins);
+            return true;
+        }
     }
 }

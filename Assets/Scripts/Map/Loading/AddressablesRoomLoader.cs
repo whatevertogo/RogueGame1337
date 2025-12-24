@@ -24,12 +24,12 @@ public class AddressablesRoomLoader : IRoomLoaderAsync
     {
         if (meta == null || string.IsNullOrEmpty(meta.BundleName))
         {
-            Debug.LogError("[AddressablesRoomLoader] Invalid meta or bundle name");
+            CDTU.Utils.Logger.LogError("[AddressablesRoomLoader] Invalid meta or bundle name");
             return null;
         }
 
         string address = "Rooms/" + meta.BundleName;
-        Debug.Log($"[AddressablesRoomLoader] Loading room: {address}");
+        CDTU.Utils.Logger.Log($"[AddressablesRoomLoader] Loading room: {address}");
 
         AsyncOperationHandle<GameObject> handle = default;
 
@@ -40,19 +40,19 @@ public class AddressablesRoomLoader : IRoomLoaderAsync
 
             if (handle.Status == AsyncOperationStatus.Succeeded)
             {
-                Debug.Log($"[AddressablesRoomLoader] Successfully loaded: {address}");
+                CDTU.Utils.Logger.Log($"[AddressablesRoomLoader] Successfully loaded: {address}");
                 return handle.Result;
             }
             else
             {
-                Debug.LogError($"[AddressablesRoomLoader] Failed to load: {address}, Status: {handle.Status}");
+                CDTU.Utils.Logger.LogError($"[AddressablesRoomLoader] Failed to load: {address}, Status: {handle.Status}");
                 UnityEngine.AddressableAssets.Addressables.Release(handle);
                 return null;
             }
         }
         catch (System.Exception ex)
         {
-            Debug.LogError($"[AddressablesRoomLoader] Exception while loading {address}: {ex.Message}");
+            CDTU.Utils.Logger.LogError($"[AddressablesRoomLoader] Exception while loading {address}: {ex.Message}");
             UnityEngine.AddressableAssets.Addressables.Release(handle);
             return null;
         }

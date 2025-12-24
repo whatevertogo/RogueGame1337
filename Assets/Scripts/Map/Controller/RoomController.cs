@@ -23,8 +23,6 @@ namespace RogueGame.Map
         [Header("精英/Boss")]
         [SerializeField] private Transform eliteAndbossSpawnPoint;
 
-        [Header("调试")]
-        [SerializeField] private bool enableDebugLog = true;
         [SerializeField][ReadOnly] private RoomState currentState = RoomState.Inactive;
         [SerializeField][ReadOnly] private RoomType roomType = RoomType.Normal;
         [SerializeField][ReadOnly] private int enemyCount = 0;
@@ -170,7 +168,7 @@ namespace RogueGame.Map
             }
             catch (Exception ex)
             {
-                Debug.LogWarning("[RoomController] 发布 RoomEnteredEvent 失败: " + ex.Message);
+                CDTU.Utils.Logger.LogWarning("[RoomController] 发布 RoomEnteredEvent 失败: " + ex.Message);
             }
 
 
@@ -212,7 +210,7 @@ namespace RogueGame.Map
             }
             catch (Exception ex)
             {
-                Debug.LogWarning("[RoomController] 发布 CombatStartedEvent 失败: " + ex.Message);
+                CDTU.Utils.Logger.LogWarning("[RoomController] 发布 CombatStartedEvent 失败: " + ex.Message);
             }
 
         }
@@ -251,7 +249,7 @@ namespace RogueGame.Map
 
             OnEnemyKilled?.Invoke(this, activeEnemies.Count);
 
-            Debug.Log($"[RoomController] 敌人死亡（带击杀者）: {enemy.name}, 击杀者: {attacker?.name ?? "null"}, 剩余: {activeEnemies.Count}");
+            CDTU.Utils.Logger.Log($"[RoomController] 敌人死亡（带击杀者）: {enemy.name}, 击杀者: {attacker?.name ?? "null"}, 剩余: {activeEnemies.Count}");
 
             // 广播全局击杀事件（供卡牌充能 / 玩家能量分发 / 掉落逻辑订阅）
             try
@@ -307,7 +305,7 @@ namespace RogueGame.Map
             }
             catch (Exception ex)
             {
-                Debug.LogWarning("[RoomController] 发布 RoomClearedEvent 失败: " + ex.Message);
+                CDTU.Utils.Logger.LogWarning("[RoomController] 发布 RoomClearedEvent 失败: " + ex.Message);
             }
 
         }
@@ -574,7 +572,7 @@ namespace RogueGame.Map
             }
             catch (System.Exception ex)
             {
-                Debug.LogWarning($"[RoomController] SpawnRewards failed: {ex.Message}");
+                CDTU.Utils.Logger.LogWarning($"[RoomController] SpawnRewards failed: {ex.Message}");
             }
         }
     }

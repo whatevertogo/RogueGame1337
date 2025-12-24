@@ -20,7 +20,7 @@ namespace Character.Combat
         {
             if (defaultConfig == null || defaultConfig.projectilePrefab == null)
             {
-                Debug.LogError("[ProjectileAttackStrategy] 投射物配置无效！");
+                CDTU.Utils.Logger.LogErrorr("[ProjectileAttackStrategy] 投射物配置无效！");
                 return;
             }
 

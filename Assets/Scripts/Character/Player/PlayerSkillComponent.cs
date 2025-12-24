@@ -160,7 +160,7 @@ namespace Character.Player
             var caster = GetComponent<CharacterBase>();
             if (caster == null)
             {
-                Debug.LogError("[PlayerSkillComponent] CharacterBase component not found");
+                CDTU.Utils.Logger.LogError("[PlayerSkillComponent] CharacterBase component not found");
                 yield break;
             }
 
@@ -278,7 +278,7 @@ namespace Character.Player
             var cardDef = GameRoot.Instance?.CardDatabase?.Resolve(cardId);
             if (cardDef == null)
             {
-                Debug.LogWarning($"[PlayerSkillComponent] Equip failed: cardDef for id '{cardId}' is null. slotIndex={slotIndex}");
+                CDTU.Utils.Logger.LogWarning($"[PlayerSkillComponent] Equip failed: cardDef for id '{cardId}' is null. slotIndex={slotIndex}");
                 return;
             }
 
@@ -425,6 +425,13 @@ namespace Character.Player
 
             // 触发已使用事件（UI/上层监听）
             OnSkillUsed?.Invoke(slotIndex);
+
+            // 发布技能释放事件（用于被动卡牌触发，例如暴风骤雨）
+            var playerRuntimeState = PlayerManager.Instance?.GetPlayerRuntimeStateByController(GetComponent<PlayerController>());
+            if (playerRuntimeState != null)
+            {
+                EventBus.Publish(new PlayerSkillCastEvent(playerRuntimeState.PlayerId, slotIndex, rt.CardId));
+            }
 
             // 开始执行（处理 detectionDelay 和 executor）
             // 将 DelayedExecute 嵌入到当前协程内，保证单一协程句柄可用于取消

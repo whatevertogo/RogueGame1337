@@ -36,8 +36,8 @@ public class ProjectileBase : MonoBehaviour
 
     private ContactFilter2D HitFilter;
 
-    [Header("Debug")]
-    [SerializeField] private bool enableDebugLog = false;
+    [Header("CDTU.Utils.Logger")]
+    [SerializeField] private bool enabledebug = false;
 
 
 
@@ -66,15 +66,15 @@ public class ProjectileBase : MonoBehaviour
 
         if (col == null)
         {
-            Debug.LogWarning($"[ProjectileBase] {gameObject.name} 缺少 Collider2D！无法检测碰撞。");
+            CDTU.Utils.Logger.LogWarning($"[ProjectileBase] {gameObject.name} 缺少 Collider2D！无法检测碰撞。");
         }
 
         hitHealthTargets = new HashSet<HealthComponent>();
         hitInstanceIds = new HashSet<int>();
 
-        if (enableDebugLog)
+        if (enabledebug)
         {
-            Debug.Log($"[ProjectileBase] Awake: rb.bodyType={(rb != null ? rb.bodyType.ToString() : "null")}, colliderIsTrigger={(col != null ? col.isTrigger.ToString() : "null")}");
+            CDTU.Utils.Logger.Log($"[ProjectileBase] Awake: rb.bodyType={(rb != null ? rb.bodyType.ToString() : "null")}, colliderIsTrigger={(col != null ? col.isTrigger.ToString() : "null")}");
         }
 
         HitFilter = new ContactFilter2D();
@@ -127,10 +127,10 @@ public class ProjectileBase : MonoBehaviour
         // 设置旋转
         UpdateRotation();
 
-        if (enableDebugLog)
+        if (enabledebug)
         {
             string ownerName = data.Owner != null ? data.Owner.name : "null";
-            Debug.Log($"[ProjectileBase] Init - Owner={ownerName}, OwnerTeam={data.OwnerTeam}, HitMask.value={data.HitMask.value}, Damage={data.Damage}");
+            CDTU.Utils.Logger.Log($"[ProjectileBase] Init - Owner={ownerName}, OwnerTeam={data.OwnerTeam}, HitMask.value={data.HitMask.value}, Damage={data.Damage}");
         }
     }
 
@@ -144,9 +144,9 @@ public class ProjectileBase : MonoBehaviour
             config, direction, damage, ownerTeam, owner, hitMask, effects);
         Init(projectileData);
 
-        if (enableDebugLog)
+        if (enabledebug)
         {
-            Debug.Log($"[ProjectileBase] Init (compat) - prefab based init, owner={(owner != null ? owner.name : "null")}, ownerTeam={ownerTeam}, hitMask={hitMask.value}");
+            CDTU.Utils.Logger.Log($"[ProjectileBase] Init (compat) - prefab based init, owner={(owner != null ? owner.name : "null")}, ownerTeam={ownerTeam}, hitMask={hitMask.value}");
         }
     }
 
@@ -297,13 +297,13 @@ public class ProjectileBase : MonoBehaviour
 
     protected virtual void OnTriggerEnter2D(Collider2D other)
     {
-        if (enableDebugLog) Debug.Log($"[ProjectileBase] OnTriggerEnter2D collided with {other?.gameObject?.name} (layer={LayerMask.LayerToName(other.gameObject.layer)})");
+        if (enabledebug) CDTU.Utils.Logger.Log($"[ProjectileBase] OnTriggerEnter2D collided with {other?.gameObject?.name} (layer={LayerMask.LayerToName(other.gameObject.layer)})");
         TryHit(other.gameObject);
     }
 
     protected virtual void OnCollisionEnter2D(Collision2D collision)
     {
-        if (enableDebugLog) Debug.Log($"[ProjectileBase] OnCollisionEnter2D collided with {collision?.gameObject?.name} (layer={LayerMask.LayerToName(collision.gameObject.layer)})");
+        if (enabledebug) CDTU.Utils.Logger.Log($"[ProjectileBase] OnCollisionEnter2D collided with {collision?.gameObject?.name} (layer={LayerMask.LayerToName(collision.gameObject.layer)})");
 
         // 如果是墙壁，直接销毁（不调用 TryHit，避免双重回收）
         if (collision.gameObject.CompareTag("Wall"))
@@ -339,9 +339,9 @@ public class ProjectileBase : MonoBehaviour
 
         // 图层过滤
         bool inMask = IsInLayerMask(target.layer, data.HitMask);
-        if (enableDebugLog && !inMask)
+        if (enabledebug && !inMask)
         {
-            Debug.Log($"[ProjectileBase] TryHit: target={target.name}, layer={LayerMask.LayerToName(target.layer)}, inHitMask={inMask}");
+            CDTU.Utils.Logger.Log($"[ProjectileBase] TryHit: target={target.name}, layer={LayerMask.LayerToName(target.layer)}, inHitMask={inMask}");
         }
         if (!inMask) return;
 
@@ -350,7 +350,7 @@ public class ProjectileBase : MonoBehaviour
         // 跳过发射者
         if (data.Owner != null && target.transform == data.Owner)
         {
-            if (enableDebugLog) Debug.Log("[ProjectileBase] TryHit: skipping owner");
+            if (enabledebug) CDTU.Utils.Logger.Log("[ProjectileBase] TryHit: skipping owner");
             return;
         }
 
@@ -358,7 +358,7 @@ public class ProjectileBase : MonoBehaviour
         var charBase = target.GetComponent<CharacterBase>();
         if (charBase != null && charBase.Team == data.OwnerTeam)
         {
-            if (enableDebugLog) Debug.Log($"[ProjectileBase] TryHit: skipping same team (targetTeam={charBase.Team}, ownerTeam={data.OwnerTeam})");
+            if (enabledebug) Debug.Log($"[ProjectileBase] TryHit: skipping same team (targetTeam={charBase.Team}, ownerTeam={data.OwnerTeam})");
             return;
         }
 
@@ -376,7 +376,7 @@ public class ProjectileBase : MonoBehaviour
         // 造成伤害
         if (health != null)
         {
-            if (enableDebugLog)
+            if (enabledebug)
             {
                 Debug.Log($"[ProjectileBase] DealDamage -> target={target.name}, healthExists=true, damage={data.Damage}");
             }
@@ -400,7 +400,7 @@ public class ProjectileBase : MonoBehaviour
         }
 
         // 在探测后输出物理层忽略信息（仅调试）
-        if (enableDebugLog)
+        if (enabledebug)
         {
             int projectileLayer = gameObject.layer;
             int targetLayer = target.layer;

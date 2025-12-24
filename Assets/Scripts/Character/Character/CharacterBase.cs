@@ -73,13 +73,13 @@ namespace Character
         protected virtual void OnDeath()
         {
             // 子类重写处理死亡逻辑
-            Debug.Log($"{gameObject.name} died!");
+            CDTU.Utils.Logger.Log($"{gameObject.name} died!");
         }
 
         protected virtual void OnDamaged(float damageAmount)
         {
             // 子类可重写处理受伤逻辑
-            Debug.Log($"{gameObject.name} took {damageAmount} damage!");
+            CDTU.Utils.Logger.Log($"{gameObject.name} took {damageAmount} damage!");
         }
 
         /// <summary>
