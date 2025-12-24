@@ -53,7 +53,7 @@ public sealed class TransitionController : MonoBehaviour
         var pm = PlayerManager.Instance;
         if (pm == null)
         {
-            CDTU.Utils.Logger.LogWarning("[TransitionController] 找不到 PlayerManager，无法传送玩家。");
+            CDTU.Utils.CDLogger.LogWarning("[TransitionController] 找不到 PlayerManager，无法传送玩家。");
             return;
         }
 
@@ -71,7 +71,7 @@ public sealed class TransitionController : MonoBehaviour
             Vector3 targetPos = exitPos;
             targetPos.z = playerTransform.position.z;
 
-            CDTU.Utils.Logger.Log($"[TransitionController] 传送玩家 {p.PlayerId}: {playerTransform.position} -> {targetPos}");
+            CDTU.Utils.CDLogger.Log($"[TransitionController] 传送玩家 {p.PlayerId}: {playerTransform.position} -> {targetPos}");
 
             if (playerRb != null)
             {
@@ -142,7 +142,7 @@ public sealed class TransitionController : MonoBehaviour
         }
         catch (Exception ex)
         {
-            CDTU.Utils.Logger.LogError($"TransitionController: 切换动作执行异常: {ex}");
+            CDTU.Utils.CDLogger.LogError($"TransitionController: 切换动作执行异常: {ex}");
         }
 
         // 等待相机/传送相关协程有机会运行

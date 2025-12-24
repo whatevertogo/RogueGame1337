@@ -4,7 +4,7 @@ using Character;
 using UnityEngine;
 
     /// <summary>
-    /// 单个属性，支持基础值 + 多个修饰符
+    /// 单个属性，支持基础值 + 多个修饰符 + 上限限制
     /// </summary>
     [Serializable]
     public class Stat
@@ -13,6 +13,9 @@ using UnityEngine;
 
         [SerializeField] private float _baseValue;
         private readonly List<StatModifier> _modifiers = new();
+
+        // 可选的上限值（null 表示无限制）
+        private float? _maxValue;
 
         private bool _isDirty = true;
         private float _cachedValue;
@@ -57,6 +60,26 @@ using UnityEngine;
             _baseValue = baseValue;
             _lastBaseValue = baseValue;
         }
+        public Stat(float baseValue, float? maxValue)
+        {
+            _baseValue = baseValue;
+            _lastBaseValue = baseValue;
+            _maxValue = maxValue;
+        }
+
+        /// <summary>
+        /// 设置属性上限（可选）
+        /// </summary>
+        public void SetMaxValue(float? maxValue)
+        {
+            _maxValue = maxValue;
+            SetDirty();
+        }
+
+        /// <summary>
+        /// 获取当前设置的上限（null 表示无限制）
+        /// </summary>
+        public float? GetMaxValue() => _maxValue;
 
         public void AddModifier(StatModifier mod)
         {
@@ -109,6 +132,7 @@ using UnityEngine;
         /// <summary>
         /// 计算最终值
         /// 公式：(Base + FlatSum) × (1 + PercentAddSum) × PercentMult1 × PercentMult2 × ...
+        /// 然后应用上限限制（如果设置了上限）
         /// </summary>
         private float CalculateFinalValue()
         {
@@ -136,6 +160,12 @@ using UnityEngine;
                         finalValue *= (1 + mod.Value);
                         break;
                 }
+            }
+
+            // 应用上限限制
+            if (_maxValue.HasValue)
+            {
+                finalValue = Mathf.Min(finalValue, _maxValue.Value);
             }
 
             return (float)Math.Round(finalValue, 4);

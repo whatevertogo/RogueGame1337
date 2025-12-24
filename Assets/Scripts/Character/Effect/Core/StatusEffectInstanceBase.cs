@@ -8,7 +8,7 @@ public abstract class StatusEffectInstanceBase : IStatusEffect
     protected readonly bool isStackable;
     public virtual bool IsStackable => isStackable;
 
-    protected readonly float duration;          // 0 = 无限
+    protected float duration;          // 0 = 无限（移除 readonly 以支持动态修改）
     protected float remainingTime;
 
     protected CharacterStats stats;
@@ -56,5 +56,15 @@ public abstract class StatusEffectInstanceBase : IStatusEffect
     {
         if (duration > 0f)
             remainingTime += extraTime;
+    }
+
+    /// <summary>
+    /// 设置效果的持续时间（用于动态调整持续时间，例如临时 Buff）
+    /// </summary>
+    /// <param name="newDuration">新的持续时间（秒），0 表示永久</param>
+    public void SetDuration(float newDuration)
+    {
+        duration = newDuration;
+        remainingTime = newDuration;
     }
 }

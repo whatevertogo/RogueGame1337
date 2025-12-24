@@ -31,7 +31,7 @@ namespace RogueGame.Map
         // 相机与传送的配置已迁移到 TransitionController
 
         [Header("调试")]
-        [SerializeField] private bool enableDebugLog = true;
+        [SerializeField] private bool enableDebugLog;
 
         #endregion
 
@@ -76,7 +76,7 @@ namespace RogueGame.Map
             _loader = new AddressablesRoomLoader();
             if (TransitionController == null)
             {
-                CDTU.Utils.Logger.LogWarning("[RoomManager] TransitionController not found in scene.");
+                CDTU.Utils.CDLogger.LogWarning("[RoomManager] TransitionController not found in scene.");
             }
             // RoomManager 不再订阅全局流程事件，流程由 GameFlowCoordinator 统一控制。
             // 订阅 EventBus，以响应 RoomController 发布的房间级事件
@@ -244,7 +244,7 @@ namespace RogueGame.Map
                 var prefab = await _loader.LoadAsync(meta);
                 if (prefab == null)
                 {
-                    CDTU.Utils.Logger.LogError($"[RoomManager] 无法加载房间: {meta.BundleName}");
+                    CDTU.Utils.CDLogger.LogError($"[RoomManager] 无法加载房间: {meta.BundleName}");
                     return;
                 }
 
@@ -256,7 +256,7 @@ namespace RogueGame.Map
 
                 if (roomPrefab == null)
                 {
-                    CDTU.Utils.Logger.LogError($"[RoomManager] 房间缺少 RoomPrefab: {meta.BundleName}");
+                    CDTU.Utils.CDLogger.LogError($"[RoomManager] 房间缺少 RoomPrefab: {meta.BundleName}");
                     Destroy(go);
                     return;
                 }
@@ -304,7 +304,7 @@ namespace RogueGame.Map
                 }
                 else
                 {
-                    CDTU.Utils.Logger.LogError("[RoomManager] 无 TransitionController：请在场景中添加 TransitionController 或在 GameManager 中注入。");
+                    CDTU.Utils.CDLogger.LogError("[RoomManager] 无 TransitionController：请在场景中添加 TransitionController 或在 GameManager 中注入。");
                 }
 
                 // 触发进入
@@ -315,7 +315,7 @@ namespace RogueGame.Map
             }
             catch (System.Exception ex)
             {
-                CDTU.Utils.Logger.LogError($"[RoomManager] 房间生成失败: {ex.Message}\n{ex.StackTrace}");
+                CDTU.Utils.CDLogger.LogError($"[RoomManager] 房间生成失败: {ex.Message}\n{ex.StackTrace}");
             }
         }
 

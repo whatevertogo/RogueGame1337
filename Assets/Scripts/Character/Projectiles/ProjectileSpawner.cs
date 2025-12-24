@@ -15,13 +15,13 @@ namespace Character.Projectiles
         {
             if (config == null)
             {
-                CDTU.Utils.Logger.LogError("[ProjectileSpawner] ProjectileConfig 为 null，无法生成投射物。");
+                CDTU.Utils.CDLogger.LogError("[ProjectileSpawner] ProjectileConfig 为 null，无法生成投射物。");
                 return null;
             }
 
             if (config.projectilePrefab == null)
             {
-                CDTU.Utils.Logger.LogError("[ProjectileSpawner] ProjectileConfig.projectilePrefab 为 null，无法生成投射物。");
+                CDTU.Utils.CDLogger.LogError("[ProjectileSpawner] ProjectileConfig.projectilePrefab 为 null，无法生成投射物。");
                 return null;
             }
 
@@ -42,7 +42,7 @@ namespace Character.Projectiles
                 }
                 catch (Exception ex)
                 {
-                    CDTU.Utils.Logger.LogWarning($"[ProjectileSpawner] 从对象池获取投射物时发生异常：{ex.Message}");
+                    CDTU.Utils.CDLogger.LogWarning($"[ProjectileSpawner] 从对象池获取投射物时发生异常：{ex.Message}");
                     projectile = null;
                     usedPool = false;
                 }
@@ -55,7 +55,7 @@ namespace Character.Projectiles
                 projectile = go.GetComponent<ProjectileBase>();
                 if (projectile == null)
                 {
-                    CDTU.Utils.Logger.LogError($"[ProjectileSpawner] 预制体 {config.projectilePrefab.name} 缺少 ProjectileBase 组件。");
+                    CDTU.Utils.CDLogger.LogError($"[ProjectileSpawner] 预制体 {config.projectilePrefab.name} 缺少 ProjectileBase 组件。");
                     GameObject.Destroy(go);
                     return null;
                 }
@@ -68,7 +68,7 @@ namespace Character.Projectiles
             }
             catch (Exception ex)
             {
-                CDTU.Utils.Logger.LogError($"[ProjectileSpawner] 初始化投射物时出错：{ex.Message}");
+                CDTU.Utils.CDLogger.LogError($"[ProjectileSpawner] 初始化投射物时出错：{ex.Message}");
                 if (usedPool && ProjectilePool.Instance != null)
                 {
                     try

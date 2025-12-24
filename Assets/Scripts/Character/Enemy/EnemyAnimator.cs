@@ -28,7 +28,7 @@ public class EnemyAnimator : MonoBehaviour
         }
         else
         {
-            CDTU.Utils.Logger.Log($"[EnemyAnimator] PlayAttack for {gameObject.name} (无Animator)");
+            CDTU.Utils.CDLogger.Log($"[EnemyAnimator] PlayAttack for {gameObject.name} (无Animator)");
         }
     }
 
@@ -43,7 +43,7 @@ public class EnemyAnimator : MonoBehaviour
         }
         else
         {
-            CDTU.Utils.Logger.Log($"[EnemyAnimator] PlayDeath for {gameObject.name} (无Animator)");
+            CDTU.Utils.CDLogger.Log($"[EnemyAnimator] PlayDeath for {gameObject.name} (无Animator)");
         }
 
         // 开始缩小协程（无论是否有Animator都执行）
@@ -87,7 +87,7 @@ public class EnemyAnimator : MonoBehaviour
         }
         else
         {
-            CDTU.Utils.Logger.Log($"[EnemyAnimator] PlayTakeDamage for {gameObject.name} (无Animator)");
+            CDTU.Utils.CDLogger.Log($"[EnemyAnimator] PlayTakeDamage for {gameObject.name} (无Animator)");
         }
     }
 

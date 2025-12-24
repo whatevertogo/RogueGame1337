@@ -49,7 +49,7 @@ public static class EventBus
     public static void Publish<T>(T evt)
     {
         if (evt == null) {
-            CDTU.Utils.Logger.LogWarning($"[EventBus] Publish: Event of type {typeof(T).Name} is null");
+            CDTU.Utils.CDLogger.LogWarning($"[EventBus] Publish: Event of type {typeof(T).Name} is null");
             return;
         }
 
@@ -64,7 +64,7 @@ public static class EventBus
             try {
                 ((Action<T>)snapshot[i])?.Invoke(evt);
             } catch (System.Exception ex) {
-                CDTU.Utils.Logger.LogError($"[EventBus] 事件处理失败 (事件类型: {type.Name}, 索引: {i}): {ex.Message}");
+                CDTU.Utils.CDLogger.LogError($"[EventBus] 事件处理失败 (事件类型: {type.Name}, 索引: {i}): {ex.Message}");
             }
         }
     }

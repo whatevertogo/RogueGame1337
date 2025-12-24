@@ -39,8 +39,9 @@ public class PlacementManager : Singleton<PlacementManager>
         // EventBus.Subscribe<RoomExitedEvent>(OnRoomExited);
     }
     
-    private void OnDestroy()
+    protected override void OnDestroy()
     {
+        base.OnDestroy();
         // EventBus.Unsubscribe<RoomExitedEvent>(OnRoomExited);
     }
     

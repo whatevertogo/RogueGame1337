@@ -160,7 +160,7 @@ namespace Character.Player
             var caster = GetComponent<CharacterBase>();
             if (caster == null)
             {
-                CDTU.Utils.Logger.LogError("[PlayerSkillComponent] CharacterBase component not found");
+                CDTU.Utils.CDLogger.LogError("[PlayerSkillComponent] CharacterBase component not found");
                 yield break;
             }
 
@@ -278,7 +278,7 @@ namespace Character.Player
             var cardDef = GameRoot.Instance?.CardDatabase?.Resolve(cardId);
             if (cardDef == null)
             {
-                CDTU.Utils.Logger.LogWarning($"[PlayerSkillComponent] Equip failed: cardDef for id '{cardId}' is null. slotIndex={slotIndex}");
+                CDTU.Utils.CDLogger.LogWarning($"[PlayerSkillComponent] Equip failed: cardDef for id '{cardId}' is null. slotIndex={slotIndex}");
                 return;
             }
 

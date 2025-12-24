@@ -82,7 +82,7 @@ public class PlayerController : CharacterBase
 			GameInput.Instance.OnSkillEPressed += () => TryActivateSkill(1); // 1 = E技能槽
 		}
 
-		CDTU.Utils.Logger.Log($"[PlayerController] Awake: {gameObject.name}, tag={gameObject.tag}, layer={LayerMask.LayerToName(gameObject.layer)}, Rigidbody2D={(rb != null ? "Yes" : "No")}, Collider2D={(col != null ? "Yes" : "No")}");
+		CDTU.Utils.CDLogger.Log($"[PlayerController] Awake: {gameObject.name}, tag={gameObject.tag}, layer={LayerMask.LayerToName(gameObject.layer)}, Rigidbody2D={(rb != null ? "Yes" : "No")}, Collider2D={(col != null ? "Yes" : "No")}");
 	}
 
 	 void OnEnable()
@@ -96,7 +96,7 @@ public class PlayerController : CharacterBase
 			Combat.OnAttack -= OnAttackPerformed;
 		}
 		// 注销
-		var pm = PlayerManager.GetExistingInstance();
+		var pm = PlayerManager.Instance;
 		if (pm != null)
 		{
 			pm.UnregisterPlayer(this);
@@ -257,7 +257,7 @@ public class PlayerController : CharacterBase
 		// TODO- UIManager.Instance.Show<DeadUIView>
 		// 播放死亡动画
 		playerAnim.PlayDie();
-		CDTU.Utils.Logger.Log("💀 玩家死亡");
+		CDTU.Utils.CDLogger.Log("💀 玩家死亡");
 	}
 
 	private void OnDisable()

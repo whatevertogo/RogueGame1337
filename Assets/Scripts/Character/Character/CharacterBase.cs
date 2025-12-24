@@ -48,7 +48,7 @@ namespace Character
             SpriteRenderer = GetComponent<SpriteRenderer>() ?? GetComponentInChildren<SpriteRenderer>();
             if (SpriteRenderer == null)
             {
-                CDTU.Utils.Logger.LogWarning($"[CharacterBase] SpriteRenderer 未找到：{gameObject.name}");
+                CDTU.Utils.CDLogger.LogWarning($"[CharacterBase] SpriteRenderer 未找到：{gameObject.name}");
             }
         }
 
@@ -73,13 +73,13 @@ namespace Character
         protected virtual void OnDeath()
         {
             // 子类重写处理死亡逻辑
-            CDTU.Utils.Logger.Log($"{gameObject.name} died!");
+            CDTU.Utils.CDLogger.Log($"{gameObject.name} died!");
         }
 
         protected virtual void OnDamaged(float damageAmount)
         {
             // 子类可重写处理受伤逻辑
-            CDTU.Utils.Logger.Log($"{gameObject.name} took {damageAmount} damage!");
+            CDTU.Utils.CDLogger.Log($"{gameObject.name} took {damageAmount} damage!");
         }
 
         /// <summary>

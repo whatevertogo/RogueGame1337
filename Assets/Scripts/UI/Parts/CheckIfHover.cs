@@ -13,7 +13,7 @@ public class CheckIfHover : MonoBehaviour
 
         if (!uiHoverAnimator)
         {
-            CDTU.Utils.Logger.LogError($"[CheckIfHover] UIHoverAnimator not found in parent of {name}");
+            CDTU.Utils.CDLogger.LogError($"[CheckIfHover] UIHoverAnimator not found in parent of {name}");
             enabled = false;
         }
     }

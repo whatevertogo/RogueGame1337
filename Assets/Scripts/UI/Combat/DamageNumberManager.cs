@@ -33,10 +33,11 @@ namespace UI.Combat
             EventBus.Subscribe<HealEvent>(OnHeal);
         }
         
-        private void OnDestroy()
+        protected override void OnDestroy()
         {
             EventBus.Unsubscribe<DamageDealtEvent>(OnDamageDealt);
             EventBus.Unsubscribe<HealEvent>(OnHeal);
+            base.OnDestroy();
         }
         
         /// <summary>
@@ -46,7 +47,7 @@ namespace UI.Combat
         {
             if (damageNumberPrefab == null || canvasTransform == null)
             {
-                CDTU.Utils.Logger.LogError("[DamageNumberManager] 预制体或Canvas未设置！");
+                CDTU.Utils.CDLogger.LogError("[DamageNumberManager] 预制体或Canvas未设置！");
                 return;
             }
             
@@ -63,12 +64,12 @@ namespace UI.Combat
                 }
                 else
                 {
-                    CDTU.Utils.Logger.LogError("[DamageNumberManager] 预制体缺少DamageNumber组件！");
+                    CDTU.Utils.CDLogger.LogError("[DamageNumberManager] 预制体缺少DamageNumber组件！");
                     Destroy(obj);
                 }
             }
             
-            CDTU.Utils.Logger.Log($"[DamageNumberManager] 对象池初始化完成: {poolSize}个对象");
+            CDTU.Utils.CDLogger.Log($"[DamageNumberManager] 对象池初始化完成: {poolSize}个对象");
         }
         
         /// <summary>

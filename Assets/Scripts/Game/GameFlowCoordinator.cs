@@ -35,7 +35,7 @@ public sealed class GameFlowCoordinator : MonoBehaviour, IGameStateManager
         this.UIManager = uiManager;
         if (roomManager == null)
         {
-            CDTU.Utils.Logger.LogWarning("[GameFlowCoordinator] Initialize called with null RoomManager");
+            CDTU.Utils.CDLogger.LogWarning("[GameFlowCoordinator] Initialize called with null RoomManager");
         }
     }
 
@@ -72,7 +72,7 @@ public sealed class GameFlowCoordinator : MonoBehaviour, IGameStateManager
     {
         if (RoomManager == null || RoomRepository == null)
         {
-            CDTU.Utils.Logger.LogError("GameFlowCoordinator: RoomManager is not set. Cannot start run.");
+            CDTU.Utils.CDLogger.LogError("GameFlowCoordinator: RoomManager is not set. Cannot start run.");
             return;
         }
 
@@ -91,7 +91,7 @@ public sealed class GameFlowCoordinator : MonoBehaviour, IGameStateManager
         _roomsClearedThisLayer = 0;
         _bossUnlockedThisLayer = false;
         RoomManager.StartFloor(CurrentLayer, meta);
-        CDTU.Utils.Logger.Log("GameFlowCoordinator: StartRun called for Layer " + CurrentLayer);
+        CDTU.Utils.CDLogger.Log("GameFlowCoordinator: StartRun called for Layer " + CurrentLayer);
 
         // 初始化UI，由单独的ui入口使用
         // UIManager?.Open<PlayingStateUIView>(layer: UILayer.Normal);
@@ -149,7 +149,7 @@ public sealed class GameFlowCoordinator : MonoBehaviour, IGameStateManager
         var startMeta = new RoomMeta { RoomType = RoomType.Start, Index = 0, BundleName = "Room_Start_0" };
         RoomManager?.StartFloor(CurrentLayer, startMeta);
 
-        CDTU.Utils.Logger.Log($"GameFlowCoordinator: Restored Run to Layer {CurrentLayer} from save.");
+        CDTU.Utils.CDLogger.Log($"GameFlowCoordinator: Restored Run to Layer {CurrentLayer} from save.");
     }
 
     public void ChangeState(GameFlowState newState)

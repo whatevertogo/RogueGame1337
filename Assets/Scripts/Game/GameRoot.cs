@@ -11,6 +11,11 @@ using UnityEngine;
 /// </summary>
 public class GameRoot : Singleton<GameRoot>
 {
+    [Header("DebugSettings")]
+    [Tooltip("启用全局调试日志输出")]
+    public bool enableDebugLogs = false;
+
+
     [Header("Game DataBases")]
     //
     [SerializeField] private CardDataBase cardDatabase;
@@ -31,6 +36,11 @@ public class GameRoot : Singleton<GameRoot>
     [Tooltip("游戏难度曲线配置")]
     [SerializeField] private DifficultyCurveConfig difficultyCurveConfig;
     public DifficultyCurveConfig DifficultyCurveConfig => difficultyCurveConfig;
+
+    //属性上限配置
+    [Tooltip("属性上限配置（防止数值爆炸）")]
+    [SerializeField] private StatLimitConfig statLimitConfig;
+    public StatLimitConfig StatLimitConfig => statLimitConfig;
 
     [Header("Scene Managers")]
     [SerializeField] private GameFlowCoordinator gameFlowCoordinator;
@@ -85,7 +95,7 @@ public class GameRoot : Singleton<GameRoot>
     protected override void Awake()
     {
         base.Awake();
-        CDTU.Utils.Logger.Log("[GameRoot] Awake()");
+        CDTU.Utils.CDLogger.Log("[GameRoot] Awake()");
 
         bool ok = true;
 
@@ -103,11 +113,17 @@ public class GameRoot : Singleton<GameRoot>
         ok &= AssertNotNull(activeCardDeduplicationConfig, nameof(activeCardDeduplicationConfig));
         ok &= AssertNotNull(difficultyCurveConfig, nameof(difficultyCurveConfig));
 
+        // statLimitConfig 是可选的，如果未配置则使用默认值
+        if (statLimitConfig == null)
+        {
+            CDTU.Utils.CDLogger.LogWarning("[GameRoot] StatLimitConfig 未配置，将使用 Stat 类内部默认上限");
+        }
+
 
 
         if (!ok)
         {
-            CDTU.Utils.Logger.LogError("[GameRoot] Initialization aborted due to missing references.");
+            CDTU.Utils.CDLogger.LogError("[GameRoot] Initialization aborted due to missing references.");
             return;
         }
 
@@ -115,11 +131,13 @@ public class GameRoot : Singleton<GameRoot>
         if (GetComponent<SlotService>() == null)
         {
             gameObject.AddComponent<SlotService>();
-            CDTU.Utils.Logger.Log("[GameRoot] SlotService added to GameRoot at runtime");
+            CDTU.Utils.CDLogger.Log("[GameRoot] SlotService added to GameRoot at runtime");
         }
 
-        CDTU.Utils.Logger.Log("[GameRoot] All required references assigned. Initializing CardDatabase.");
+        CDTU.Utils.CDLogger.Log("[GameRoot] All required references assigned. Initializing CardDatabase.");
         cardDatabase.Initialize();
+        //SaveManager 初始化依赖于 PlayerManager 和 InventoryManager
+        //TODO:项目最后来写保存游戏功能SaveManager
 
         gameFlowCoordinator.Initialize(
             roomManager,
@@ -130,7 +148,6 @@ public class GameRoot : Singleton<GameRoot>
 
         playerManager.Initialize(roomManager);
 
-        //SaveManager 初始化依赖于 PlayerManager 和 InventoryManager
 
         shopManager.Initialize(inventoryManager);
 
@@ -175,20 +192,22 @@ public class GameRoot : Singleton<GameRoot>
     {
         if (obj == null)
         {
-            CDTU.Utils.Logger.LogError($"[GameRoot] {name} is not assigned.");
+            CDTU.Utils.CDLogger.LogError($"[GameRoot] {name} is not assigned.");
             return false;
         }
         return true;
     }
 
 
-    public void OnDestroy()
+    protected override void OnDestroy()
     {
-        CDTU.Utils.Logger.Log("[GameRoot] OnDestroy() called.");
+        CDTU.Utils.CDLogger.Log("[GameRoot] OnDestroy() called.");
 
         // 取消订阅服务的事件
         FloorRewardSystemService?.Unsubscribe();
         PassiveCardApplicationService?.Unsubscribe();
         RoomPlayerSkillLimitService?.Unsubscribe();
+
+        base.OnDestroy();
     }
 }

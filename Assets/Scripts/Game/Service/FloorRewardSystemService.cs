@@ -81,11 +81,11 @@ public sealed class FloorRewardSystemService
 
         if (result.ConvertedToCoins)
         {
-            CDTU.Utils.Logger.Log($"[FloorRewardSystemService] 层间奖励卡牌重复，已转换为 {result.CoinsAmount} 金币");
+            CDTU.Utils.CDLogger.Log($"[FloorRewardSystemService] 层间奖励卡牌重复，已转换为 {result.CoinsAmount} 金币");
         }
         else if (result.Added)
         {
-            CDTU.Utils.Logger.Log($"[FloorRewardSystemService] 层间奖励：获得主动卡 '{result.CardId}'");
+            CDTU.Utils.CDLogger.Log($"[FloorRewardSystemService] 层间奖励：获得主动卡 '{result.CardId}'");
         }
     }
 

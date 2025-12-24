@@ -37,7 +37,7 @@ public class ProjectileBase : MonoBehaviour
     private ContactFilter2D HitFilter;
 
     [Header("CDTU.Utils.Logger")]
-    [SerializeField] private bool enabledebug = false;
+    [SerializeField] private bool enabledebug;
 
 
 
@@ -66,7 +66,7 @@ public class ProjectileBase : MonoBehaviour
 
         if (col == null)
         {
-            CDTU.Utils.Logger.LogWarning($"[ProjectileBase] {gameObject.name} 缺少 Collider2D！无法检测碰撞。");
+            CDTU.Utils.CDLogger.LogWarning($"[ProjectileBase] {gameObject.name} 缺少 Collider2D！无法检测碰撞。");
         }
 
         hitHealthTargets = new HashSet<HealthComponent>();
@@ -74,12 +74,14 @@ public class ProjectileBase : MonoBehaviour
 
         if (enabledebug)
         {
-            CDTU.Utils.Logger.Log($"[ProjectileBase] Awake: rb.bodyType={(rb != null ? rb.bodyType.ToString() : "null")}, colliderIsTrigger={(col != null ? col.isTrigger.ToString() : "null")}");
+            CDTU.Utils.CDLogger.Log($"[ProjectileBase] Awake: rb.bodyType={(rb != null ? rb.bodyType.ToString() : "null")}, colliderIsTrigger={(col != null ? col.isTrigger.ToString() : "null")}");
         }
 
         HitFilter = new ContactFilter2D();
         HitFilter.SetLayerMask(data.HitMask);
         HitFilter.useTriggers = true;
+
+        enabledebug = GameRoot.Instance.enableDebugLogs;
     }
 
     protected virtual void OnEnable()
@@ -130,7 +132,7 @@ public class ProjectileBase : MonoBehaviour
         if (enabledebug)
         {
             string ownerName = data.Owner != null ? data.Owner.name : "null";
-            CDTU.Utils.Logger.Log($"[ProjectileBase] Init - Owner={ownerName}, OwnerTeam={data.OwnerTeam}, HitMask.value={data.HitMask.value}, Damage={data.Damage}");
+            CDTU.Utils.CDLogger.Log($"[ProjectileBase] Init - Owner={ownerName}, OwnerTeam={data.OwnerTeam}, HitMask.value={data.HitMask.value}, Damage={data.Damage}");
         }
     }
 
@@ -146,7 +148,7 @@ public class ProjectileBase : MonoBehaviour
 
         if (enabledebug)
         {
-            CDTU.Utils.Logger.Log($"[ProjectileBase] Init (compat) - prefab based init, owner={(owner != null ? owner.name : "null")}, ownerTeam={ownerTeam}, hitMask={hitMask.value}");
+            CDTU.Utils.CDLogger.Log($"[ProjectileBase] Init (compat) - prefab based init, owner={(owner != null ? owner.name : "null")}, ownerTeam={ownerTeam}, hitMask={hitMask.value}");
         }
     }
 
@@ -297,13 +299,13 @@ public class ProjectileBase : MonoBehaviour
 
     protected virtual void OnTriggerEnter2D(Collider2D other)
     {
-        if (enabledebug) CDTU.Utils.Logger.Log($"[ProjectileBase] OnTriggerEnter2D collided with {other?.gameObject?.name} (layer={LayerMask.LayerToName(other.gameObject.layer)})");
+        if (enabledebug) CDTU.Utils.CDLogger.Log($"[ProjectileBase] OnTriggerEnter2D collided with {other?.gameObject?.name} (layer={LayerMask.LayerToName(other.gameObject.layer)})");
         TryHit(other.gameObject);
     }
 
     protected virtual void OnCollisionEnter2D(Collision2D collision)
     {
-        if (enabledebug) CDTU.Utils.Logger.Log($"[ProjectileBase] OnCollisionEnter2D collided with {collision?.gameObject?.name} (layer={LayerMask.LayerToName(collision.gameObject.layer)})");
+        if (enabledebug) CDTU.Utils.CDLogger.Log($"[ProjectileBase] OnCollisionEnter2D collided with {collision?.gameObject?.name} (layer={LayerMask.LayerToName(collision.gameObject.layer)})");
 
         // 如果是墙壁，直接销毁（不调用 TryHit，避免双重回收）
         if (collision.gameObject.CompareTag("Wall"))
@@ -341,7 +343,7 @@ public class ProjectileBase : MonoBehaviour
         bool inMask = IsInLayerMask(target.layer, data.HitMask);
         if (enabledebug && !inMask)
         {
-            CDTU.Utils.Logger.Log($"[ProjectileBase] TryHit: target={target.name}, layer={LayerMask.LayerToName(target.layer)}, inHitMask={inMask}");
+            CDTU.Utils.CDLogger.Log($"[ProjectileBase] TryHit: target={target.name}, layer={LayerMask.LayerToName(target.layer)}, inHitMask={inMask}");
         }
         if (!inMask) return;
 
@@ -350,7 +352,7 @@ public class ProjectileBase : MonoBehaviour
         // 跳过发射者
         if (data.Owner != null && target.transform == data.Owner)
         {
-            if (enabledebug) CDTU.Utils.Logger.Log("[ProjectileBase] TryHit: skipping owner");
+            if (enabledebug) CDTU.Utils.CDLogger.Log("[ProjectileBase] TryHit: skipping owner");
             return;
         }
 

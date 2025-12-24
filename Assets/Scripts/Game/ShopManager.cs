@@ -31,7 +31,7 @@ public class ShopManager : Singleton<ShopManager>
         var playerState = PlayerManager.Instance?.GetLocalPlayerData();
         if (playerState?.Controller == null)
         {
-            CDTU.Utils.Logger.LogWarning("[ShopManager] Player not found.");
+            CDTU.Utils.CDLogger.LogWarning("[ShopManager] Player not found.");
             OnPurchaseFailed?.Invoke("Player not found");
             return false;
         }
@@ -39,7 +39,7 @@ public class ShopManager : Singleton<ShopManager>
         var health = playerState.Controller.GetComponent<HealthComponent>();
         if (health == null)
         {
-            CDTU.Utils.Logger.LogWarning("[ShopManager] Player has no HealthComponent.");
+            CDTU.Utils.CDLogger.LogWarning("[ShopManager] Player has no HealthComponent.");
             OnPurchaseFailed?.Invoke("Health component missing");
             return false;
         }
@@ -47,7 +47,7 @@ public class ShopManager : Singleton<ShopManager>
         // 检查是否满血
         if (health.CurrentHP >= health.MaxHP)
         {
-            CDTU.Utils.Logger.Log("[ShopManager] Player is already at full health. No purchase needed.");
+            CDTU.Utils.CDLogger.Log("[ShopManager] Player is already at full health. No purchase needed.");
             OnPurchaseFailed?.Invoke("Already at full health");
             return false;
         }
@@ -55,7 +55,7 @@ public class ShopManager : Singleton<ShopManager>
         // 使用原子操作消耗金币
         if (!inventoryManager.SpendCoins(spendCoins))
         {
-            CDTU.Utils.Logger.LogWarning("[ShopManager] Not enough coins to buy bloods.");
+            CDTU.Utils.CDLogger.LogWarning("[ShopManager] Not enough coins to buy bloods.");
             OnPurchaseFailed?.Invoke("Not enough coins");
             return false;
         }
@@ -75,7 +75,7 @@ public class ShopManager : Singleton<ShopManager>
     {
         if (inventoryManager == null)
         {
-            CDTU.Utils.Logger.LogError("[ShopManager] InventoryManager is not initialized.");
+            CDTU.Utils.CDLogger.LogError("[ShopManager] InventoryManager is not initialized.");
             OnPurchaseFailed?.Invoke("System not initialized");
             return false;
         }
@@ -83,7 +83,7 @@ public class ShopManager : Singleton<ShopManager>
         // 使用原子操作消耗金币
         if (!inventoryManager.SpendCoins(spendCoins))
         {
-            CDTU.Utils.Logger.LogWarning("[ShopManager] Not enough coins to buy cards.");
+            CDTU.Utils.CDLogger.LogWarning("[ShopManager] Not enough coins to buy cards.");
             OnPurchaseFailed?.Invoke("Not enough coins");
             return false;
         }
@@ -92,7 +92,7 @@ public class ShopManager : Singleton<ShopManager>
         var cardDatabase = GameRoot.Instance?.CardDatabase;
         if (cardDatabase == null)
         {
-            CDTU.Utils.Logger.LogError("[ShopManager] CardDatabase not found, refunding coins.");
+            CDTU.Utils.CDLogger.LogError("[ShopManager] CardDatabase not found, refunding coins.");
             inventoryManager.AddCoins(spendCoins); // 退款
             OnPurchaseFailed?.Invoke("Card database missing");
             return false;
@@ -101,7 +101,7 @@ public class ShopManager : Singleton<ShopManager>
         string cardId = cardDatabase.GetRandomCardId();
         if (string.IsNullOrEmpty(cardId))
         {
-            CDTU.Utils.Logger.LogError("[ShopManager] Failed to get random card, refunding coins.");
+            CDTU.Utils.CDLogger.LogError("[ShopManager] Failed to get random card, refunding coins.");
             inventoryManager.AddCoins(spendCoins); // 退款
             OnPurchaseFailed?.Invoke("No cards available");
             return false;
@@ -111,7 +111,7 @@ public class ShopManager : Singleton<ShopManager>
         var cardDef = cardDatabase.Resolve(cardId);
         if (cardDef == null)
         {
-            CDTU.Utils.Logger.LogError($"[ShopManager] Failed to resolve card '{cardId}', refunding coins.");
+            CDTU.Utils.CDLogger.LogError($"[ShopManager] Failed to resolve card '{cardId}', refunding coins.");
             inventoryManager.AddCoins(spendCoins); // 退款
             OnPurchaseFailed?.Invoke("Card definition missing");
             return false;
@@ -149,7 +149,7 @@ public class ShopManager : Singleton<ShopManager>
             else
             {
                 // 添加失败（不应该发生，因为已经处理了重复和满级情况）
-                CDTU.Utils.Logger.LogError($"[ShopManager] Failed to add card '{cardId}', refunding coins.");
+                CDTU.Utils.CDLogger.LogError($"[ShopManager] Failed to add card '{cardId}', refunding coins.");
                 inventoryManager.AddCoins(spendCoins); // 退款
                 OnPurchaseFailed?.Invoke("Failed to add card");
                 return false;

@@ -21,7 +21,7 @@ namespace RogueGame.SaveSystem
         {
             if (data == null)
             {
-                CDTU.Utils.Logger.LogError("[SaveRestoreUtility] RunSaveData is null");
+                CDTU.Utils.CDLogger.LogError("[SaveRestoreUtility] RunSaveData is null");
                 return;
             }
 
@@ -34,7 +34,7 @@ namespace RogueGame.SaveSystem
             // 3. 恢复 GameFlowCoordinator 状态（层级、房间）
             RestoreGameState(data);
 
-            CDTU.Utils.Logger.Log("[SaveRestoreUtility] Run 存档已恢复");
+            CDTU.Utils.CDLogger.Log("[SaveRestoreUtility] Run 存档已恢复");
         }
 
         /// <summary>
@@ -45,7 +45,7 @@ namespace RogueGame.SaveSystem
             var inv = InventoryManager.Instance;
             if (inv == null)
             {
-                CDTU.Utils.Logger.LogWarning("[SaveRestoreUtility] InventoryManager not found");
+                CDTU.Utils.CDLogger.LogWarning("[SaveRestoreUtility] InventoryManager not found");
                 return;
             }
 
@@ -94,7 +94,7 @@ namespace RogueGame.SaveSystem
             var localPlayer = pm?.GetLocalPlayerState();
             if (localPlayer?.Controller == null)
             {
-                CDTU.Utils.Logger.LogWarning("[SaveRestoreUtility] PlayerController not found");
+                CDTU.Utils.CDLogger.LogWarning("[SaveRestoreUtility] PlayerController not found");
                 return;
             }
 
@@ -119,13 +119,13 @@ namespace RogueGame.SaveSystem
             var gsm = GameRoot.Instance?.GameFlowCoordinator;
             if (gsm == null)
             {
-                CDTU.Utils.Logger.LogWarning("[SaveRestoreUtility] GameFlowCoordinator not found");
+                CDTU.Utils.CDLogger.LogWarning("[SaveRestoreUtility] GameFlowCoordinator not found");
                 return;
             }
 
             // 注意：这里需要根据你的 GameFlowCoordinator 实际 API 调整
             // 可能需要通过 RoomManager 重新加载指定的层级和房间
-            CDTU.Utils.Logger.Log($"[SaveRestoreUtility] 需要恢复到 Layer {data.CurrentLayer}, Room {data.CurrentRoomId}");
+            CDTU.Utils.CDLogger.Log($"[SaveRestoreUtility] 需要恢复到 Layer {data.CurrentLayer}, Room {data.CurrentRoomId}");
             // TODO: 实现房间恢复逻辑（可能需要与 RoomManager 配合）
         }
 
@@ -136,13 +136,13 @@ namespace RogueGame.SaveSystem
         {
             if (data == null)
             {
-                CDTU.Utils.Logger.LogError("[SaveRestoreUtility] MetaSaveData is null");
+                CDTU.Utils.CDLogger.LogError("[SaveRestoreUtility] MetaSaveData is null");
                 return;
             }
 
             // TODO: 根据实际需求实现解锁系统
             // 例如：通知 UI 更新解锁的卡牌、角色等
-            CDTU.Utils.Logger.Log($"[SaveRestoreUtility] Meta 存档已加载：已解锁 {data.UnlockedCards.Count} 张卡牌");
+            CDTU.Utils.CDLogger.Log($"[SaveRestoreUtility] Meta 存档已加载：已解锁 {data.UnlockedCards.Count} 张卡牌");
         }
     }
 }

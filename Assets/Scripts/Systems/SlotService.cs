@@ -21,7 +21,7 @@ public class SlotService : MonoBehaviour
 
     private void OnClearAllSlotsRequested(ClearAllSlotsRequestedEvent evt)
     {
-        CDTU.Utils.Logger.Log("[SlotService] ClearAllSlotsRequestedEvent received, clearing slots");
+        CDTU.Utils.CDLogger.Log("[SlotService] ClearAllSlotsRequestedEvent received, clearing slots");
         var slots = ObjectCache.Instance.FindObjectsOfType<CardSlot>();
         foreach (var slot in slots)
         {

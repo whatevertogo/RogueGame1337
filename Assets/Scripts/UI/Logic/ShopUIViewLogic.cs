@@ -78,7 +78,7 @@ namespace Game.UI
         {
             if (ShopManager.Instance == null)
             {
-                CDTU.Utils.Logger.LogWarning("[ShopUIViewLogic] ShopManager.Instance is null");
+                CDTU.Utils.CDLogger.LogWarning("[ShopUIViewLogic] ShopManager.Instance is null");
                 return;
             }
 

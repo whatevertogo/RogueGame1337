@@ -26,7 +26,7 @@ namespace Game.UI
 
         private void OnLayerTransition(LayerTransitionEvent evt)
         {
-            CDTU.Utils.Logger.Log($"层过渡事件：从层 {evt.FromLayer} 到层 {evt.ToLayer}");
+            CDTU.Utils.CDLogger.Log($"层过渡事件：从层 {evt.FromLayer} 到层 {evt.ToLayer}");
             _view.SetLevelText($"第{evt.ToLayer}层");
         }
 
@@ -52,7 +52,7 @@ namespace Game.UI
         {
             // 关闭时清理
             // 退订所有事件，避免内存泄漏或悬挂引用
-            var pm = PlayerManager.GetExistingInstance();
+            var pm = PlayerManager.Instance;
             if (pm != null)
             {
                 pm.OnPlayerRegistered -= PlayerRegistered;
@@ -76,7 +76,7 @@ namespace Game.UI
         }
         private void SubscribeToSkillEvents()
         {
-            var pm = PlayerManager.GetExistingInstance();
+            var pm = PlayerManager.Instance;
             if (pm == null) return;
             if (_skillEventsSubscribed) return;
             pm.OnPlayerSkillEnergyChanged += this.OnPlayerSkillEnergyChanged;
@@ -88,7 +88,7 @@ namespace Game.UI
 
         private void UnsubscribeFromSkillEvents()
         {
-            var pm = PlayerManager.GetExistingInstance();
+            var pm = PlayerManager.Instance;
             if (pm == null) return;
             if (!_skillEventsSubscribed) return;
             pm.OnPlayerSkillEnergyChanged -= this.OnPlayerSkillEnergyChanged;
@@ -121,7 +121,7 @@ namespace Game.UI
 
             // 保存引用并订阅生命值与技能事件
             _myPlayerState = state;
-            CDTU.Utils.Logger.Log("玩家注册：" + state.PlayerId);
+            CDTU.Utils.CDLogger.Log("玩家注册：" + state.PlayerId);
             SubscribeToPlayerHealthEvents();
             SubscribeToSkillEvents();
             // TODO-刷新技能槽初始显示
@@ -155,7 +155,7 @@ namespace Game.UI
 
         private void OnPlayerHealthChanged(float currentHealth, float maxHealth)
         {
-            CDTU.Utils.Logger.Log($"玩家血量变化，当前血量：{currentHealth}");
+            CDTU.Utils.CDLogger.Log($"玩家血量变化，当前血量：{currentHealth}");
             _view?.SetHealthNormalized(currentHealth / Math.Max(1f, maxHealth));
         }
 
@@ -208,7 +208,7 @@ namespace Game.UI
             }
             catch (System.Exception ex)
             {
-                CDTU.Utils.Logger.LogError($"打开背包失败: {ex.Message}");
+                CDTU.Utils.CDLogger.LogError($"打开背包失败: {ex.Message}");
             }
             return null;
         }

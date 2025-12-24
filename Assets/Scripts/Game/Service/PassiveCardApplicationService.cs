@@ -47,9 +47,9 @@ public sealed class PassiveCardApplicationService
         EventBus.Subscribe<PlayerRespawnEvent>(OnPlayerRespawn);
         EventBus.Subscribe<EntityKilledEvent>(OnEntityKilled); // 条件触发卡：P08 吸血体质
         EventBus.Subscribe<PlayerSkillCastEvent>(OnPlayerSkillCast); // 条件触发卡：P10 暴风骤雨
-        CDTU.Utils.Loggercribed = true;
+        _subscribed = true;
 
-        CDTU.Utils.Logger.Log("[PassiveCardApplicationService] 已订阅被动卡牌事件");
+        CDTU.Utils.CDLogger.Log("[PassiveCardApplicationService] 已订阅被动卡牌事件");
     }
 
     /// <summary>
@@ -74,7 +74,7 @@ public sealed class PassiveCardApplicationService
     {
         if (evt == null || string.IsNullOrEmpty(evt.CardId))
         {
-            CDTU.Utils.Logger.LogWarning("[PassiveCardApplicationService] 无效的被动卡牌拾取事件");
+            CDTU.Utils.CDLogger.LogWarning("[PassiveCardApplicationService] 无效的被动卡牌拾取事件");
             return;
         }
 
@@ -82,13 +82,13 @@ public sealed class PassiveCardApplicationService
         var cardDef = cardDatabase.Resolve(evt.CardId);
         if (cardDef == null)
         {
-            CDTU.Utils.Logger.LogError($"[PassiveCardApplicationService] 无法找到卡牌定义: {evt.CardId}");
+            CDTU.Utils.CDLogger.LogError($"[PassiveCardApplicationService] 无法找到卡牌定义: {evt.CardId}");
             return;
         }
 
         if (cardDef.passiveCardConfig == null)
         {
-            CDTU.Utils.Logger.LogError($"[PassiveCardApplicationService] 卡牌 {evt.CardId} 没有被动卡配置");
+            CDTU.Utils.CDLogger.LogError($"[PassiveCardApplicationService] 卡牌 {evt.CardId} 没有被动卡配置");
             return;
         }
 
@@ -96,14 +96,14 @@ public sealed class PassiveCardApplicationService
         var localPlayer = GetLocalPlayer();
         if (localPlayer == null)
         {
-            CDTU.Utils.Logger.LogWarning("[PassiveCardApplicationService] 没有本地玩家");
+            CDTU.Utils.CDLogger.LogWarning("[PassiveCardApplicationService] 没有本地玩家");
             return;
         }
 
         var statusEffectComponent = localPlayer.GetComponent<StatusEffectComponent>();
         if (statusEffectComponent == null)
         {
-            CDTU.Utils.Logger.LogError("[PassiveCardApplicationService] 本地玩家没有 StatusEffectComponent");
+            CDTU.Utils.CDLogger.LogError("[PassiveCardApplicationService] 本地玩家没有 StatusEffectComponent");
             return;
         }
 
@@ -118,7 +118,7 @@ public sealed class PassiveCardApplicationService
     {
         if (evt == null || string.IsNullOrEmpty(evt.CardId))
         {
-            CDTU.Utils.Logger.LogWarning("[PassiveCardApplicationService] 无效的被动卡牌移除事件");
+            CDTU.Utils.CDLogger.LogWarning("[PassiveCardApplicationService] 无效的被动卡牌移除事件");
             return;
         }
 
@@ -138,7 +138,7 @@ public sealed class PassiveCardApplicationService
     /// </summary>
     private void OnPlayerRespawn(PlayerRespawnEvent evt)
     {
-        CDTU.Utils.Logger.Log("[PassiveCardApplicationService] 玩家重生，重新应用被动效果");
+        CDTU.Utils.CDLogger.Log("[PassiveCardApplicationService] 玩家重生，重新应用被动效果");
 
         // 清除已追踪的效果
         _appliedEffects.Clear();
@@ -175,7 +175,7 @@ public sealed class PassiveCardApplicationService
     {
         if (config.passiveEffects == null || config.passiveEffects.Length == 0)
         {
-            CDTU.Utils.Logger.LogWarning($"[PassiveCardApplicationService] 卡牌 {cardId} 没有配置被动效果");
+            CDTU.Utils.CDLogger.LogWarning($"[PassiveCardApplicationService] 卡牌 {cardId} 没有配置被动效果");
             return;
         }
 
@@ -225,7 +225,7 @@ public sealed class PassiveCardApplicationService
     {
         if (!_appliedEffects.ContainsKey(cardId))
         {
-            CDTU.Utils.Logger.LogWarning($"[PassiveCardApplicationService] 卡牌 {cardId} 没有已应用的效果");
+            CDTU.Utils.CDLogger.LogWarning($"[PassiveCardApplicationService] 卡牌 {cardId} 没有已应用的效果");
             return;
         }
 
@@ -241,7 +241,7 @@ public sealed class PassiveCardApplicationService
             removedCount++;
         }
 
-        CDTU.Utils.Logger.Log($"[PassiveCardApplicationService] 移除了 {removedCount} 个效果 from {cardId}");
+        CDTU.Utils.CDLogger.Log($"[PassiveCardApplicationService] 移除了 {removedCount} 个效果 from {cardId}");
 
         // 如果该卡牌没有效果了，移除条目
         if (effects.Count == 0)
@@ -304,7 +304,7 @@ public sealed class PassiveCardApplicationService
         float healAmount = 5f * cardCount;
         stats.Heal(healAmount);
 
-        CDTU.Utils.Logger.Log($"[PassiveCardApplicationService] 吸血体质触发：回复 {healAmount} 点生命（{cardCount} 张卡）");
+        CDTU.Utils.CDLogger.Log($"[PassiveCardApplicationService] 吸血体质触发：回复 {healAmount} 点生命（{cardCount} 张卡）");
     }
 
     /// <summary>
@@ -325,28 +325,27 @@ public sealed class PassiveCardApplicationService
         var statusEffectComponent = localPlayer.GetComponent<StatusEffectComponent>();
         if (statusEffectComponent == null) return;
 
-        // 查找 AttackSpeedBuffDefinition
-        var attackSpeedBuffDef = UnityEngine.Resources.LoadAll<AttackSpeedBuffDefinition>("").
-            OrderBy(d => d.name).FirstOrDefault();
-        if (attackSpeedBuffDef == null)
+        // 获取 P10 卡牌定义，从中读取 StatusEffect 配置
+        var cardDef = cardDatabase.Resolve("P10");
+        if (cardDef == null || cardDef.passiveCardConfig?.passiveEffects == null || cardDef.passiveCardConfig.passiveEffects.Length == 0)
         {
-            CDTU.Utils.Logger.LogWarning("[PassiveCardApplicationService] 未找到 AttackSpeedBuffDefinition，无法触发暴风骤雨");
+            CDTU.Utils.CDLogger.LogWarning("[PassiveCardApplicationService] P10 卡牌配置错误，未找到 StatusEffect");
             return;
         }
 
-        // 创建临时的攻速增益效果实例
-        var effectInstance = effectFactory.CreateInstance(attackSpeedBuffDef, localPlayer);
+        // 创建攻速增益效果实例
+        var effectDef = cardDef.passiveCardConfig.passiveEffects[0];
+        var effectInstance = effectFactory.CreateInstance(effectDef, localPlayer);
 
-        // 设置持续时间为3秒（需要修改 StatusEffectInstanceBase 添加 SetDuration 方法）
+        // 设置持续时间为3秒（临时 Buff）
         if (effectInstance is StatusEffectInstanceBase baseInstance)
         {
-            // 直接修改内部字段（临时方案）
-            // baseInstance.SetDuration(3f); // TODO: 添加 SetDuration 方法
+            baseInstance.SetDuration(3f);
         }
 
         statusEffectComponent.AddEffect(effectInstance);
 
-        CDTU.Utils.Logger.Log($"[PassiveCardApplicationService] 暴风骤雨触发：攻速提升，持续3秒（{cardCount} 张卡）");
+        CDTU.Utils.CDLogger.Log($"[PassiveCardApplicationService] 暴风骤雨触发：攻速提升，持续3秒（{cardCount} 张卡）");
     }
 
     #endregion

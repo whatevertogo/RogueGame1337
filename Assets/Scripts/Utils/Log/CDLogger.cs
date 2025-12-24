@@ -8,7 +8,7 @@ namespace CDTU.Utils
     /// - Development Build: 所有日志输出
     /// - Release Build: 仅 Warning 和 Error 输出
     /// </summary>
-    public static class Logger
+    public static class CDLogger
     {
         public static void Log(object message, Object context = null)
         {
@@ -33,9 +33,8 @@ namespace CDTU.Utils
 
         public static void LogError(object message, Object context = null)
         {
-            // Error 在所有情况下都输出
-            if (context != null) CDTU.Utils.Logger.LogError($"{message}", context);
-            else CDTU.Utils.Logger.LogError($"{message}");
+            if (context != null) Debug.LogError($"{message}", context);
+            else Debug.LogError($"{message}");
         }
     }
 }

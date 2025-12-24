@@ -206,30 +206,52 @@ public sealed class InventoryManager : Singleton<InventoryManager>
     {
         if (count <= 0) return;
 
+        // 获取被动卡叠加上限（从 StatLimitConfig）
+        int maxStack = GameRoot.Instance?.StatLimitConfig?.maxPassiveCardStack ?? 99;
+
         for (int i = 0; i < _passiveCards.Count; i++)
         {
             if (_passiveCards[i].CardId == cardId)
             {
+                int currentCount = _passiveCards[i].Count;
+                int newCount = Mathf.Min(currentCount + count, maxStack);
+
+                // 如果已经达到上限，记录警告
+                if (currentCount >= maxStack)
+                {
+                    CDTU.Utils.CDLogger.LogWarning($"[InventoryManager] 被动卡 {cardId} 已达到上限 ({maxStack})，无法继续叠加");
+                    return;
+                }
+
+                int actualAdded = newCount - currentCount;
                 _passiveCards[i] = new PassiveCardInfo
                 {
                     CardId = cardId,
-                    Count = _passiveCards[i].Count + count
+                    Count = newCount
                 };
 
-                // 发布被动卡拾取事件
-                EventBus.Publish(new PassiveCardAcquiredEvent(cardId, count, source));
+                // 发布被动卡拾取事件（使用实际添加的数量）
+                EventBus.Publish(new PassiveCardAcquiredEvent(cardId, actualAdded, source));
+
+                // 如果达到上限，记录日志
+                if (newCount >= maxStack)
+                {
+                    CDTU.Utils.CDLogger.Log($"[InventoryManager] 被动卡 {cardId} 已达到上限 ({maxStack})");
+                }
                 return;
             }
         }
 
+        // 新卡牌，直接添加
+        int actualCount = Mathf.Min(count, maxStack);
         _passiveCards.Add(new PassiveCardInfo
         {
             CardId = cardId,
-            Count = count
+            Count = actualCount
         });
 
         // 发布被动卡拾取事件
-        EventBus.Publish(new PassiveCardAcquiredEvent(cardId, count, source));
+        EventBus.Publish(new PassiveCardAcquiredEvent(cardId, actualCount, source));
     }
 
     #endregion
@@ -288,6 +310,23 @@ public sealed class InventoryManager : Singleton<InventoryManager>
                 return;
             }
         }
+    }
+
+    /// <summary>
+    /// 获取指定被动卡牌的数量
+    /// </summary>
+    /// <param name="cardId">卡牌ID</param>
+    /// <returns>卡牌数量，如果没有则返回 0</returns>
+    public int GetPassiveCardCount(string cardId)
+    {
+        foreach (var card in _passiveCards)
+        {
+            if (card.CardId == cardId)
+            {
+                return card.Count;
+            }
+        }
+        return 0;
     }
 
     /// <summary>
@@ -609,14 +648,17 @@ public sealed class InventoryManager : Singleton<InventoryManager>
     /// 升级主动技能（如果存在且未达到最大等级）
     /// </summary>
     /// <param name="cardId">卡牌ID</param>
-    /// <param name="maxLevel">最大等级（默认 5）</param>
+    /// <param name="maxLevel">最大等级（如果为null，从 StatLimitConfig 读取）</param>
     /// <returns>升级后的等级，如果升级失败返回 -1</returns>
-    public int UpgradeActiveCard(string cardId, int maxLevel = 5)
+    public int UpgradeActiveCard(string cardId, int? maxLevel = null)
     {
+        // 从配置读取最大等级（如果未指定）
+        int actualMaxLevel = maxLevel ?? (GameRoot.Instance?.StatLimitConfig?.maxActiveSkillLevel ?? 5);
+
         var st = GetFirstInstanceByCardId(cardId);
         if (st == null) return -1;
 
-        if (st.Level >= maxLevel)
+        if (st.Level >= actualMaxLevel)
         {
             // 已达到最大等级
             return st.Level;
@@ -625,6 +667,7 @@ public sealed class InventoryManager : Singleton<InventoryManager>
         st.Level++;
         OnActiveCardLevelUp?.Invoke(cardId, st.Level);
 
+        CDTU.Utils.CDLogger.Log($"[InventoryManager] 技能 '{cardId}' 升级至 Lv{st.Level}/{actualMaxLevel}");
         return st.Level;
     }
 
@@ -659,10 +702,9 @@ public sealed class InventoryManager : Singleton<InventoryManager>
         var existingCard = GetFirstInstanceByCardId(cardId);
         if (existingCard != null)
         {
-            // 卡牌已存在，尝试升级
-            int maxLevel = 5; // 从配置读取或默认值
+            // 卡牌已存在，尝试升级（从 StatLimitConfig 读取最大等级）
             int oldLevel = existingCard.Level;
-            int newLevel = UpgradeActiveCard(cardId, maxLevel);
+            int newLevel = UpgradeActiveCard(cardId, maxLevel: null); // null 表示从配置读取
 
             if (newLevel > oldLevel)
             {
@@ -672,7 +714,7 @@ public sealed class InventoryManager : Singleton<InventoryManager>
                 result.NewLevel = newLevel;
                 result.InstanceId = existingCard.InstanceId;
 
-                CDTU.Utils.Logger.Log($"[InventoryManager] 技能 '{cardId}' 升级：Lv{oldLevel} → Lv{newLevel}");
+                CDTU.Utils.CDLogger.Log($"[InventoryManager] 技能 '{cardId}' 升级：Lv{oldLevel} → Lv{newLevel}");
                 return result;
             }
             else
@@ -691,7 +733,7 @@ public sealed class InventoryManager : Singleton<InventoryManager>
 
                     if (config.showDeduplicationLog)
                     {
-                        CDTU.Utils.Logger.Log($"[InventoryManager] 技能 '{cardId}' 已达最大等级 Lv{maxLevel}，转换为 {coins} 金币");
+                        CDTU.Utils.CDLogger.Log($"[InventoryManager] 技能 '{cardId}' 已达最大等级 Lv{GameRoot.Instance.StatLimitConfig?.maxActiveSkillLevel ?? 5}，转换为 {coins} 金币");
                     }
                     return result;
                 }
@@ -699,7 +741,7 @@ public sealed class InventoryManager : Singleton<InventoryManager>
                 {
                     // 不启用去重，无法添加
                     result.Success = false;
-                    CDTU.Utils.Logger.LogWarning($"[InventoryManager] 技能 '{cardId}' 已达最大等级且未启用去重转换");
+                    CDTU.Utils.CDLogger.LogWarning($"[InventoryManager] 技能 '{cardId}' 已达最大等级且未启用去重转换");
                     return result;
                 }
             }
@@ -714,7 +756,7 @@ public sealed class InventoryManager : Singleton<InventoryManager>
 
         if (result.Success)
         {
-            CDTU.Utils.Logger.Log($"[InventoryManager] 添加新技能 '{cardId}' (Lv1)");
+            CDTU.Utils.CDLogger.Log($"[InventoryManager] 添加新技能 '{cardId}' (Lv1)");
         }
 
         return result;

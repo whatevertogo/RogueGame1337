@@ -3,9 +3,12 @@ using UnityEngine;
 namespace CDTU.Utils
 {
     /// <summary>
-    ///     单例模式基类
+    /// MonoBehaviour 单例基类（安全版）
+    /// 规则：
+    /// 1. 不在 Instance getter 中调用 Unity API
+    /// 2. 实例只在 Awake 中注册
+    /// 3. 不负责自动创建 GameObject
     /// </summary>
-    /// <typeparam name="T">继承MonoBehaviour的类型</typeparam>
     public abstract class Singleton<T> : MonoBehaviour where T : MonoBehaviour
     {
         private static T _instance;
@@ -16,27 +19,16 @@ namespace CDTU.Utils
             {
                 if (_instance == null)
                 {
-                    _instance = FindFirstObjectByType<T>();
-                    if (_instance == null && Application.isPlaying)
-                    {
-                        var go = new GameObject(typeof(T).Name);
-                        _instance = go.AddComponent<T>();
-                    }
+                    Debug.LogError(
+                        $"[Singleton<{typeof(T).Name}>] Instance is null. " +
+                        $"Ensure the object exists in scene and Awake has been called."
+                    );
                 }
-
                 return _instance;
             }
-            set => _instance = value;
         }
 
-        /// <summary>
-        /// 尝试获取已存在的实例，但不会在找不到时自动创建新 GameObject（用于析构/清理阶段避免重新生成实例）
-        /// </summary>
-        public static T GetExistingInstance()
-        {
-            if (_instance != null) return _instance;
-            return FindFirstObjectByType<T>();
-        }
+        public static bool HasInstance => _instance != null;
 
         protected virtual void Awake()
         {
@@ -47,6 +39,14 @@ namespace CDTU.Utils
             else if (_instance != this)
             {
                 Destroy(gameObject);
+            }
+        }
+
+        protected virtual void OnDestroy()
+        {
+            if (_instance == this)
+            {
+                _instance = null;
             }
         }
     }

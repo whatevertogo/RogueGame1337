@@ -93,7 +93,7 @@ public sealed class DifficultyService
         var stats = enemy.GetComponent<CharacterStats>();
         if (stats == null)
         {
-            CDTU.Utils.Logger.LogWarning($"[DifficultyService] 敌人 {enemy.name} 缺少 CharacterStats 组件，跳过难度缩放");
+            CDTU.Utils.CDLogger.LogWarning($"[DifficultyService] 敌人 {enemy.name} 缺少 CharacterStats 组件，跳过难度缩放");
             return;
         }
 
@@ -131,7 +131,7 @@ public sealed class DifficultyService
         // 治疗到满血，确保生命值缩放生效
         stats.FullHeal();
 
-        CDTU.Utils.Logger.Log($"[DifficultyService] 已应用 {floor} 层难度缩放到 {enemy.name}：" +
+        CDTU.Utils.CDLogger.Log($"[DifficultyService] 已应用 {floor} 层难度缩放到 {enemy.name}：" +
                   $"HP×{hpMultiplier:F2} ATK×{atkMultiplier:F2} DEF×{armorMultiplier:F2} SPD×{atkSpeedMultiplier:F2}");
     }
 

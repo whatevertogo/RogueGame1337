@@ -14,8 +14,6 @@ namespace Game.UI
     {
         protected BagViewView _view;
 
-        private PlayerManager playerManager;
-
         private CharacterStats localCharacterStats;
         private PlayerController localplayerController;
 
@@ -34,12 +32,11 @@ namespace Game.UI
         {
             if (_view == null)
             {
-                CDTU.Utils.Logger.LogError("[BagViewLogicCore] OnOpen() 中 _view 是 null！Bind() 可能没有被正确调用");
+                CDTU.Utils.CDLogger.LogError("[BagViewLogicCore] OnOpen() 中 _view 是 null！Bind() 可能没有被正确调用");
                 return;
             }
 
-            playerManager = GameRoot.Instance.PlayerManager;
-            localplayerController = playerManager.GetLocalPlayerData()?.Controller;
+            localplayerController = GameRoot.Instance.PlayerManager?.GetLocalPlayerData()?.Controller;
             localCharacterStats = localplayerController?.GetComponent<CharacterStats>();
             localPlayerSkillComponent = localplayerController?.GetComponent<PlayerSkillComponent>();
             if (localCharacterStats != null)
@@ -78,13 +75,13 @@ namespace Game.UI
             var inv = InventoryManager.Instance;
             if (inv == null)
             {
-                CDTU.Utils.Logger.LogWarning("[BagView] InventoryManager.Instance is null");
+                CDTU.Utils.CDLogger.LogWarning("[BagView] InventoryManager.Instance is null");
                 return;
             }
 
             if (_view == null)
             {
-                CDTU.Utils.Logger.LogError("[BagView] _view 是 null！无法添加卡牌视图");
+                CDTU.Utils.CDLogger.LogError("[BagView] _view 是 null！无法添加卡牌视图");
                 return;
             }
 
@@ -124,7 +121,7 @@ namespace Game.UI
 
         public void OnClearCardButtonClicked()
         {
-            CDTU.Utils.Logger.Log("[BagViewLogic] OnClearCardButtonClicked invoked");
+            CDTU.Utils.CDLogger.Log("[BagViewLogic] OnClearCardButtonClicked invoked");
             RefreshAllCardViews();
 
             // 发布事件请求，由 SlotService 或其他订阅方执行具体清理（实现解耦）
@@ -170,9 +167,10 @@ namespace Game.UI
 
         public void SetAllPlayerStatsText()
         {
-            if (playerManager != null)
+            var pm =GameRoot.Instance.PlayerManager;
+            if (pm != null)
             {
-                var player = playerManager.GetLocalPlayerData()?.Controller;
+                var player = pm.GetLocalPlayerData()?.Controller;
                 if (player != null)
                 {
                     if (localCharacterStats != null)

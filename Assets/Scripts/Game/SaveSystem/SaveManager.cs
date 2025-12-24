@@ -51,10 +51,11 @@ namespace RogueGame.SaveSystem
         //     LoadMeta();
         // }
 
-        private void OnDestroy()
+        protected override void OnDestroy()
         {
             EventBus.Unsubscribe<RoomEnteredEvent>(OnRoomEntered);
             EventBus.Unsubscribe<EntityKilledEvent>(OnEntityKilled);
+            base.OnDestroy();
         }
 
         #region 文件系统
@@ -68,7 +69,7 @@ namespace RogueGame.SaveSystem
             if (!Directory.Exists(savePath))
             {
                 Directory.CreateDirectory(savePath);
-                CDTU.Utils.Logger.Log($"[SaveManager] 创建存档文件夹: {savePath}");
+                CDTU.Utils.CDLogger.Log($"[SaveManager] 创建存档文件夹: {savePath}");
             }
         }
 
@@ -103,26 +104,26 @@ namespace RogueGame.SaveSystem
                 var data = CreateRunSaveData();
                 if (data == null)
                 {
-                    CDTU.Utils.Logger.LogWarning("[SaveManager] 无法创建 Run 存档数据（缺少必要的游戏组件）");
+                    CDTU.Utils.CDLogger.LogWarning("[SaveManager] 无法创建 Run 存档数据（缺少必要的游戏组件）");
                     return false;
                 }
 
                 // 先保存文件，成功后再更新内部状态
                 if (!SaveToFile(RUN_AUTO_SAVE_FILE, data))
                 {
-                    CDTU.Utils.Logger.LogError("[SaveManager] Run 存档文件写入失败");
+                    CDTU.Utils.CDLogger.LogError("[SaveManager] Run 存档文件写入失败");
                     return false;
                 }
 
                 // 仅在文件写入成功后才更新状态和触发事件
                 _currentRunSave = data;
                 OnRunSaved?.Invoke();
-                CDTU.Utils.Logger.Log("[SaveManager] Run 存档保存成功");
+                CDTU.Utils.CDLogger.Log("[SaveManager] Run 存档保存成功");
                 return true;
             }
             catch (Exception ex)
             {
-                CDTU.Utils.Logger.LogError($"[SaveManager] Run 存档保存失败: {ex.Message}");
+                CDTU.Utils.CDLogger.LogError($"[SaveManager] Run 存档保存失败: {ex.Message}");
                 return false;
             }
         }
@@ -137,18 +138,18 @@ namespace RogueGame.SaveSystem
                 var data = LoadFromFile<RunSaveData>(RUN_AUTO_SAVE_FILE);
                 if (data == null)
                 {
-                    CDTU.Utils.Logger.Log("[SaveManager] 无 Run 存档，跳过加载");
+                    CDTU.Utils.CDLogger.Log("[SaveManager] 无 Run 存档，跳过加载");
                     return;
                 }
 
                 _currentRunSave = data;
                 SaveRestoreUtility.RestoreRunSave(data);
                 OnRunSaveLoaded?.Invoke(data);
-                CDTU.Utils.Logger.Log($"[SaveManager] Run 存档加载成功: Layer {data.CurrentLayer}, Room {data.CurrentRoomId}");
+                CDTU.Utils.CDLogger.Log($"[SaveManager] Run 存档加载成功: Layer {data.CurrentLayer}, Room {data.CurrentRoomId}");
             }
             catch (Exception ex)
             {
-                CDTU.Utils.Logger.LogError($"[SaveManager] Run 存档加载失败: {ex.Message}");
+                CDTU.Utils.CDLogger.LogError($"[SaveManager] Run 存档加载失败: {ex.Message}");
             }
         }
 
@@ -163,13 +164,13 @@ namespace RogueGame.SaveSystem
                 if (File.Exists(filePath))
                 {
                     File.Delete(filePath);
-                    CDTU.Utils.Logger.Log("[SaveManager] Run 存档已清除");
+                    CDTU.Utils.CDLogger.Log("[SaveManager] Run 存档已清除");
                 }
                 _currentRunSave = null;
             }
             catch (Exception ex)
             {
-                CDTU.Utils.Logger.LogError($"[SaveManager] 清除 Run 存档失败: {ex.Message}");
+                CDTU.Utils.CDLogger.LogError($"[SaveManager] 清除 Run 存档失败: {ex.Message}");
             }
         }
 
@@ -188,17 +189,17 @@ namespace RogueGame.SaveSystem
             bool hasRequiredComponents = true;
             if (gsm == null)
             {
-                CDTU.Utils.Logger.LogWarning("[SaveManager] GameFlowCoordinator not found");
+                CDTU.Utils.CDLogger.LogWarning("[SaveManager] GameFlowCoordinator not found");
                 hasRequiredComponents = false;
             }
             if (pm == null)
             {
-                CDTU.Utils.Logger.LogWarning("[SaveManager] PlayerManager not found");
+                CDTU.Utils.CDLogger.LogWarning("[SaveManager] PlayerManager not found");
                 hasRequiredComponents = false;
             }
             if (inv == null)
             {
-                CDTU.Utils.Logger.LogWarning("[SaveManager] InventoryManager not found");
+                CDTU.Utils.CDLogger.LogWarning("[SaveManager] InventoryManager not found");
                 hasRequiredComponents = false;
             }
 
@@ -302,17 +303,17 @@ namespace RogueGame.SaveSystem
 
                 if (!SaveToFile(META_SAVE_FILE, _metaSave))
                 {
-                    CDTU.Utils.Logger.LogError("[SaveManager] 元游戏存档文件写入失败");
+                    CDTU.Utils.CDLogger.LogError("[SaveManager] 元游戏存档文件写入失败");
                     return false;
                 }
 
                 OnMetaSaved?.Invoke();
-                CDTU.Utils.Logger.Log("[SaveManager] 元游戏存档保存成功");
+                CDTU.Utils.CDLogger.Log("[SaveManager] 元游戏存档保存成功");
                 return true;
             }
             catch (Exception ex)
             {
-                CDTU.Utils.Logger.LogError($"[SaveManager] 元游戏存档保存失败: {ex.Message}");
+                CDTU.Utils.CDLogger.LogError($"[SaveManager] 元游戏存档保存失败: {ex.Message}");
                 return false;
             }
         }
@@ -329,18 +330,18 @@ namespace RogueGame.SaveSystem
                 {
                     // 首次游戏，创建新的元存档
                     _metaSave = new MetaSaveData();
-                    CDTU.Utils.Logger.Log("[SaveManager] 首次游戏，创建新元存档");
+                    CDTU.Utils.CDLogger.Log("[SaveManager] 首次游戏，创建新元存档");
                     return;
                 }
 
                 _metaSave = data;
                 SaveRestoreUtility.ApplyMetaSave(data);
                 OnMetaSaveLoaded?.Invoke(data);
-                CDTU.Utils.Logger.Log($"[SaveManager] 元游戏存档加载成功: {data.TotalRuns} 次 Run");
+                CDTU.Utils.CDLogger.Log($"[SaveManager] 元游戏存档加载成功: {data.TotalRuns} 次 Run");
             }
             catch (Exception ex)
             {
-                CDTU.Utils.Logger.LogError($"[SaveManager] 元游戏存档加载失败: {ex.Message}");
+                CDTU.Utils.CDLogger.LogError($"[SaveManager] 元游戏存档加载失败: {ex.Message}");
                 _metaSave = new MetaSaveData();
             }
         }
@@ -424,7 +425,7 @@ namespace RogueGame.SaveSystem
             }
             catch (Exception ex)
             {
-                CDTU.Utils.Logger.LogError($"[SaveManager] SaveToFile '{fileName}' failed: {ex.Message}");
+                CDTU.Utils.CDLogger.LogError($"[SaveManager] SaveToFile '{fileName}' failed: {ex.Message}");
                 return false;
             }
         }
@@ -501,12 +502,12 @@ namespace RogueGame.SaveSystem
                     Directory.CreateDirectory(savePath);
                     _currentRunSave = null;
                     _metaSave = new MetaSaveData();
-                    CDTU.Utils.Logger.Log("[SaveManager] 所有存档已删除");
+                    CDTU.Utils.CDLogger.Log("[SaveManager] 所有存档已删除");
                 }
             }
             catch (Exception ex)
             {
-                CDTU.Utils.Logger.LogError($"[SaveManager] 删除存档失败: {ex.Message}");
+                CDTU.Utils.CDLogger.LogError($"[SaveManager] 删除存档失败: {ex.Message}");
             }
         }
 

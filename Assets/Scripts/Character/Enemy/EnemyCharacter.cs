@@ -34,7 +34,7 @@ public class EnemyCharacter : CharacterBase
         // 如果没有配置，警告并退出初始化
         if (enemyConfig == null)
         {
-            CDTU.Utils.Logger.LogWarning($"[EnemyCharacter] {gameObject.name} 没有配置 EnemyConfigSO!");
+            CDTU.Utils.CDLogger.LogWarning($"[EnemyCharacter] {gameObject.name} 没有配置 EnemyConfigSO!");
         }
 
         // 设置阵营为敌人（如果尚未设置）
@@ -59,7 +59,7 @@ public class EnemyCharacter : CharacterBase
 
         var rb = GetComponent<Rigidbody2D>();
         var col = GetComponent<Collider2D>();
-        CDTU.Utils.Logger.Log($"[EnemyCharacter] Awake: {gameObject.name}, tag={gameObject.tag}, layer={LayerMask.LayerToName(gameObject.layer)}, Rigidbody2D={(rb != null ? "Yes" : "No")}, Collider2D={(col != null ? "Yes" : "No")}");
+        CDTU.Utils.CDLogger.Log($"[EnemyCharacter] Awake: {gameObject.name}, tag={gameObject.tag}, layer={LayerMask.LayerToName(gameObject.layer)}, Rigidbody2D={(rb != null ? "Yes" : "No")}, Collider2D={(col != null ? "Yes" : "No")}");
 
 
     }
@@ -99,7 +99,7 @@ public class EnemyCharacter : CharacterBase
         }
         catch (System.Exception ex)
         {
-            CDTU.Utils.Logger.LogWarning($"[EnemyCharacter] OverrideConfig failed: {ex.Message}");
+            CDTU.Utils.CDLogger.LogWarning($"[EnemyCharacter] OverrideConfig failed: {ex.Message}");
         }
     }
 
@@ -117,7 +117,7 @@ public class EnemyCharacter : CharacterBase
         }
         catch (Exception ex)
         {
-            CDTU.Utils.Logger.LogWarning($"[EnemyCharacter] ApplyEliteModifiers failed: {ex.Message}");
+            CDTU.Utils.CDLogger.LogWarning($"[EnemyCharacter] ApplyEliteModifiers failed: {ex.Message}");
         }
     }
 
@@ -127,11 +127,11 @@ public class EnemyCharacter : CharacterBase
         try
         {
             EnemyAnim?.PlayAttackAnim();
-            CDTU.Utils.Logger.Log($"[EnemyCharacter] {gameObject.name} 播放攻击动画");
+            CDTU.Utils.CDLogger.Log($"[EnemyCharacter] {gameObject.name} 播放攻击动画");
         }
         catch (Exception ex)
         {
-            CDTU.Utils.Logger.LogWarning($"[EnemyCharacter] PlayAttack failed: {ex.Message}");
+            CDTU.Utils.CDLogger.LogWarning($"[EnemyCharacter] PlayAttack failed: {ex.Message}");
         }
     }
 
@@ -194,7 +194,7 @@ public class EnemyCharacter : CharacterBase
         }
         catch (Exception ex)
         {
-            CDTU.Utils.Logger.LogWarning($"[EnemyCharacter] PlayDeath failed: {ex.Message}");
+            CDTU.Utils.CDLogger.LogWarning($"[EnemyCharacter] PlayDeath failed: {ex.Message}");
         }
 
         Movement?.SetCanMove(false);

@@ -1,86 +1,60 @@
 using UnityEngine;
-using System;
 
 namespace CDTU.Utils
 {
     /// <summary>
-    ///     单例模式基类 - DontDestroyOnLoad 版本
-    ///     自动处理多场景环境中的单例创建与销毁
+    /// DontDestroyOnLoad 单例基类（安全版）
+    /// 规则：
+    /// - Instance 仅返回引用，不调用 Unity API
+    /// - 实例只在 Awake 中注册
+    /// - 不自动创建、不自动查找
     /// </summary>
-    /// <typeparam name="T">继承MonoBehaviour的类型</typeparam>
     public abstract class SingletonDD<T> : MonoBehaviour where T : MonoBehaviour
     {
         private static T _instance;
-        private static bool _isDestroying = false;
+        private static bool _isQuitting;
 
         public static T Instance
         {
             get
             {
-                if (_isDestroying)
+                if (_instance == null && !_isQuitting)
                 {
-                    CDTU.Utils.Logger.LogWarning($"[SingletonDD<{typeof(T).Name}>] 单例正在销毁中，无法获取实例");
-                    return null;
-                }
-
-                if (_instance == null)
-                {
-                    _instance = FindFirstObjectByType<T>();
-                    
-                    if (_instance == null && Application.isPlaying)
-                    {
-                        CDTU.Utils.Logger.Log($"[SingletonDD<{typeof(T).Name}>] 动态创建新实例");
-                        var go = new GameObject(typeof(T).Name);
-                        _instance = go.AddComponent<T>();
-                    }
+                    Debug.LogError(
+                        $"[SingletonDD<{typeof(T).Name}>] Instance is null. " +
+                        $"Ensure the object exists in scene and Awake has been called."
+                    );
                 }
 
                 return _instance;
             }
-            set => _instance = value;
         }
 
-        /// <summary>
-        /// 尝试获取已存在的实例，但不会在找不到时自动创建新 GameObject（用于析构/清理阶段避免重新生成实例）
-        /// </summary>
-        public static T GetExistingInstance()
-        {
-            if (_instance != null) return _instance;
-            return FindFirstObjectByType<T>();
-        }
+        public static bool HasInstance => _instance != null;
 
         protected virtual void Awake()
         {
-            // 检测多个实例的情况
-            T existingInstance = FindFirstObjectByType<T>();
-            
-            if (existingInstance == null)
+            if (_instance == null)
             {
-                // 这是第一个实例
                 _instance = this as T;
                 DontDestroyOnLoad(gameObject);
-                CDTU.Utils.Logger.Log($"[SingletonDD<{typeof(T).Name}>] 创建单例，应用 DontDestroyOnLoad");
             }
-            else if (existingInstance != this)
+            else if (_instance != this)
             {
-                // 检测到多个实例，销毁新的
-                CDTU.Utils.Logger.LogWarning($"[SingletonDD<{typeof(T).Name}>] 检测到多个实例，销毁重复对象：{gameObject.name}");
                 Destroy(gameObject);
             }
-            else
-            {
-                // existingInstance == this，说明已经初始化过了
-                DontDestroyOnLoad(gameObject);
-            }
+        }
+
+        protected virtual void OnApplicationQuit()
+        {
+            _isQuitting = true;
         }
 
         protected virtual void OnDestroy()
         {
-            if (this as T == _instance)
+            if (_instance == this)
             {
-                _isDestroying = true;
                 _instance = null;
-                CDTU.Utils.Logger.Log($"[SingletonDD<{typeof(T).Name}>] 单例已销毁");
             }
         }
     }

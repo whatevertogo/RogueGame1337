@@ -83,7 +83,7 @@ public class CardSlot : MonoBehaviour, IDropHandler
             else
             {
                 // 原位置不是槽位，不允许放入已满的槽
-                CDTU.Utils.Logger.Log($"[CardSlot] 槽位已满，无法放入卡牌");
+                CDTU.Utils.CDLogger.Log($"[CardSlot] 槽位已满，无法放入卡牌");
             }
         }
         else

@@ -44,7 +44,7 @@ public class CardDataBase : ScriptableObject
             }
             else
             {
-                CDTU.Utils.Logger.LogWarning($"[CardDataBase] Duplicate CardDefinition cardId detected: {c.CardId} ({c.name} & {_cardid_cardDefinition_Map[c.CardId].name})");
+                CDTU.Utils.CDLogger.LogWarning($"[CardDataBase] Duplicate CardDefinition cardId detected: {c.CardId} ({c.name} & {_cardid_cardDefinition_Map[c.CardId].name})");
             }
         }
 
@@ -57,7 +57,7 @@ public class CardDataBase : ScriptableObject
     public CardDefinition Resolve(string cardId)
     {
         if (string.IsNullOrEmpty(cardId)) {
-            CDTU.Utils.Logger.LogWarning($"[CardDataBase] Resolve: cardId is null or empty");
+            CDTU.Utils.CDLogger.LogWarning($"[CardDataBase] Resolve: cardId is null or empty");
             return null;
         }
 
@@ -66,7 +66,7 @@ public class CardDataBase : ScriptableObject
         if (_cardid_cardDefinition_Map.TryGetValue(cardId, out var data)) {
             return data;
         } else {
-            CDTU.Utils.Logger.LogWarning($"[CardDataBase] Resolve: CardId '{cardId}' not found in database");
+            CDTU.Utils.CDLogger.LogWarning($"[CardDataBase] Resolve: CardId '{cardId}' not found in database");
             return null;
         }
     }
@@ -94,7 +94,7 @@ public class CardDataBase : ScriptableObject
     {
         if (AllCardDefinitions == null || !AllCardDefinitions.Any())
         {
-            CDTU.Utils.Logger.LogWarning("[CardDataBase] GetRandomCardId: No card definitions available.");
+            CDTU.Utils.CDLogger.LogWarning("[CardDataBase] GetRandomCardId: No card definitions available.");
             return null;
         }
 
@@ -102,7 +102,7 @@ public class CardDataBase : ScriptableObject
         var validCards = AllCardDefinitions.Where(x => x != null && !string.IsNullOrEmpty(x.CardId)).ToList();
         if (validCards.Count == 0)
         {
-            CDTU.Utils.Logger.LogWarning("[CardDataBase] GetRandomCardId: No valid cards available.");
+            CDTU.Utils.CDLogger.LogWarning("[CardDataBase] GetRandomCardId: No valid cards available.");
             return null;
         }
 

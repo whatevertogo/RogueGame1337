@@ -33,7 +33,7 @@ namespace RogueGame.Map
         [SerializeField] private DoorState currentState = DoorState.Closed;
 
         [Header("调试")]
-        [SerializeField] private bool enableDebugLog = false;
+        [SerializeField] private bool enableDebugLog;
 
         [Header("交互设置")]
         [Tooltip("是否在玩家靠近时发布交互提示事件（由 UI 层订阅显示）")]

@@ -24,12 +24,12 @@ namespace Game.UI
         /// </summary>
         private void InitializeUISystem()
         {
-            CDTU.Utils.Logger.Log("[UIBootstrap] 开始初始化UI系统");
+            CDTU.Utils.CDLogger.Log("[UIBootstrap] 开始初始化UI系统");
 
             // 确保UIManager存在
             if (UIManager.Instance == null)
             {
-                CDTU.Utils.Logger.LogError("[UIBootstrap] UIManager单例未找到，请确保场景中有UIManager对象");
+                CDTU.Utils.CDLogger.LogError("[UIBootstrap] UIManager单例未找到，请确保场景中有UIManager对象");
                 return;
             }
 
@@ -49,7 +49,7 @@ namespace Game.UI
                 _ = ShowPlayingStateUI();
             }
 
-            CDTU.Utils.Logger.Log("[UIBootstrap] UI系统初始化完成");
+            CDTU.Utils.CDLogger.Log("[UIBootstrap] UI系统初始化完成");
         }
 
         /// <summary>
@@ -59,7 +59,7 @@ namespace Game.UI
         {
             if (UIManager.Instance == null)
             {
-                CDTU.Utils.Logger.LogError("[UIBootstrap] UIManager实例不存在");
+                CDTU.Utils.CDLogger.LogError("[UIBootstrap] UIManager实例不存在");
                 return;
             }
 
@@ -68,7 +68,7 @@ namespace Game.UI
                 // 检查是否已经打开
                 if (UIManager.Instance.IsOpen<PlayingStateUIView>())
                 {
-                    CDTU.Utils.Logger.Log("[UIBootstrap] PlayingStateUI已经打开");
+                    CDTU.Utils.CDLogger.Log("[UIBootstrap] PlayingStateUI已经打开");
                     return;
                 }
 
@@ -76,19 +76,19 @@ namespace Game.UI
                 var uiView = await UIManager.Instance.Open<PlayingStateUIView>(layer: UILayer.Normal);
                 if (uiView != null)
                 {
-                    CDTU.Utils.Logger.Log("[UIBootstrap] PlayingStateUI打开成功");
+                    CDTU.Utils.CDLogger.Log("[UIBootstrap] PlayingStateUI打开成功");
 
                     // 设置初始层级显示
                     uiView.SetLevelText("第1层");
                 }
                 else
                 {
-                    CDTU.Utils.Logger.LogError("[UIBootstrap] PlayingStateUI打开失败");
+                    CDTU.Utils.CDLogger.LogError("[UIBootstrap] PlayingStateUI打开失败");
                 }
             }
             catch (System.Exception ex)
             {
-                CDTU.Utils.Logger.LogError($"[UIBootstrap] 打开PlayingStateUI时发生错误: {ex.Message}");
+                CDTU.Utils.CDLogger.LogError($"[UIBootstrap] 打开PlayingStateUI时发生错误: {ex.Message}");
             }
         }
 
@@ -102,7 +102,7 @@ namespace Game.UI
             if (UIManager.Instance.IsOpen<PlayingStateUIView>())
             {
                 UIManager.Instance.Close<PlayingStateUIView>();
-                CDTU.Utils.Logger.Log("[UIBootstrap] PlayingStateUI已隐藏");
+                CDTU.Utils.CDLogger.Log("[UIBootstrap] PlayingStateUI已隐藏");
             }
         }
     }

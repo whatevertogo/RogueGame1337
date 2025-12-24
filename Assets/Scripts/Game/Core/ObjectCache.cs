@@ -84,7 +84,7 @@ namespace Core
             CacheObjects<CardSlot>();
             
             _cacheDirty = false;
-            CDTU.Utils.Logger.Log("[ObjectCache] 缓存重建完成");
+            CDTU.Utils.CDLogger.Log("[ObjectCache] 缓存重建完成");
         }
         
         /// <summary>
@@ -115,7 +115,7 @@ namespace Core
             if (_cachedObjects.ContainsKey(type))
             {
                 CacheObjects<T>();
-                CDTU.Utils.Logger.Log($"[ObjectCache] 刷新类型缓存: {type.Name}");
+                CDTU.Utils.CDLogger.Log($"[ObjectCache] 刷新类型缓存: {type.Name}");
             }
         }
         
@@ -127,7 +127,7 @@ namespace Core
             _cachedObjects.Clear();
             _cachedTagObjects.Clear();
             _cacheDirty = true;
-            CDTU.Utils.Logger.Log("[ObjectCache] 缓存已清理");
+            CDTU.Utils.CDLogger.Log("[ObjectCache] 缓存已清理");
         }
         
         private void OnEnable()

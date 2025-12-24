@@ -124,8 +124,11 @@ namespace Character.Components
             }
             else
             {
-                CDTU.Utils.Logger.LogWarning($"[CharacterStats] {gameObject.name} 没有配置 CharacterStatsSO，使用默认值！");
+                CDTU.Utils.CDLogger.LogWarning($"[CharacterStats] {gameObject.name} 没有配置 CharacterStatsSO，使用默认值！");
             }
+
+            // 应用属性上限配置
+            ApplyStatLimits();
 
             // 初始化当前生命为满血
             if (_currentHP <= 0)
@@ -134,6 +137,33 @@ namespace Character.Components
             }
 
             SubscribeToStatChanges();
+        }
+
+        /// <summary>
+        /// 应用属性上限配置（从 GameRoot.StatLimitConfig 读取）
+        /// </summary>
+        private void ApplyStatLimits()
+        {
+            var config = GameRoot.Instance?.StatLimitConfig;
+            if (config == null)
+            {
+                // 未配置上限，使用 Stat 类内部默认值（无限制）
+                return;
+            }
+
+            // 应用各属性上限
+            _maxHP.SetMaxValue(config.maxMaxHP);
+            _hpRegen.SetMaxValue(config.maxHPRegen);
+            _moveSpeed.SetMaxValue(config.maxMoveSpeed);
+            _acceleration.SetMaxValue(config.maxAcceleration);
+            _attackPower.SetMaxValue(config.maxAttackPower);
+            _attackSpeed.SetMaxValue(config.maxAttackSpeed);
+            _attackRange.SetMaxValue(config.maxAttackRange);
+            _armor.SetMaxValue(config.maxArmor);
+            _dodge.SetMaxValue(config.maxDodge);
+            _skillCooldownReductionRate.SetMaxValue(config.maxSkillCooldownReduction);
+
+            CDTU.Utils.CDLogger.Log($"[CharacterStats] {gameObject.name} 属性上限已应用");
         }
 
         private void InitializeFromSO(CharacterStatsSO so)
@@ -191,8 +221,9 @@ namespace Character.Components
 
             if (IsDead) return new DamageResult(0, info.Source?.name ?? "Unknown");
 
-            // 闪避判定
-            if (UnityEngine.Random.value < _dodge.Value)
+            // 闪避判定（_dodge.Value 已经包含了上限限制）
+            float actualDodge = _dodge.Value; // Stat 类会自动应用上限
+            if (UnityEngine.Random.value < actualDodge)
             {
                 return new DamageResult(0, info.Source?.name ?? "Unknown");
             }

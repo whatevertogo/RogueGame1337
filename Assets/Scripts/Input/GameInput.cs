@@ -25,14 +25,14 @@ public sealed class GameInput : Singleton<GameInput>
     protected override void Awake()
     {
         base.Awake();
-        CDTU.Utils.Logger.Log("GameInput Awake called");
+        CDTU.Utils.CDLogger.Log("GameInput Awake called");
         
         try {
             playerInput = new PlayerInputSystem();
             playerInput.Enable();
-            CDTU.Utils.Logger.Log("PlayerInputSystem enabled successfully");
+            CDTU.Utils.CDLogger.Log("PlayerInputSystem enabled successfully");
         } catch (System.Exception ex) {
-            CDTU.Utils.Logger.LogError($"[GameInput] 初始化输入系统失败: {ex.Message}");
+            CDTU.Utils.CDLogger.LogError($"[GameInput] 初始化输入系统失败: {ex.Message}");
             // 尝试继续运行，但记录错误
         }
     }
@@ -95,5 +95,9 @@ public sealed class GameInput : Singleton<GameInput>
     {
         OnSkillEPressed?.Invoke();
     }
-    private void OnDestroy() { playerInput?.Dispose(); }
+    protected override void OnDestroy() 
+    { 
+        playerInput?.Dispose();
+        base.OnDestroy();
+    }
 }

@@ -57,7 +57,7 @@ namespace Game.UI
             _view = view as DeadUIView;
             if (_view == null)
             {
-                CDTU.Utils.Logger.LogError($"[UI] DeadUIViewLogic: Bind failed! View is not {typeof(DeadUIView)}");
+                CDTU.Utils.CDLogger.LogError($"[UI] DeadUIViewLogic: Bind failed! View is not {typeof(DeadUIView)}");
                 return;
             }
 
