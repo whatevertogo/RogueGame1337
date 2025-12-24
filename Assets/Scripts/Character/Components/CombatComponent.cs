@@ -15,11 +15,6 @@ namespace Character.Components
         //
         public AttackStrategyBaseSO attackStrategy;
 
-        [Header("投射物配置（远程攻击时使用）")]
-        [Tooltip("投射物配置 SO")]
-        //
-        public ProjectileConfig projectileConfig;
-
         [Header("攻击设置")]
         [Tooltip("发射点/攻击原点")]
         public Transform FirePoint;
@@ -293,7 +288,6 @@ namespace Character.Components
                 FirePosition = FirePoint != null ? FirePoint.position : transform.position,
                 DamageInfo = damageInfo,
                 HitMask = hitMask,
-                ProjectileConfig = projectileConfig
             };
         }
 
