@@ -124,9 +124,6 @@ namespace Character.Player
             // 关键检查：技能定义必须存在
             if (def == null)
             {
-#if UNITY_EDITOR
-                Debug.LogWarning("[PlayerSkillComponent] DelayedExecute: SkillDefinition is null");
-#endif
                 yield break;
             }
 
@@ -179,18 +176,12 @@ namespace Character.Player
             // 如果没有目标则直接返回
             if (validTargets == null || validTargets.Count == 0)
             {
-#if UNITY_EDITOR
-                Debug.Log($"[PlayerSkillComponent] No valid targets found for skill {def.skillId}");
-#endif
                 yield break;
             }
 
             // 应用效果到所有有效目标
             if (def.Effects == null || def.Effects.Count == 0)
             {
-#if UNITY_EDITOR
-                Debug.LogWarning($"[PlayerSkillComponent] Skill {def.skillId} has no effects defined");
-#endif
                 yield break;
             }
 
@@ -201,9 +192,6 @@ namespace Character.Player
                 var statusComp = target.GetComponent<StatusEffectComponent>();
                 if (statusComp == null)
                 {
-#if UNITY_EDITOR
-                    Debug.LogWarning($"[PlayerSkillComponent] Target {target.name} has no StatusEffectComponent");
-#endif
                     continue;
                 }
 
@@ -215,9 +203,6 @@ namespace Character.Player
                     var effectInstance = effectFactory.CreateInstance(effectDef, caster);
                     if (effectInstance == null)
                     {
-#if UNITY_EDITOR
-                        Debug.LogWarning($"[PlayerSkillComponent] Failed to create effect instance from {effectDef.GetType().Name}");
-#endif
                         continue;
                     }
 
@@ -508,7 +493,8 @@ namespace Character.Player
                     if (state != null)
                     {
                         int maxCharges = cardDef.activeCardConfig.maxCharges;
-                        inv.AddCharges(rt.InstanceId, 1, maxCharges);
+                        int AddCharges = cardDef.activeCardConfig.chargesPerKill;
+                        inv.AddCharges(rt.InstanceId, AddCharges, maxCharges);
                     }
                 }
             }

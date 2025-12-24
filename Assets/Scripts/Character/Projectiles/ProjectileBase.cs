@@ -500,26 +500,6 @@ public class ProjectileBase : MonoBehaviour
 
     #endregion
 
-    #region 调试
-
-#if UNITY_EDITOR
-    protected virtual void OnDrawGizmosSelected()
-    {
-        if (data.IsHoming && data.HomingRadius > 0)
-        {
-            Gizmos.color = Color.cyan;
-            Gizmos.DrawWireSphere(transform.position, data.HomingRadius);
-        }
-
-        if (homingTarget != null)
-        {
-            Gizmos.color = Color.red;
-            Gizmos.DrawLine(transform.position, homingTarget.position);
-        }
-    }
-#endif
-
-    #endregion
 
 
 

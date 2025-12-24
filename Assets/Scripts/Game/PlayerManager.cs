@@ -321,7 +321,7 @@ public class PlayerManager : Singleton<PlayerManager>
         if (prs == null) return;
 
         GameRoot.Instance.CombatRewardEnergyService
-            .GrantKillRewardEnergy(prs.PlayerId, roomType);
+            .GrantKillRewardEnergy(prs.PlayerId);
     }
 
     #endregion

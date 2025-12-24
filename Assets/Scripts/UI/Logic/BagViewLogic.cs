@@ -32,6 +32,12 @@ namespace Game.UI
 
         public virtual void OnOpen(UIArgs args)
         {
+            if (_view == null)
+            {
+                Debug.LogError("[BagViewLogicCore] OnOpen() 中 _view 是 null！Bind() 可能没有被正确调用");
+                return;
+            }
+
             playerManager = GameRoot.Instance.PlayerManager;
             localplayerController = playerManager.GetLocalPlayerData()?.Controller;
             localCharacterStats = localplayerController?.GetComponent<CharacterStats>();
@@ -76,6 +82,12 @@ namespace Game.UI
                 return;
             }
 
+            if (_view == null)
+            {
+                Debug.LogError("[BagView] _view 是 null！无法添加卡牌视图");
+                return;
+            }
+
             var states = inv.ActiveCardStates;
             foreach (var st in states)
             {
@@ -103,6 +115,8 @@ namespace Game.UI
 
         public void RefreshAllCardViews()
         {
+            if (_view == null) return;
+
             _view.ClearCardViews();
             RefreshActiveCardViews();
             // RefreshPassiveCardViews();

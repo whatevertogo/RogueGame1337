@@ -9,10 +9,10 @@ public class EnemyCharacter : CharacterBase
 {
 
     [Header("Enemy特殊配置")]
-    [SerializeField, InlineEditor]
+    [SerializeField, ]
     private EnemyConfigSO enemyConfig;
 
-    [SerializeField, ReadOnly]
+    [SerializeField]
     private EnemyConfigStats enemyConfigStats;
 
     private EnemyAnimator EnemyAnim => GetComponent<EnemyAnimator>();
@@ -145,14 +145,19 @@ public class EnemyCharacter : CharacterBase
             LootDropper.Instance?.DropCoins(transform.position, amount);
         }
 
+        //TODO-后面设置卡牌权重来选择掉落
         // 扔卡牌：被动 & 主动分开依据概率
-        if (!string.IsNullOrEmpty(enemyConfigStats.PassiveCardId) && UnityEngine.Random.value <= enemyConfigStats.PassiveDropChance)
+        if (enemyConfigStats.PassiveCardIds != null && enemyConfigStats.PassiveCardIds.Length > 0 && UnityEngine.Random.value <= enemyConfigStats.PassiveDropChance)
         {
-            LootDropper.Instance?.DropCard(transform.position, enemyConfigStats.PassiveCardId);
+            var index = UnityEngine.Random.Range(0, enemyConfigStats.PassiveCardIds.Length);
+            var passiveCardId = enemyConfigStats.PassiveCardIds[index];
+            LootDropper.Instance?.DropCard(transform.position, passiveCardId);
         }
-        if (!string.IsNullOrEmpty(enemyConfigStats.ActiveCardId) && UnityEngine.Random.value <= enemyConfigStats.ActiveDropChance)
+        if (enemyConfigStats.ActiveCardIds != null && enemyConfigStats.ActiveCardIds.Length > 0 && UnityEngine.Random.value <= enemyConfigStats.ActiveDropChance)
         {
-            LootDropper.Instance?.DropCard(transform.position, enemyConfigStats.ActiveCardId);
+            var index = UnityEngine.Random.Range(0, enemyConfigStats.ActiveCardIds.Length);
+            var activeCardId = enemyConfigStats.ActiveCardIds[index];
+            LootDropper.Instance?.DropCard(transform.position, activeCardId);
         }
 
         // 分配能量给击杀者（如果击杀者为玩家）

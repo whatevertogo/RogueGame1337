@@ -10,6 +10,7 @@ public enum CardType
 /// </summary>
 public enum CardAcquisitionSource
 {
+    Other,
     Shop,
     Reward,
     Crafting,

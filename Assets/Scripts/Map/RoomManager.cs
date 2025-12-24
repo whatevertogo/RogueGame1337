@@ -16,9 +16,9 @@ namespace RogueGame.Map
     {
         #region 配置
 
-        [Header("房间配置"), InlineEditor]
+        [Header("房间配置")]
         [SerializeField] private RoomWeightTable weightTable;
-        [InlineEditor]
+        //
         [SerializeField] private List<RoomVariantSet> variantSets;
         [SerializeField] private int seed = 12345;
 

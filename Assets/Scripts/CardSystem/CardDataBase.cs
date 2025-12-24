@@ -3,10 +3,6 @@ using UnityEngine;
 using System.Linq;
 
 
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
-
 [CreateAssetMenu(fileName = "New Card Database", menuName = "Card System/Card Database")]
 /// <summary>
 /// 全局卡牌定义注册表：通过 cardId 查找 CardDefinition(SO)
@@ -31,7 +27,7 @@ public class CardDataBase : ScriptableObject
         // 清理旧数据，保证幂等性
         _cardid_cardDefinition_Map.Clear();
 
-        if (AllCardDefinitions == null || AllCardDefinitions.Count == 0)
+        if (AllCardDefinitions == null || !AllCardDefinitions.Any())
         {
             _initialized = true;
             return;
@@ -122,14 +118,4 @@ public class CardDataBase : ScriptableObject
         _initialized = false;
         _cardid_cardDefinition_Map.Clear();
     }
-
-#if UNITY_EDITOR
-    /// <summary>
-    /// 编辑器中修改 Inspector 时保证状态一致
-    /// </summary>
-    private void OnValidate()
-    {
-        _initialized = false;
-    }
-#endif
 }

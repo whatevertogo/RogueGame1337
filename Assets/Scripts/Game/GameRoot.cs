@@ -1,4 +1,5 @@
 using CDTU.Utils;
+using RogueGame.GameConfig;
 using RogueGame.Map;
 using RogueGame.SaveSystem;
 using UI;
@@ -10,27 +11,25 @@ using UnityEngine;
 public class GameRoot : Singleton<GameRoot>
 {
     [Header("Game DataBases")]
-    [InlineEditor]
+    //
     [SerializeField] private CardDataBase cardDatabase;
     public CardDataBase CardDatabase => cardDatabase;
 
     [Header("Game Configs")]
-    [InlineEditor, Tooltip("游戏充能平衡配置")]
-    [SerializeField] private GameChargeBalanceConfig GameBalanceConfig;
-
-    //技能充能Config
-    [InlineEditor, Tooltip("游戏充能平衡配置")]
-    public GameChargeBalanceConfig ChargeBalanceConfig => GameBalanceConfig;
-
     //游戏胜利奖励配置
-    [InlineEditor, Tooltip("层间胜利奖励配置")]
+    [Tooltip("层间胜利奖励配置")]
     [SerializeField] private GameWinLayerRewardConfig gameWinLayerRewardConfig;
     public GameWinLayerRewardConfig GameWinLayerRewardConfig => gameWinLayerRewardConfig;
 
     //主动卡去重配置
-    [InlineEditor, Tooltip("重复主动卡转换为金币的配置")]
+    [Tooltip("重复主动卡转换为金币的配置")]
     [SerializeField] private ActiveCardDeduplicationConfig activeCardDeduplicationConfig;
     public ActiveCardDeduplicationConfig ActiveCardDeduplicationConfig => activeCardDeduplicationConfig;
+
+    //难度曲线配置
+    [Tooltip("游戏难度曲线配置")]
+    [SerializeField] private DifficultyCurveConfig difficultyCurveConfig;
+    public DifficultyCurveConfig DifficultyCurveConfig => difficultyCurveConfig;
 
     [Header("Scene Managers")]
     [SerializeField] private GameFlowCoordinator gameFlowCoordinator;
@@ -62,14 +61,21 @@ public class GameRoot : Singleton<GameRoot>
     // SlotService放UI根对象了
     // public SlotService SlotService => GetComponent<SlotService>();
 
-    //战斗奖励能量服务
-    public CombatRewardEnergyService CombatRewardEnergyService { get; private set; }
 
     //战斗奖励技能服务
     public SkillChargeSyncService SkillChargeSyncService { get; private set; }
 
     //层间奖励系统服务
     public FloorRewardSystemService FloorRewardSystemService { get; private set; }
+
+    //难度系统服务
+    public DifficultyService DifficultyService { get; private set; }
+
+    //被动卡牌效果应用服务
+    public PassiveCardApplicationService PassiveCardApplicationService { get; private set; }
+
+    //充能服务
+    public CombatRewardEnergyService CombatRewardEnergyService { get; private set; }
 
 
     protected override void Awake()
@@ -89,9 +95,9 @@ public class GameRoot : Singleton<GameRoot>
         ok &= AssertNotNull(lootDropper, nameof(lootDropper));
         ok &= AssertNotNull(saveManager, nameof(saveManager));
         ok &= AssertNotNull(shopManager, nameof(shopManager));
-        ok &= AssertNotNull(GameBalanceConfig, nameof(GameBalanceConfig));
         ok &= AssertNotNull(gameWinLayerRewardConfig, nameof(gameWinLayerRewardConfig));
         ok &= AssertNotNull(activeCardDeduplicationConfig, nameof(activeCardDeduplicationConfig));
+        ok &= AssertNotNull(difficultyCurveConfig, nameof(difficultyCurveConfig));
 
 
 
@@ -124,13 +130,6 @@ public class GameRoot : Singleton<GameRoot>
 
         shopManager.Initialize(inventoryManager);
 
-        //Serivces 初始化
-        CombatRewardEnergyService = new CombatRewardEnergyService(
-            cardDatabase,
-            inventoryManager,
-            GameBalanceConfig
-        );
-
         SkillChargeSyncService = new SkillChargeSyncService(
             inventoryManager,
             playerManager,
@@ -143,9 +142,17 @@ public class GameRoot : Singleton<GameRoot>
             gameWinLayerRewardConfig
         );
 
+        DifficultyService = new DifficultyService(difficultyCurveConfig);
 
+        PassiveCardApplicationService = new PassiveCardApplicationService(
+            inventoryManager,
+            playerManager,
+            cardDatabase
+        );
+
+        CombatRewardEnergyService = new CombatRewardEnergyService(inventoryManager);
         FloorRewardSystemService.Subscribe();
-
+        PassiveCardApplicationService.Subscribe();
         // 启动时加载元游戏存档
         SaveManager.LoadMeta();
     }
@@ -165,7 +172,8 @@ public class GameRoot : Singleton<GameRoot>
     {
         Debug.Log("[GameRoot] OnDestroy() called.");
 
-        // 取消订阅 FloorRewardSystemService 的事件
+        // 取消订阅服务的事件
         FloorRewardSystemService?.Unsubscribe();
+        PassiveCardApplicationService?.Unsubscribe();
     }
 }

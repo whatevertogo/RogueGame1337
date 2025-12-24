@@ -199,4 +199,49 @@ namespace RogueGame.Events
         }
     }
 
+    /// <summary>
+    /// 被动卡牌拾取事件：InventoryManager 在添加被动卡时发布此事件
+    /// </summary>
+    public class PassiveCardAcquiredEvent
+    {
+        public string CardId;
+        public int Count;
+        public CardAcquisitionSource Source;
+
+        public PassiveCardAcquiredEvent(string cardId, int count, CardAcquisitionSource source)
+        {
+            CardId = cardId;
+            Count = count;
+            Source = source;
+        }
+    }
+
+    /// <summary>
+    /// 被动卡牌移除事件：InventoryManager 在移除被动卡时发布此事件
+    /// </summary>
+    public class PassiveCardRemovedEvent
+    {
+        public string CardId;
+        public int Count;
+
+        public PassiveCardRemovedEvent(string cardId, int count)
+        {
+            CardId = cardId;
+            Count = count;
+        }
+    }
+
+    /// <summary>
+    /// 玩家重生事件：玩家重生后发布，用于重新应用被动效果
+    /// </summary>
+    public class PlayerRespawnEvent
+    {
+        public string PlayerId;
+
+        public PlayerRespawnEvent(string playerId)
+        {
+            PlayerId = playerId;
+        }
+    }
+
 }

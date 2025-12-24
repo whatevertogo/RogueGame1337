@@ -19,11 +19,11 @@ public class SkillDefinition : ScriptableObject
 
     [Header("Executor")]
     [Tooltip("为该技能指定选择目标方法")]
-    [InlineEditor]
+    //
     public TargetAcquireSO TargetAcquireSO;
 
     [Header("过滤器")]
-    [InlineEditor]
+    //
 
     public TargetFilterGroupSO TargetFilters;
 

@@ -78,13 +78,6 @@ namespace Character.Combat
             // 播放音效
             PlaySlashSound(context);
 
-#if UNITY_EDITOR
-            // 调试日志
-            if (hitCount > 0)
-            {
-                Debug.Log($"[MeleeAttackStrategy] 命中 {hitCount} 个目标");
-            }
-#endif
         }
 
         private void SpawnSlashEffect(AttackContext context)

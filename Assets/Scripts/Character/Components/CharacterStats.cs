@@ -9,7 +9,7 @@ namespace Character.Components
     public class CharacterStats : MonoBehaviour
     {
         [Header("配置模板（必填）")]
-        [InlineEditor]
+        //
         [SerializeField] private CharacterStatsSO baseStatsSO;
 
         public Sprite Icon => baseStatsSO != null ? baseStatsSO.icon : null;

@@ -4,6 +4,7 @@ using System.Linq;
 using UnityEngine;
 using CDTU.Utils;
 using RogueGame.Map;
+using RogueGame.Events;
 
 public sealed class InventoryManager : Singleton<InventoryManager>
 {
@@ -189,7 +190,7 @@ public sealed class InventoryManager : Singleton<InventoryManager>
 
     #region ===== 被动卡 =====
 
-    public void AddPassiveCard(string cardId, int count = 1)
+    public void AddPassiveCard(string cardId, int count = 1, CardAcquisitionSource source = CardAcquisitionSource.Other)
     {
         if (count <= 0) return;
 
@@ -202,6 +203,9 @@ public sealed class InventoryManager : Singleton<InventoryManager>
                     CardId = cardId,
                     Count = _passiveCards[i].Count + count
                 };
+
+                // 发布被动卡拾取事件
+                EventBus.Publish(new PassiveCardAcquiredEvent(cardId, count, source));
                 return;
             }
         }
@@ -211,6 +215,9 @@ public sealed class InventoryManager : Singleton<InventoryManager>
             CardId = cardId,
             Count = count
         });
+
+        // 发布被动卡拾取事件
+        EventBus.Publish(new PassiveCardAcquiredEvent(cardId, count, source));
     }
 
     #endregion
@@ -263,6 +270,9 @@ public sealed class InventoryManager : Singleton<InventoryManager>
                 {
                     _passiveCards.RemoveAt(i);
                 }
+
+                // 发布被动卡移除事件
+                EventBus.Publish(new PassiveCardRemovedEvent(cardId, count));
                 return;
             }
         }
@@ -316,7 +326,7 @@ public sealed class InventoryManager : Singleton<InventoryManager>
         }
         else
         {
-            AddPassiveCard(cardId, 1);
+            AddPassiveCard(cardId, 1, CardAcquisitionSource.EnemyDrop);
         }
     }
 
@@ -393,15 +403,12 @@ public sealed class InventoryManager : Singleton<InventoryManager>
     }
 
     // 为玩家装备的主动卡发放击杀充能（RoomType 可作为未来权重依据）
-    public void AddChargesForKill(string playerId, RoomType roomType)
+    public void AddChargesForKill(string playerId)
     {
         if (string.IsNullOrEmpty(playerId)) return;
         var db = GameRoot.Instance?.CardDatabase;
-        var balance = GameRoot.Instance?.ChargeBalanceConfig;  // 获取配置
-        if (db == null || balance == null) return;
+        if (db == null) return;
 
-        // 从配置获取充能值
-        int chargeAmount = balance.GetChargeForRoomType(roomType);
 
         foreach (var st in _activeCards)
         {
@@ -410,6 +417,7 @@ public sealed class InventoryManager : Singleton<InventoryManager>
             if (def == null || def.activeCardConfig == null) continue;
 
             int max = Mathf.Max(1, def.activeCardConfig.maxCharges);
+            int chargeAmount = def.activeCardConfig.chargesPerKill; 
             AddCharges(st.InstanceId, chargeAmount, max);
         }
     }

@@ -47,7 +47,7 @@ namespace Game.UI
         [SerializeField] private TMP_Text skillCooldownReductionRate;
         [SerializeField] private GameObject BagViewALL;
         [SerializeField] private GameObject PlayerStatViewALL;
-        [SerializeField] private CardUIPrefab cardUIPrefabScript;
+        [SerializeField] private GameObject cardUIPrefab;
         [SerializeField] private Button ClearCardButton1;
 
 
@@ -141,10 +141,10 @@ namespace Game.UI
 
         public void AddCardView(string cardId, int Amount = 1)
         {
-            if (cardUIPrefabScript == null || scrollView1 == null || scrollView1.content == null) return;
+            if (cardUIPrefab == null || scrollView1 == null || scrollView1.content == null) return;
 
             // 以 prefab 的 GameObject 形式在 content 下实例化，并保持本地变换
-            var go = Instantiate(cardUIPrefabScript.gameObject, scrollView1.content, false);
+            var go = Instantiate(cardUIPrefab, scrollView1.content, false);
             var newCard = go.GetComponent<CardUIPrefab>();
             if (newCard == null) return;
 

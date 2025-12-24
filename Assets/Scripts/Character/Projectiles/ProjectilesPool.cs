@@ -159,26 +159,5 @@ namespace Character.Projectiles
             return pool;
         }
 
-#if UNITY_EDITOR
-        private void OnGUI()
-        {
-            if (!showDebugInfo || !Application.isPlaying) return;
-
-            GUILayout.BeginArea(new Rect(10, 10, 200, 120));
-            GUILayout.BeginVertical("box");
-
-            GUILayout.Label("=== 投射物池 ===");
-            GUILayout.Label($"获取: {_totalGet} | 归还: {_totalReturn}");
-
-            foreach (var kvp in _pools)
-            {
-                var p = kvp.Value;
-                GUILayout.Label($"  {kvp.Key.name}: {p.CountActive}/{p.CountAll}");
-            }
-
-            GUILayout.EndVertical();
-            GUILayout.EndArea();
-        }
-#endif
     }
 }

@@ -1,7 +1,6 @@
 ﻿using System;
 using UnityEngine;
 using UI;
-using UnityEditor.SearchService;
 using UnityEngine.SceneManagement;
 
 namespace Game.UI

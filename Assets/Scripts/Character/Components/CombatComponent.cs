@@ -12,12 +12,12 @@ namespace Character.Components
     {
         [Header("攻击策略")]
         [Tooltip("攻击策略 SO（投射物/近战等）")]
-        [InlineEditor]
+        //
         public AttackStrategyBaseSO attackStrategy;
 
         [Header("投射物配置（远程攻击时使用）")]
         [Tooltip("投射物配置 SO")]
-        [InlineEditor]
+        //
         public ProjectileConfig projectileConfig;
 
         [Header("攻击设置")]

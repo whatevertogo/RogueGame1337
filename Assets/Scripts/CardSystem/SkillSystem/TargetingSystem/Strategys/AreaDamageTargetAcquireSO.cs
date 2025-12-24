@@ -19,7 +19,7 @@ public class AreaDamageTargetAcquireSO : TargetAcquireSO
     
     [Header("过滤设置")]
     [Tooltip("目标过滤器组，用于筛选符合条件的目标")]
-    [InlineEditor]
+    //
     [SerializeField] private TargetFilterGroupSO filterGroup;
     
     /// <summary>

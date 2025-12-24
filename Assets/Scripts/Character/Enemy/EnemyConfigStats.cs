@@ -14,8 +14,8 @@ public class EnemyConfigStats
 
     public float PassiveDropChance;
     public float ActiveDropChance;
-    public string PassiveCardId;
-    public string ActiveCardId;
+    public string[] PassiveCardIds;
+    public string[] ActiveCardIds;
     public EnemyConfigStats(EnemyConfigSO configSO)
     {
         KillEnergy = configSO.KillEnergy;
@@ -26,8 +26,8 @@ public class EnemyConfigStats
         aiType = configSO.aiType;
         PassiveDropChance = configSO.PassiveDropChance;
         ActiveDropChance = configSO.ActiveDropChance;
-        PassiveCardId = configSO.PassiveCardId;
-        ActiveCardId = configSO.ActiveCardId;
+        PassiveCardIds = configSO.PassiveCardIds;
+        ActiveCardIds = configSO.ActiveCardIds;
     }
 
 

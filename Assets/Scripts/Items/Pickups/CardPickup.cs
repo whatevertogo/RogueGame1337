@@ -65,6 +65,7 @@ public sealed class CardPickup : MonoBehaviour, IPickup
             Destroy(gameObject);
             return;
         }
+
         InventoryManager.Instance.AddCardById(CardId);
         Destroy(gameObject);
     }

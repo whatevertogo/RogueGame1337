@@ -9,7 +9,7 @@ using UnityEngine;
 public class PassiveCardConfig
 {
     [Tooltip("被动效果列表")]
-    [InlineEditor]
+    //
     public StatusEffectDefinitionSO[] passiveEffects;
     
     

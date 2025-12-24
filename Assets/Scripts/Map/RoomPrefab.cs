@@ -320,45 +320,5 @@ namespace RogueGame.Map
             return bounds;
         }
 
-        // ========== 编辑器 ==========
-
-#if UNITY_EDITOR
-        private void OnDrawGizmosSelected()
-        {
-            var size = GetSize();
-
-            Gizmos.color = new Color(0, 1, 0, 0.3f);
-            Gizmos.DrawWireCube(transform.position, new Vector3(size.x, size.y, 0));
-
-            UnityEditor.Handles.Label(
-                transform.position + Vector3.up * (size.y / 2f + 1f),
-                $"Size: {size.x:F1} x {size.y:F1}"
-            );
-
-            if (PlayerSpawn != null)
-            {
-                Gizmos.color = Color.cyan;
-                Gizmos.DrawSphere(PlayerSpawn.position, 0.5f);
-                UnityEditor.Handles.Label(PlayerSpawn.position + Vector3.up, "PlayerSpawn");
-            }
-        }
-
-        [ContextMenu("Auto Find Doors")]
-        private void AutoFindDoors()
-        {
-            var doors = GetComponentsInChildren<DoorController>();
-            foreach (var door in doors)
-            {
-                switch (door.Direction)
-                {
-                    case Direction.North: doorNorth = door; break;
-                    case Direction.South: doorSouth = door; break;
-                    case Direction.East: doorEast = door; break;
-                    case Direction.West: doorWest = door; break;
-                }
-            }
-            UnityEditor.EditorUtility.SetDirty(this);
-        }
-#endif
     }
 }

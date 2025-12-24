@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using Character.Components;
 using RogueGame.Events;
+using RogueGame.GameConfig;
+using Character;
 
 namespace RogueGame.Map
 {
@@ -13,7 +15,7 @@ namespace RogueGame.Map
     [RequireComponent(typeof(RoomPrefab))]
     public sealed class RoomController : MonoBehaviour
     {
-        [Header("敌人配置"), InlineEditor]
+        [Header("敌人配置"),]
         [SerializeField] private EnemySpawnConfig enemySpawnConfig;
         [SerializeField] private Transform[] enemySpawnPoints;
         [SerializeField] private int minEnemies = 3;
@@ -136,7 +138,6 @@ namespace RogueGame.Map
             ClearEnemies();
             UpdateEnemyCount();
 
-            Log($"[RoomController] 初始化房间:  {meta.BundleName}, 类型: {roomType}, IsCombatRoom:  {IsCombatRoom}, InstanceId: {instanceId}");
         }
 
         public void ResetRoom()
@@ -154,11 +155,9 @@ namespace RogueGame.Map
         /// <param name="entryDirection"></param>
         public void OnPlayerEnter(Direction entryDirection)
         {
-            Log($"[RoomController] OnPlayerEnter, 方向: {entryDirection}, 当前状态: {currentState}, 房间类型: {roomType}");
 
             if (currentState != RoomState.Inactive)
             {
-                Log("[RoomController] 房间已激活，跳过");
                 return;
             }
 
@@ -176,16 +175,13 @@ namespace RogueGame.Map
                 Debug.LogWarning("[RoomController] 发布 RoomEnteredEvent 失败: " + ex.Message);
             }
 
-            Log($"[RoomController] IsCombatRoom:  {IsCombatRoom}, IsCleared: {IsCleared}");
 
             if (IsCombatRoom && !IsCleared)
             {
-                Log("[RoomController] 战斗房间，开始战斗");
                 StartCombat();
             }
             else
             {
-                Log("[RoomController] 非战斗房间，开启所有门（入口门保持关闭）");
                 // 使用 RoomPrefab 的便捷方法，打开除入口门外的所有门
                 roomPrefab?.OpenAllExcept(entryDirection);
             }
@@ -199,16 +195,13 @@ namespace RogueGame.Map
         {
             if (currentState == RoomState.Combat)
             {
-                Log("[RoomController] 已在战斗中，跳过");
                 return;
             }
 
             currentState = RoomState.Combat;
 
-            Log("[RoomController] 战斗开始：将所有门设为 Locked（不可通行且以锁定视觉显示）");
             roomPrefab?.LockAllDoors();
 
-            Log("[RoomController] 生成敌人");
             SpawnEnemies();
 
             // 记录初始敌人数，供房间清理时统计
@@ -224,7 +217,6 @@ namespace RogueGame.Map
                 Debug.LogWarning("[RoomController] 发布 CombatStartedEvent 失败: " + ex.Message);
             }
 
-            Log($"[RoomController] 战斗开始！类型: {roomType}, 敌人:  {activeEnemies.Count}");
         }
 
         /// <summary>
@@ -240,7 +232,6 @@ namespace RogueGame.Map
 
             OnEnemyKilled?.Invoke(this, activeEnemies.Count);
 
-            Log($"[RoomController] 敌人死亡，剩余: {activeEnemies.Count}");
 
             if (activeEnemies.Count <= 0 && currentState == RoomState.Combat)
             {
@@ -262,7 +253,7 @@ namespace RogueGame.Map
 
             OnEnemyKilled?.Invoke(this, activeEnemies.Count);
 
-            Log($"[RoomController] 敌人死亡（带击杀者）: {enemy.name}, 击杀者: {attacker?.name ?? "null"}, 剩余: {activeEnemies.Count}");
+            Debug.Log($"[RoomController] 敌人死亡（带击杀者）: {enemy.name}, 击杀者: {attacker?.name ?? "null"}, 剩余: {activeEnemies.Count}");
 
             // 广播全局击杀事件（供卡牌充能 / 玩家能量分发 / 掉落逻辑订阅）
             try
@@ -297,11 +288,9 @@ namespace RogueGame.Map
         /// </summary>
         private void CompleteCombat()
         {
-            Log("[RoomController] 战斗完成！");
 
             currentState = RoomState.Cleared;
 
-            Log("[RoomController] 战斗结束：开启所有门（入口门保持关闭）");
             roomPrefab.OpenAllExcept(lastEntryDirection);
 
             // 生成房间奖励（简单实现）
@@ -323,7 +312,6 @@ namespace RogueGame.Map
                 Debug.LogWarning("[RoomController] 发布 RoomClearedEvent 失败: " + ex.Message);
             }
 
-            Log($"[RoomController] 房间已清理！类型: {roomType}");
         }
 
 
@@ -344,7 +332,6 @@ namespace RogueGame.Map
                     SpawnBoss();
                     break;
                 default:
-                    Log($"[RoomController] 房间类型 {roomType} 不需要生成敌人");
                     CompleteCombat();
                     break;
             }
@@ -359,14 +346,20 @@ namespace RogueGame.Map
         {
             if (enemySpawnConfig == null)
             {
-                Log("[RoomController] 没有敌人配置，直接完成");
                 CompleteCombat();
                 return;
             }
 
             if (!IsCombatRoom) return;
 
-            int count = UnityEngine.Random.Range(minEnemies, maxEnemies + 1);
+            // 使用 DifficultyService 计算缩放后的敌人数量
+            int baseCount = UnityEngine.Random.Range(minEnemies, maxEnemies + 1);
+            int count = baseCount;
+
+            if (GameRoot.Instance?.DifficultyService != null)
+            {
+                count = GameRoot.Instance.DifficultyService.GetScaledEnemyCount(currentFloor, baseCount);
+            }
 
             for (int i = 0; i < count; i++)
             {
@@ -379,7 +372,6 @@ namespace RogueGame.Map
 
             if (activeEnemies.Count == 0)
             {
-                Log("[RoomController] 没有生成任何敌人，直接完成");
                 CompleteCombat();
             }
         }
@@ -424,36 +416,28 @@ namespace RogueGame.Map
         /// </summary>
         private void SpawnBoss()
         {
-            Log($"[RoomController] SpawnBoss 被调用，currentFloor: {currentFloor}");
-
             if (enemySpawnConfig == null)
             {
-                Log("[RoomController] enemySpawnConfig 为 null！");
                 CompleteCombat();
                 return;
             }
 
             if (enemySpawnConfig.bosses == null || enemySpawnConfig.bosses.Count == 0)
             {
-                Log("[RoomController] enemySpawnConfig.bosses 数组为空！");
                 CompleteCombat();
                 return;
             }
 
-            Log($"[RoomController] Boss 配置数量: {enemySpawnConfig.bosses.Count}");
 
             var bossPrefab = enemySpawnConfig.SelectEnemy(enemySpawnConfig.bosses, currentFloor);
             if (bossPrefab != null)
             {
                 Vector3 bossPos = eliteAndbossSpawnPoint != null ?
                     eliteAndbossSpawnPoint.position : transform.position;
-                Log($"[RoomController] Boss 预制体: {bossPrefab.name}, 生成位置: {bossPos}");
                 SpawnEnemy(bossPrefab, bossPos);
-                Log($"[RoomController] SpawnEnemy 调用完成，当前敌人数量: {activeEnemies.Count}");
             }
             else
             {
-                Log("[RoomController] SelectEnemy 返回 null！没有 Boss 预制体！");
                 CompleteCombat();
             }
         }
@@ -462,22 +446,17 @@ namespace RogueGame.Map
         {
             if (prefab == null)
             {
-                Log("[RoomController] SpawnEnemy: prefab 为 null！");
                 return;
             }
-
-            Log($"[RoomController] SpawnEnemy: 开始生成 {prefab.name} at {position}");
 
             // 使用 EnemyFactory 负责实例化与可选配置注入
             var enemy = RogueGame.Map.Factory.EnemyFactory.Spawn(prefab, position, transform, null, currentFloor);
 
             if (enemy == null)
             {
-                Log("[RoomController] SpawnEnemy: EnemyFactory.Spawn 返回 null！");
                 return;
             }
 
-            Log($"[RoomController] SpawnEnemy: 成功生成敌人 {enemy.name}");
 
             // 检查必要组件
             var stats = enemy.GetComponent<CharacterStats>();
@@ -485,12 +464,13 @@ namespace RogueGame.Map
 
             if (stats == null || health == null)
             {
-                Log($"[RoomController] SpawnEnemy: 错误 - 敌人 {enemy.name} 缺少必要组件 (CharacterStats: {stats != null}, HealthComponent: {health != null})，销毁对象！");
                 Destroy(enemy);
                 return;
             }
 
             activeEnemies.Add(enemy);
+
+            ApplyDifficultyScaling(enemy, currentFloor);
 
             // 使用具名转发器，便于取消订阅与调试
             var forwarder = new EnemyDeathForwarder(this, enemy);
@@ -500,7 +480,15 @@ namespace RogueGame.Map
             health.OnDeathWithAttacker += deathWithAttackerHandler;
             _enemyDeathHandlersDic[enemy] = deathHandler;
             _enemyDeathWithAttackerHandlersDic[enemy] = deathWithAttackerHandler;
-            Log($"[RoomController] SpawnEnemy: 已订阅敌人 {enemy.name} 的死亡事件");
+        }
+
+        private void ApplyDifficultyScaling(GameObject enemy, int floor)
+        {
+            // 使用 DifficultyService 应用难度缩放
+            if (GameRoot.Instance?.DifficultyService != null)
+            {
+                GameRoot.Instance.DifficultyService.ApplyDifficultyScaling(enemy, floor, this);
+            }
         }
 
         private Vector3 GetSpawnPosition(int index)
@@ -536,7 +524,7 @@ namespace RogueGame.Map
             if (enemy == null) return;
             var stats = enemy.GetComponent<CharacterStats>();
             var health = enemy.GetComponent<HealthComponent>();
-            if (health == null|| stats == null) return;
+            if (health == null || stats == null) return;
 
             if (_enemyDeathHandlersDic.TryGetValue(enemy, out var dh))
             {
@@ -585,55 +573,11 @@ namespace RogueGame.Map
             try
             {
                 LootDropper.Instance?.DropCoins(transform.position, amount);
-                Log($"[RoomController] 掉落金币: {amount}");
             }
             catch (System.Exception ex)
             {
                 Debug.LogWarning($"[RoomController] SpawnRewards failed: {ex.Message}");
             }
         }
-
-
-        #region Editor And Debug
-#if UNITY_EDITOR
-        private void OnDrawGizmosSelected()
-        {
-            if (enemySpawnPoints != null)
-            {
-                Gizmos.color = Color.red;
-                foreach (var point in enemySpawnPoints)
-                {
-                    if (point != null)
-                    {
-                        Gizmos.DrawWireSphere(point.position, 0.5f);
-                    }
-                }
-            }
-
-            if (eliteAndbossSpawnPoint != null)
-            {
-                Gizmos.color = new Color(1f, 0.5f, 0f);
-                Gizmos.DrawWireSphere(eliteAndbossSpawnPoint.position, 1f);
-                UnityEditor.Handles.Label(eliteAndbossSpawnPoint.position + Vector3.up, "Boss");
-            }
-
-            string stateText = $"State: {currentState}\nType: {roomType}\nEnemies: {enemyCount}\nCanLeave: {CanPlayerLeave}";
-            UnityEditor.Handles.Label(transform.position + Vector3.up * 2f, stateText);
-        }
-
-        // ========== 工具 ==========
-
-        private void Log(string message)
-        {
-            if (enableDebugLog)
-            {
-                Debug.Log(message);
-            }
-        }
-
-
-#endif
-
-        #endregion
     }
 }

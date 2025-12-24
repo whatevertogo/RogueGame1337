@@ -24,8 +24,8 @@ public class EnemyConfigSO : ScriptableObject
     [Tooltip("被动卡牌掉落概率")]
     public float ActiveDropChance = 0f;
     [Tooltip("主动卡牌掉落ID（可选）")]
-    public string PassiveCardId;
+    public string[] PassiveCardIds;
     [Tooltip("被动卡牌掉落ID（可选）")]
-    public string ActiveCardId;
+    public string[] ActiveCardIds;
 
 }

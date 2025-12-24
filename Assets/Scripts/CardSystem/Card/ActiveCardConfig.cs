@@ -12,6 +12,6 @@ public class ActiveCardConfig
     [Tooltip("若为 true 则此卡需要消耗充能才能使用；否则可按冷却使用")]
     public bool requiresCharge = true;
 
-    [InlineEditor]
+    //
     public SkillDefinition skill;
 }
