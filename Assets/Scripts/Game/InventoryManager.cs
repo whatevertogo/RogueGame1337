@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using CDTU.Utils;
-using RogueGame.Map;
 using RogueGame.Events;
 
 
@@ -115,12 +114,12 @@ public sealed class InventoryManager : Singleton<InventoryManager>
     #region 主动卡
 
     /// <summary>
-    /// 添加一个主动卡实例
+    /// 添加一个主动卡实例（内部方法，用于技能槽初始化等特殊场景）
     /// </summary>
     /// <param name="cardId"></param>
     /// <param name="initialCharges"></param>
     /// <returns></returns>
-    public string AddActiveCardInstance(string cardId, int initialCharges)
+    private string AddActiveCardInstance(string cardId, int initialCharges)
     {
         var state = new ActiveCardState
         {
@@ -135,6 +134,18 @@ public sealed class InventoryManager : Singleton<InventoryManager>
         _activeCards.Add(state);
         OnActiveCardInstanceAdded?.Invoke(state.InstanceId);
         return state.InstanceId;
+    }
+
+    /// <summary>
+    /// 内部方法：为技能槽系统创建卡牌实例（不触发升级/去重逻辑）
+    /// 仅用于 PlayerSkillComponent 等内部系统初始化
+    /// </summary>
+    /// <param name="cardId">卡牌ID</param>
+    /// <param name="initialCharges">初始充能</param>
+    /// <returns>实例ID</returns>
+    public string CreateActiveCardInstanceInternal(string cardId, int initialCharges)
+    {
+        return AddActiveCardInstance(cardId, initialCharges);
     }
 
     /// <summary>
@@ -219,7 +230,7 @@ public sealed class InventoryManager : Singleton<InventoryManager>
                 // 如果已经达到上限，记录警告
                 if (currentCount >= maxStack)
                 {
-                    CDTU.Utils.CDLogger.LogWarning($"[InventoryManager] 被动卡 {cardId} 已达到上限 ({maxStack})，无法继续叠加");
+                    CDLogger.LogWarning($"[InventoryManager] 被动卡 {cardId} 已达到上限 ({maxStack})，无法继续叠加");
                     return;
                 }
 
@@ -236,7 +247,7 @@ public sealed class InventoryManager : Singleton<InventoryManager>
                 // 如果达到上限，记录日志
                 if (newCount >= maxStack)
                 {
-                    CDTU.Utils.CDLogger.Log($"[InventoryManager] 被动卡 {cardId} 已达到上限 ({maxStack})");
+                    CDLogger.Log($"[InventoryManager] 被动卡 {cardId} 已达到上限 ({maxStack})");
                 }
                 return;
             }
@@ -363,6 +374,10 @@ public sealed class InventoryManager : Singleton<InventoryManager>
 
     #region ===== 统一入口 =====
 
+    /// <summary>
+    /// 通过卡牌ID添加卡牌
+    /// </summary>
+    /// <param name="cardId"></param>
     public void AddCardById(string cardId)
     {
         var db = GameRoot.Instance?.CardDatabase;
@@ -373,7 +388,8 @@ public sealed class InventoryManager : Singleton<InventoryManager>
 
         if (def.CardType == CardType.Active)
         {
-            AddActiveCardInstance(cardId, def.activeCardConfig.energyPerKill);
+            // 使用智能添加，支持去重和升级
+            AddActiveCardSmart(cardId, def.activeCardConfig.energyPerKill);
         }
         else
         {
@@ -499,7 +515,7 @@ public sealed class InventoryManager : Singleton<InventoryManager>
     #endregion
 
     /// <summary>
-    /// 随机获得一张主动卡牌
+    /// 随机获得一张主动卡牌（支持去重和升级）
     /// </summary>
     public void AddRandomActiveCard()
     {
@@ -508,7 +524,8 @@ public sealed class InventoryManager : Singleton<InventoryManager>
 
         var activeCardID = db.GetRandomCardId();
 
-        AddActiveCardInstance(activeCardID, db.Resolve(activeCardID).activeCardConfig.energyPerKill);
+        // 使用智能添加，支持去重和升级
+        AddActiveCardSmart(activeCardID, db.Resolve(activeCardID).activeCardConfig.energyPerKill);
     }
 
     #region 主动卡去重
@@ -667,7 +684,7 @@ public sealed class InventoryManager : Singleton<InventoryManager>
         st.Level++;
         OnActiveCardLevelUp?.Invoke(cardId, st.Level);
 
-        CDTU.Utils.CDLogger.Log($"[InventoryManager] 技能 '{cardId}' 升级至 Lv{st.Level}/{actualMaxLevel}");
+        CDLogger.Log($"[InventoryManager] 技能 '{cardId}' 升级至 Lv{st.Level}/{actualMaxLevel}");
         return st.Level;
     }
 
@@ -714,7 +731,7 @@ public sealed class InventoryManager : Singleton<InventoryManager>
                 result.NewLevel = newLevel;
                 result.InstanceId = existingCard.InstanceId;
 
-                CDTU.Utils.CDLogger.Log($"[InventoryManager] 技能 '{cardId}' 升级：Lv{oldLevel} → Lv{newLevel}");
+                CDLogger.Log($"[InventoryManager] 技能 '{cardId}' 升级：Lv{oldLevel} → Lv{newLevel}");
                 return result;
             }
             else
@@ -733,7 +750,7 @@ public sealed class InventoryManager : Singleton<InventoryManager>
 
                     if (config.showDeduplicationLog)
                     {
-                        CDTU.Utils.CDLogger.Log($"[InventoryManager] 技能 '{cardId}' 已达最大等级 Lv{GameRoot.Instance.StatLimitConfig?.maxActiveSkillLevel ?? 5}，转换为 {coins} 金币");
+                        CDLogger.Log($"[InventoryManager] 技能 '{cardId}' 已达最大等级 Lv{GameRoot.Instance.StatLimitConfig?.maxActiveSkillLevel ?? 5}，转换为 {coins} 金币");
                     }
                     return result;
                 }
@@ -741,7 +758,7 @@ public sealed class InventoryManager : Singleton<InventoryManager>
                 {
                     // 不启用去重，无法添加
                     result.Success = false;
-                    CDTU.Utils.CDLogger.LogWarning($"[InventoryManager] 技能 '{cardId}' 已达最大等级且未启用去重转换");
+                    CDLogger.LogWarning($"[InventoryManager] 技能 '{cardId}' 已达最大等级且未启用去重转换");
                     return result;
                 }
             }
@@ -756,7 +773,7 @@ public sealed class InventoryManager : Singleton<InventoryManager>
 
         if (result.Success)
         {
-            CDTU.Utils.CDLogger.Log($"[InventoryManager] 添加新技能 '{cardId}' (Lv1)");
+            CDLogger.Log($"[InventoryManager] 添加新技能 '{cardId}' (Lv1)");
         }
 
         return result;

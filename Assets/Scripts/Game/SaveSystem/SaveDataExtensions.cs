@@ -15,14 +15,15 @@ namespace RogueGame.SaveSystem
         public static ActiveCardSaveData ToSaveData(this InventoryManager.ActiveCardState state)
         {
             if (state == null) return null;
-            
+
             return new ActiveCardSaveData
             {
                 CardId = state.CardId,
                 InstanceId = state.InstanceId,
                 CurrentCharges = state.CurrentCharges,
                 IsEquipped = state.IsEquipped,
-                EquippedPlayerId = state.EquippedPlayerId
+                EquippedPlayerId = state.EquippedPlayerId,
+                Level = state.Level  // 保存技能等级
             };
         }
 
@@ -41,7 +42,7 @@ namespace RogueGame.SaveSystem
         public static InventoryManager.ActiveCardState ToRuntimeState(this ActiveCardSaveData saveData)
         {
             if (saveData == null) return null;
-            
+
             return new InventoryManager.ActiveCardState
             {
                 CardId = saveData.CardId,
@@ -49,6 +50,7 @@ namespace RogueGame.SaveSystem
                 CurrentCharges = saveData.CurrentCharges,
                 IsEquipped = saveData.IsEquipped,
                 EquippedPlayerId = saveData.EquippedPlayerId,
+                Level = saveData.Level,  // 恢复技能等级
                 CooldownRemaining = 0f // 运行时状态重置
             };
         }

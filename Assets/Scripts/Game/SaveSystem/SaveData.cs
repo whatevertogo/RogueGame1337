@@ -74,6 +74,7 @@ namespace RogueGame.SaveSystem
         public int CurrentCharges;  // 当前充能
         public bool IsEquipped;
         public string EquippedPlayerId;
+        public int Level = 1;  // 技能等级（Lv1-Lv5）
     }
     
     /// <summary>

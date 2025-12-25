@@ -298,7 +298,8 @@ namespace Character.Player
                 }
                 else
                 {
-                    instanceId = inv.AddActiveCardInstance(cardId, 0);
+                    // 使用内部方法创建实例（不触发升级/去重逻辑）
+                    instanceId = inv.CreateActiveCardInstanceInternal(cardId, 0);
                 }
 
                 // 尝试把实例标记为被此玩家装备（若能找到 playerId）

@@ -12,7 +12,6 @@ namespace Character.Components
     {
         [Header("攻击策略")]
         [Tooltip("攻击策略 SO（投射物/近战等）")]
-        //
         public AttackStrategyBaseSO attackStrategy;
 
         [Header("攻击设置")]

@@ -9,7 +9,7 @@ public class EnemyCharacter : CharacterBase
 {
 
     [Header("Enemy特殊配置")]
-    [SerializeField,InlineEditor ]
+    [SerializeField]
     private EnemyConfigSO enemyConfig;
 
     [SerializeField, ReadOnly]

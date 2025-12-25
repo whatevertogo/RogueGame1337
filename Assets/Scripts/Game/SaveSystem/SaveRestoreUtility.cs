@@ -58,12 +58,14 @@ namespace RogueGame.SaveSystem
             // 恢复主动卡牌
             foreach (var cardData in data.ActiveCards)
             {
-                var instanceId = inv.AddActiveCardInstance(cardData.CardId, cardData.CurrentCharges);
+                // 使用内部方法创建实例（不触发升级逻辑）
+                var instanceId = inv.CreateActiveCardInstanceInternal(cardData.CardId, cardData.CurrentCharges);
                 var state = inv.GetActiveCardState(instanceId);
                 if (state != null)
                 {
                     state.IsEquipped = cardData.IsEquipped;
                     state.EquippedPlayerId = cardData.EquippedPlayerId;
+                    state.Level = cardData.Level;  // 恢复技能等级
                 }
             }
 
