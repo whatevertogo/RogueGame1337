@@ -30,7 +30,7 @@ namespace Game.UI
         {
             var shopArg = args as ShopUIArgs;
 
-            if (_view is null) return;
+            if (_view == null) return;
 
             // 记录最近的 ShopType 并消费金额
             if (shopArg != null)

@@ -19,14 +19,14 @@ public class UIHoverAnimator : MonoBehaviour,
     public void OnPointerEnter(PointerEventData eventData)
     {
         Hoveraction?.Invoke(true);
-        if(animator is null) return;
+        if (animator == null) return;
         animator.SetBool(IsHoverKey, true);
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
         Hoveraction?.Invoke(false);
-        if(animator is null) return;
+        if (animator == null) return;
         animator.SetBool(IsHoverKey, false);
     }
 }
