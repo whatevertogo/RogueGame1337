@@ -16,6 +16,7 @@ public class PlayerController : CharacterBase
 	private PlayerAnimator playerAnim;
 	private AutoPickupComponent autoPickup;
 	private PlayerSkillComponent skillComponent;
+	private Camera _mainCamera;
 	// 转发器实现：在控制器内部维护一个小型转发器类以避免使用 lambda
 	private class PlayerSkillEventForwarder
 	{
@@ -75,6 +76,7 @@ public class PlayerController : CharacterBase
 		playerAnim = GetComponent<PlayerAnimator>();
 		autoPickup = GetComponent<AutoPickupComponent>();
 		skillComponent = GetComponent<PlayerSkillComponent>();
+		_mainCamera = Camera.main;
 
 		if (GameInput.Instance != null)
 		{
@@ -156,7 +158,7 @@ public class PlayerController : CharacterBase
 		Movement?.SetInput(moveDir);
 
 		//更新人物朝向
-		Vector3 mouseWorldPos = Camera.main.ScreenToWorldPoint(UnityEngine.InputSystem.Mouse.current.position.ReadValue());
+		Vector3 mouseWorldPos = _mainCamera.ScreenToWorldPoint(UnityEngine.InputSystem.Mouse.current.position.ReadValue());
 		transform.localScale = new Vector3(mouseWorldPos.x > transform.position.x ? 1f : -1f, transform.localScale.y, transform.localScale.z);
 
 
@@ -192,7 +194,7 @@ public class PlayerController : CharacterBase
 	public void TryActivateSkill(int slotIndex)
 	{
 		// 计算鼠标世界坐标作为瞄点，尝试找到显式目标（2D 优先），否则把瞄点传给技能
-		Vector3 aimWorld = Camera.main.ScreenToWorldPoint(UnityEngine.InputSystem.Mouse.current.position.ReadValue());
+		Vector3 aimWorld = _mainCamera.ScreenToWorldPoint(UnityEngine.InputSystem.Mouse.current.position.ReadValue());
 		aimWorld.z = 0f;
 		// 我们使用范围伤害（AOE），不需要显式目标检测，直接把瞄点传给技能
 		skillComponent.UseSkill(slotIndex, aimWorld);
@@ -215,7 +217,7 @@ public class PlayerController : CharacterBase
 		// return lastFacingDirection;
 
 		//方案二以鼠标方向为准
-		Vector3 mouseWorldPos = Camera.main.ScreenToWorldPoint(UnityEngine.InputSystem.Mouse.current.position.ReadValue());
+		Vector3 mouseWorldPos = _mainCamera.ScreenToWorldPoint(UnityEngine.InputSystem.Mouse.current.position.ReadValue());
 		Vector2 aimDir = (mouseWorldPos - transform.position).normalized;
 		return aimDir;
 	}

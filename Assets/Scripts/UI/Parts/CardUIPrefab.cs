@@ -23,14 +23,14 @@ public class CardUIPrefab : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
     {
         CardId = cardId;
 
-        if (image == null) image = GetComponent<Image>() ?? GetComponentInChildren<Image>();
-        if (amountText == null) amountText = GetComponentInChildren<TextMeshProUGUI>();
+        if (!image) image = GetComponent<Image>() ?? GetComponentInChildren<Image>();
+        if (!amountText) amountText = GetComponentInChildren<TextMeshProUGUI>();
 
         var card = GameRoot.Instance.CardDatabase.Resolve(cardId);
-        if (card != null)
+        if (card)
         {
             image.sprite = card.GetSprite();
-            if (amountText != null)
+            if (amountText)
                 amountText.text = amount.ToString();
         }
 

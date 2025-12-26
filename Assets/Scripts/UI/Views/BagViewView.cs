@@ -1,7 +1,5 @@
-﻿using System;
-using TMPro;
+﻿using TMPro;
 using UI;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -63,43 +61,43 @@ namespace Game.UI
         /// <summary>更新文本内容</summary>
         public void SetMaxHP(string content)
         {
-            if (maxHP != null) maxHP.text = content;
+            if (maxHP) maxHP.text = content;
         }
         public void SetHPRegen(string content)
         {
-            if (hPRegen != null) hPRegen.text = content;
+            if (hPRegen) hPRegen.text = content;
         }
         public void SetMoveSpeed(string content)
         {
-            if (moveSpeed != null) moveSpeed.text = content;
+            if (moveSpeed) moveSpeed.text = content;
         }
         public void SetAcceleration(string content)
         {
-            if (acceleration != null) acceleration.text = content;
+            if (acceleration) acceleration.text = content;
         }
         public void SetAttackPower(string content)
         {
-            if (attackPower != null) attackPower.text = content;
+            if (attackPower) attackPower.text = content;
         }
         public void SetAttackSpeed(string content)
         {
-            if (attackSpeed != null) attackSpeed.text = content;
+            if (attackSpeed) attackSpeed.text = content;
         }
         public void SetAttackRange(string content)
         {
-            if (attackRange != null) attackRange.text = content;
+            if (attackRange) attackRange.text = content;
         }
         public void SetArmor(string content)
         {
-            if (armor != null) armor.text = content;
+            if (armor) armor.text = content;
         }
         public void SetDodge(string content)
         {
-            if (dodge != null) dodge.text = content;
+            if (dodge) dodge.text = content;
         }
         public void SetSkillCooldownReductionRate(string content)
         {
-            if (skillCooldownReductionRate != null) skillCooldownReductionRate.text = content;
+            if (skillCooldownReductionRate) skillCooldownReductionRate.text = content;
         }
 
         /// <summary>设置玩家头像图片</summary>
@@ -111,21 +109,21 @@ namespace Game.UI
         /// <summary>绑定 Button 事件</summary>
         public void BindPlayerStats1Button(System.Action onClickAction)
         {
-            if (playerStats1 != null) { playerStats1.onClick.RemoveAllListeners(); if (onClickAction != null) playerStats1.onClick.AddListener(() => onClickAction()); }
+            if (playerStats1) { playerStats1.onClick.RemoveAllListeners(); if (onClickAction != null) playerStats1.onClick.AddListener(() => onClickAction()); }
         }
         public void BindPlayerStats12Button(System.Action onClickAction)
         {
-            if (playerStats12 != null) { playerStats12.onClick.RemoveAllListeners(); if (onClickAction != null) playerStats12.onClick.AddListener(() => onClickAction()); }
+            if (playerStats12) { playerStats12.onClick.RemoveAllListeners(); if (onClickAction != null) playerStats12.onClick.AddListener(() => onClickAction()); }
         }
 
         public void BindClearCardButton1(System.Action onClickAction)
         {
-            if (ClearCardButton1 != null) { ClearCardButton1.onClick.RemoveAllListeners(); if (onClickAction != null) ClearCardButton1.onClick.AddListener(() => onClickAction()); }
+            if (ClearCardButton1) { ClearCardButton1.onClick.RemoveAllListeners(); if (onClickAction != null) ClearCardButton1.onClick.AddListener(() => onClickAction()); }
         }
 
         public void SetBagViewALLActive(bool isActive)
         {
-            if (BagViewALL != null)
+            if (BagViewALL)
             {
                 BagViewALL.SetActive(isActive);
             }
@@ -133,7 +131,7 @@ namespace Game.UI
 
         public void SetPlayerStatViewActive(bool isActive)
         {
-            if (PlayerStatViewALL != null)
+            if (PlayerStatViewALL)
             {
                 PlayerStatViewALL.SetActive(isActive);
             }
@@ -141,12 +139,12 @@ namespace Game.UI
 
         public void AddCardView(string cardId, int Amount = 1)
         {
-            if (cardUIPrefab == null || scrollView1 == null || scrollView1.content == null) return;
+            if (!cardUIPrefab || !scrollView1 || scrollView1.content == null) return;
 
             // 以 prefab 的 GameObject 形式在 content 下实例化，并保持本地变换
             var go = Instantiate(cardUIPrefab, scrollView1.content, false);
             var newCard = go.GetComponent<CardUIPrefab>();
-            if (newCard == null) return;
+            if (!newCard) return;
 
             // 重置 RectTransform 以避免继承不期望的缩放/位置
             if (newCard.transform is RectTransform rt)
