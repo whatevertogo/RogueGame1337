@@ -3,12 +3,12 @@ using Character.Player;
 
 public sealed class SkillChargeSyncService
 {
-    private readonly InventoryManager inv;
+    private readonly InventoryServiceManager inv;
     private readonly PlayerManager playerManager;
     private readonly CardDataBase db;
 
     public SkillChargeSyncService(
-        InventoryManager inv,
+        InventoryServiceManager inv,
         PlayerManager playerManager,
         CardDataBase db)
     {

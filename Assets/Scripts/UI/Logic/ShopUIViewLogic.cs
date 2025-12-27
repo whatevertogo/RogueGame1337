@@ -69,7 +69,7 @@ namespace Game.UI
         {
             if (_view != null)
             {
-                int coinNumber = InventoryManager.Instance != null ? InventoryManager.Instance.Coins : 0;
+                int coinNumber = InventoryServiceManager.Instance != null ? InventoryServiceManager.Instance.Coins : 0;
                 _view.SetCoinText($"Coins: {coinNumber}");
             }
         }

@@ -24,11 +24,13 @@ namespace RogueGame.Game.Service.SkillLimit
 
         // 当前房间规则（用于调试）
         private RoomSkillRule _currentRule = RoomSkillRule.None;
+        private readonly InventoryServiceManager inventory;
 
-        public RoomPlayerSkillLimitService(PlayerManager playerManager, RoomManager roomManager)
+        public RoomPlayerSkillLimitService(PlayerManager playerManager, RoomManager roomManager, InventoryServiceManager inventoryManager)
         {
             this.roomManager = roomManager ?? throw new ArgumentNullException(nameof(roomManager));
             _playerManager = playerManager ?? throw new ArgumentNullException(nameof(playerManager));
+            this.inventory = inventoryManager ?? throw new ArgumentNullException(nameof(inventoryManager));
         }
 
         /// <summary>
@@ -171,7 +173,6 @@ namespace RogueGame.Game.Service.SkillLimit
         /// </summary>
         private void ResetSkillEnergy(PlayerController player)
         {
-            var inventory = InventoryManager.Instance;
             if (inventory == null) return;
 
             var skillComponent = player.GetComponent<PlayerSkillComponent>();
@@ -182,17 +183,7 @@ namespace RogueGame.Game.Service.SkillLimit
             {
                 if (slot?.Runtime != null && !string.IsNullOrEmpty(slot.Runtime.InstanceId))
                 {
-                    var state = inventory.GetActiveCard(slot.Runtime.InstanceId);
-                    if (state != null)
-                    {
-                        var cardDef = GameRoot.Instance?.CardDatabase?.Resolve(slot.Runtime.CardId);
-                        if (cardDef?.activeCardConfig != null)
-                        {
-                            // 重置为最大能量
-                            int maxEnergy = cardDef.activeCardConfig.maxEnergy;
-                            inventory.SetCharges(slot.Runtime.InstanceId, maxEnergy);
-                        }
-                    }
+                    inventory.ResetEnergyToMax(slot.Runtime.InstanceId);
                 }
             }
         }

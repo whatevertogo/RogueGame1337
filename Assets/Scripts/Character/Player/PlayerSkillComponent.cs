@@ -54,11 +54,35 @@ namespace Character.Player
             });
 
             EventBus.Subscribe<OnPlayerSkillEquippedEvent>(OnPlayerSlotCardChanged);
+
+            // 订阅能量变化事件，自动更新 UI
+            EventBus.Subscribe<ActiveCardChargesChangedEvent>(OnEnergyChangedFromInventory);
         }
 
         private void OnDestroy()
         {
             EventBus.Unsubscribe<OnPlayerSkillEquippedEvent>(OnPlayerSlotCardChanged);
+            EventBus.Unsubscribe<ActiveCardChargesChangedEvent>(OnEnergyChangedFromInventory);
+        }
+
+        /// <summary>
+        /// 当能量变化时，自动更新对应槽位的 UI
+        /// </summary>
+        private void OnEnergyChangedFromInventory(ActiveCardChargesChangedEvent evt)
+        {
+            // 查找使用此 instanceId 的槽位
+            for (int i = 0; i < _playerSkillSlots.Length; i++)
+            {
+                var rt = _playerSkillSlots[i]?.Runtime;
+                if (rt != null && rt.InstanceId == evt.InstanceId)
+                {
+                    // 获取最大能量并归一化
+                    int maxEnergy = GameRoot.Instance?.CardDatabase?.Resolve(rt.CardId)?.activeCardConfig?.maxEnergy ?? 100;
+                    float norm = maxEnergy > 0 ? (float)evt.NewCharges / maxEnergy : 0f;
+                    OnEnergyChanged?.Invoke(i, norm);
+                    break;
+                }
+            }
         }
 
         private void OnPlayerSlotCardChanged(OnPlayerSkillEquippedEvent @event)
@@ -121,7 +145,7 @@ namespace Character.Player
             var cardDef = GameRoot.Instance?.CardDatabase?.Resolve(rt.CardId);
             if (cardDef != null && cardDef.activeCardConfig != null && cardDef.activeCardConfig.requiresCharge)
             {
-                var inv = InventoryManager.Instance;
+                var inv = InventoryServiceManager.Instance;
                 if (inv == null || string.IsNullOrEmpty(rt.InstanceId)) return false;
 
                 var state = inv.GetActiveCardState(rt.InstanceId);
@@ -289,7 +313,7 @@ namespace Character.Player
                 _playerSkillSlots[slotIndex] = new SkillSlot();
 
             // 获取或创建 Inventory 中的 ActiveCardState 实例，并把实例 id 关联到 runtime
-            var inv = InventoryManager.Instance;
+            var inv = InventoryServiceManager.Instance;
             string instanceId = null;
             if (inv != null)
             {
@@ -351,7 +375,7 @@ namespace Character.Player
             // 取消装备标记
             if (!string.IsNullOrEmpty(instanceId))
             {
-                InventoryManager.Instance?.MarkInstanceEquipped(instanceId, null);
+                InventoryServiceManager.Instance?.MarkInstanceEquipped(instanceId, null);
             }
             slot.Clear();
             OnSkillUnequipped?.Invoke(slotIndex);
@@ -400,23 +424,13 @@ namespace Character.Player
             if (requiresCharge)
             {
                 // 消耗技能能量（符合策划案：释放后清零或减少阈值）
-                var inv = InventoryManager.Instance;
+                var inv = InventoryServiceManager.Instance;
                 if (inv == null || string.IsNullOrEmpty(rt.InstanceId)) yield break;
 
-                // 使用新的能量消耗方法
+                // 使用能量消耗方法，事件会自动触发 UI 更新
                 if (!inv.ConsumeSkillEnergy(rt.InstanceId))
                 {
                     yield break;
-                }
-
-                // 通知 UI 当前剩余能量（归一化到 0..1）
-                var state = inv.GetActiveCardState(rt.InstanceId);
-                if (state != null)
-                {
-                    var cardDef = GameRoot.Instance?.CardDatabase?.Resolve(rt.CardId);
-                    int maxEnergy = cardDef?.activeCardConfig?.maxEnergy ?? 100;
-                    float norm = maxEnergy > 0 ? (float)state.CurrentCharges / maxEnergy : 0f;
-                    OnEnergyChanged?.Invoke(slotIndex, norm);
                 }
             }
 
@@ -521,7 +535,7 @@ namespace Character.Player
             // 如果需要退还充能
             if (refundCharges && !string.IsNullOrEmpty(rt.InstanceId))
             {
-                var inv = InventoryManager.Instance;
+                var inv = InventoryServiceManager.Instance;
                 var cardDef = GameRoot.Instance?.CardDatabase?.Resolve(rt.CardId);
                 if (inv != null && cardDef != null && cardDef.activeCardConfig != null && cardDef.activeCardConfig.requiresCharge)
                 {

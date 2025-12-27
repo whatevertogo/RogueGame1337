@@ -8,13 +8,13 @@ using UnityEngine;
 /// </summary>
 public class ShopManager : Singleton<ShopManager>
 {
-    private InventoryManager inventoryManager;
+    private InventoryServiceManager inventoryManager;
 
     // 购买成功事件
     public event Action<string, int> OnItemPurchased; // (itemName, cost)
     public event Action<string> OnPurchaseFailed; // (reason)
 
-    public void Initialize(InventoryManager invManager)
+    public void Initialize(InventoryServiceManager invManager)
     {
         inventoryManager = invManager;
     }

@@ -183,7 +183,7 @@ namespace RogueGame.SaveSystem
             // 验证关键依赖
             var gsm = GameRoot.Instance?.GameFlowCoordinator;
             var pm = PlayerManager.Instance;
-            var inv = InventoryManager.Instance;
+            var inv = InventoryServiceManager.Instance;
 
             // 检查关键组件是否存在
             bool hasRequiredComponents = true;

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using RogueGame.Items;
 
 namespace RogueGame.SaveSystem
 {
@@ -12,7 +13,7 @@ namespace RogueGame.SaveSystem
         /// <summary>
         /// 将运行时卡牌状态转换为存档数据
         /// </summary>
-        public static ActiveCardSaveData ToSaveData(this InventoryManager.ActiveCardState state)
+        public static ActiveCardSaveData ToSaveData(this ActiveCardState state)
         {
             if (state == null) return null;
 
@@ -30,7 +31,7 @@ namespace RogueGame.SaveSystem
         /// <summary>
         /// 批量转换运行时卡牌状态列表为存档数据列表
         /// </summary>
-        public static List<ActiveCardSaveData> ToSaveDataList(this IEnumerable<InventoryManager.ActiveCardState> states)
+        public static List<ActiveCardSaveData> ToSaveDataList(this IEnumerable<ActiveCardState> states)
         {
             if (states == null) return new List<ActiveCardSaveData>();
             return states.Select(s => s.ToSaveData()).Where(s => s != null).ToList();
@@ -39,11 +40,11 @@ namespace RogueGame.SaveSystem
         /// <summary>
         /// 将存档数据恢复为运行时卡牌状态
         /// </summary>
-        public static InventoryManager.ActiveCardState ToRuntimeState(this ActiveCardSaveData saveData)
+        public static ActiveCardState ToRuntimeState(this ActiveCardSaveData saveData)
         {
             if (saveData == null) return null;
 
-            return new InventoryManager.ActiveCardState
+            return new ActiveCardState
             {
                 CardId = saveData.CardId,
                 InstanceId = saveData.InstanceId,
@@ -58,9 +59,9 @@ namespace RogueGame.SaveSystem
         /// <summary>
         /// 批量转换存档数据列表为运行时状态列表
         /// </summary>
-        public static List<InventoryManager.ActiveCardState> ToRuntimeStateList(this IEnumerable<ActiveCardSaveData> saveDataList)
+        public static List<ActiveCardState> ToRuntimeStateList(this IEnumerable<ActiveCardSaveData> saveDataList)
         {
-            if (saveDataList == null) return new List<InventoryManager.ActiveCardState>();
+            if (saveDataList == null) return new List<ActiveCardState>();
             return saveDataList.Select(s => s.ToRuntimeState()).Where(s => s != null).ToList();
         }
     }

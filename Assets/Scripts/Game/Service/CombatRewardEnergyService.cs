@@ -1,9 +1,9 @@
 public class CombatRewardEnergyService
 {
-    public InventoryManager InventoryManager;
+    public InventoryServiceManager InventoryManager;
 
 
-    public CombatRewardEnergyService(InventoryManager inventoryManager)
+    public CombatRewardEnergyService(InventoryServiceManager inventoryManager)
     {
         InventoryManager = inventoryManager;
     }

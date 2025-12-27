@@ -11,14 +11,14 @@ using UnityEngine;
 public sealed class FloorRewardSystemService
 {
     private readonly PlayerManager playerManager;
-    private readonly InventoryManager inventoryManager;
+    private readonly InventoryServiceManager inventoryManager;
     private readonly GameWinLayerRewardConfig gameWinLayerRewardConfig;
 
     private bool _subscribed = false;
 
     public FloorRewardSystemService(
         PlayerManager playerManager,
-        InventoryManager inventoryManager,
+        InventoryServiceManager inventoryManager,
         GameWinLayerRewardConfig gameWinLayerRewardConfig
     )
     {

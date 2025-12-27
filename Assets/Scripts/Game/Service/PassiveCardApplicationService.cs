@@ -13,7 +13,7 @@ using UnityEngine;
 /// </summary>
 public sealed class PassiveCardApplicationService
 {
-    private readonly InventoryManager inventoryManager;
+    private readonly InventoryServiceManager inventoryManager;
     private readonly PlayerManager playerManager;
     private readonly CardDataBase cardDatabase;
     private readonly EffectFactory effectFactory;
@@ -24,7 +24,7 @@ public sealed class PassiveCardApplicationService
     private bool _subscribed = false;
 
     public PassiveCardApplicationService(
-        InventoryManager inventoryManager,
+        InventoryServiceManager inventoryManager,
         PlayerManager playerManager,
         CardDataBase cardDatabase
     )

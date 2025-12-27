@@ -52,9 +52,9 @@ public class GameRoot : Singleton<GameRoot>
     public TransitionController TransitionController => transitionController;
     [SerializeField] private PlayerManager playerManager;
     public PlayerManager PlayerManager => playerManager;
-    [SerializeField] private InventoryManager inventoryManager;
+    [SerializeField] private InventoryServiceManager inventoryManager;
 
-    public InventoryManager InventoryManager => inventoryManager;
+    public InventoryServiceManager InventoryManager => inventoryManager;
     [SerializeField] private LootDropper lootDropper;
     public LootDropper LootDropper => lootDropper;
     [SerializeField] private SaveManager saveManager;
@@ -173,7 +173,8 @@ public class GameRoot : Singleton<GameRoot>
 
         RoomPlayerSkillLimitService = new RoomPlayerSkillLimitService(
             playerManager,
-            roomManager
+            roomManager,
+            inventoryManager
         );
 
         CombatRewardEnergyService = new CombatRewardEnergyService(inventoryManager);

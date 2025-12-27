@@ -42,7 +42,7 @@ namespace RogueGame.SaveSystem
         /// </summary>
         private static void RestoreInventory(RunSaveData data)
         {
-            var inv = InventoryManager.Instance;
+            var inv = InventoryServiceManager.Instance;
             if (inv == null)
             {
                 CDTU.Utils.CDLogger.LogWarning("[SaveRestoreUtility] InventoryManager not found");

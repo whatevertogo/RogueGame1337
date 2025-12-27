@@ -4,6 +4,7 @@ using UI;
 using Character.Components;
 using Unity.VisualScripting;
 using Character.Player;
+using RogueGame.Items;
 
 namespace Game.UI
 {
@@ -72,7 +73,7 @@ namespace Game.UI
 
         public void RefreshActiveCardViews()
         {
-            var inv = InventoryManager.Instance;
+            var inv = InventoryServiceManager.Instance;
             if (inv == null)
             {
                 CDTU.Utils.CDLogger.LogWarning("[BagView] InventoryManager.Instance is null");
@@ -86,7 +87,7 @@ namespace Game.UI
             }
 
             // 按 CardId 分组，找到最高等级的实例
-            var cardGroups = new System.Collections.Generic.Dictionary<string, InventoryManager.ActiveCardState>();
+            var cardGroups = new System.Collections.Generic.Dictionary<string, ActiveCardState>();
 
             foreach (var st in inv.ActiveCardStates)
             {
