@@ -38,18 +38,6 @@ public class DamageStatusEffectInstance : StatusEffectInstanceBase, IDamageSourc
     {
         base.OnApply(stats, comp);
         
-        // 设置伤害来源为施法者（如果可用）
-        if (comp != null && _damageSource == null)
-        {
-            var characterBase = comp.GetComponent<CharacterBase>();
-            if (characterBase != null)
-            {
-                // 尝试从技能目标上下文获取施法者信息
-                // 这里需要通过其他方式传递施法者信息，暂时使用当前角色作为来源
-                _damageSource = characterBase;
-            }
-        }
-        
         // 如果是瞬间伤害（damageInterval为0），立即应用伤害
         if (_def.damageInterval <= 0f)
         {

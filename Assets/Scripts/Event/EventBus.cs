@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
 
 public static class EventBus
 {
@@ -36,7 +37,7 @@ public static class EventBus
         if (_listeners.TryGetValue(type, out var list))
         {
             list.Remove(callback);
-            if (list.Count == 0)
+            if (!list.Any())
                 _listeners.Remove(type);
         }
     }

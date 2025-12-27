@@ -162,8 +162,8 @@ namespace RogueGame.Game.Service.SkillLimit
                 return provider.SkillRule;
             }
 
-            // 默认规则：每个房间只能使用一次技能
-            return RoomSkillRule.OneTimePerRoom;
+            // 默认规则：无技能使用限制
+            return RoomSkillRule.None;
         }
 
         /// <summary>

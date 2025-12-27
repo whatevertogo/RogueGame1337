@@ -8,12 +8,14 @@ namespace Character.Effects
     public interface IStatusEffect
     {
         string EffectId { get; }
+        // 是否可叠加
         bool IsStackable { get; }
 
         void OnApply(CharacterStats stats, StatusEffectComponent comp);
         void OnTick(float deltaTime);
         void OnRemove(CharacterStats stats, StatusEffectComponent comp);
 
+        // 是否过期
         bool IsExpired { get; }
 
         // 可选：修改输出伤害

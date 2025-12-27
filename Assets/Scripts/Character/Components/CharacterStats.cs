@@ -332,29 +332,6 @@ namespace Character.Components
             };
         }
 
-        // /// <summary>
-        // /// 根据名称获取 Stat（兼容旧代码）
-        // /// </summary>
-        // public Stat GetStat(string statName)
-        // {
-        //     return statName.ToLower() switch
-        //     {
-        //         "maxhp" => _maxHP,
-        //         "hpregen" => _hpRegen,
-        //         "movespeed" => _moveSpeed,
-        //         "acceleration" => _acceleration,
-        //         "attackpower" => _attackPower,
-        //         "attackspeed" => _attackSpeed,
-        //         "attackrange" => _attackRange,
-        //         // "critchance" => _critChance,
-        //         // "critdamage" => _critDamage,
-        //         "armor" => _armor,
-        //         "dodge" => _dodge,
-        //         "skillcooldownreductionrate" => _skillCooldownReductionRate,
-        //         _ => null
-        //     };
-        // }
-
         /// <summary>
         /// 移除某来源的所有修饰符
         /// </summary>

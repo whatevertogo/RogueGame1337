@@ -38,7 +38,7 @@ public class EnemyCharacter : CharacterBase
         }
 
         // 设置阵营为敌人（如果尚未设置）
-        SetTeam(Character.TeamType.Enemy);
+        this.SetTeam(Character.TeamType.Enemy);
 
         // 自动设置 Layer 为 Enemy 层
         int enemyLayer = LayerMask.NameToLayer("Enemy");

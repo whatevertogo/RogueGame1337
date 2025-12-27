@@ -18,7 +18,7 @@ namespace Character.Player
         public SkillSlot[] PlayerSkillSlots => _playerSkillSlots;
 
         // 技能限制器：根据房间规则限制技能使用
-        public PlayerSkillLimiter SkillLimiter { get; private set; }
+        public PlayerSkillLimiter SkillLimiter;
 
         // 保留事件签名以兼容现有绑定，但不触发任何事件
         public event Action<int, float> OnEnergyChanged;
@@ -30,8 +30,10 @@ namespace Character.Player
 
         private void Awake()
         {
-            // 初始化技能限制器
+            //TODO-将其加入难度系统里面通过服务模式
             SkillLimiter = new PlayerSkillLimiter();
+            SkillLimiter.SetNoCooldownMode(); // 默认无冷却模式
+
 
             // 确保数组内的 SkillSlot 实例已初始化，避免 Inspector VS 运行期不一致
             if (_playerSkillSlots != null)

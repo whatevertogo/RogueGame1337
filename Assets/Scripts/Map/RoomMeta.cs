@@ -22,7 +22,7 @@ namespace RogueGame.Map
         [Header("技能规则")]
         [Tooltip("该房间的技能使用规则")]
         [SerializeField]
-        private RoomSkillRule skillRule = RoomSkillRule.OneTimePerRoom;
+        private RoomSkillRule skillRule = RoomSkillRule.None;
 
         public bool HasCustomSize => Width > 0 && Height > 0;
 

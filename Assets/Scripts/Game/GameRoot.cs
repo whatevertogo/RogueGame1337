@@ -17,7 +17,6 @@ public class GameRoot : Singleton<GameRoot>
 
 
     [Header("Game DataBases")]
-    //
     [SerializeField] private CardDataBase cardDatabase;
     public CardDataBase CardDatabase => cardDatabase;
 
@@ -68,8 +67,8 @@ public class GameRoot : Singleton<GameRoot>
 
     public GameInput GameInput => gameInput;
 
-    //Services
-    // SlotService放UI根对象了
+    // Services
+    // SlotService放GameRoot了
     // public SlotService SlotService => GetComponent<SlotService>();
 
 
@@ -95,7 +94,7 @@ public class GameRoot : Singleton<GameRoot>
     protected override void Awake()
     {
         base.Awake();
-        CDTU.Utils.CDLogger.Log("[GameRoot] Awake()");
+        CDLogger.Log("[GameRoot] Awake()");
 
         bool ok = true;
 
@@ -116,12 +115,12 @@ public class GameRoot : Singleton<GameRoot>
         // statLimitConfig 是可选的，如果未配置则使用默认值
         if (statLimitConfig == null)
         {
-            CDTU.Utils.CDLogger.LogWarning("[GameRoot] StatLimitConfig 未配置，将使用 Stat 类内部默认上限");
+            CDLogger.LogWarning("[GameRoot] StatLimitConfig 未配置");
         }
 
         if (!ok)
         {
-            CDTU.Utils.CDLogger.LogError("[GameRoot] Initialization aborted due to missing references.");
+            CDLogger.LogError("[GameRoot] Initialization aborted due to missing references.");
             return;
         }
 
@@ -129,7 +128,7 @@ public class GameRoot : Singleton<GameRoot>
         if (GetComponent<SlotService>() == null)
         {
             gameObject.AddComponent<SlotService>();
-            CDTU.Utils.CDLogger.Log("[GameRoot] SlotService added to GameRoot at runtime");
+            CDLogger.Log("[GameRoot] SlotService added to GameRoot at runtime");
         }
 
         CDLogger.Log("[GameRoot] All required references assigned. Initializing CardDatabase.");
@@ -144,10 +143,10 @@ public class GameRoot : Singleton<GameRoot>
         );
 
         transitionController.Initialize(playerManager);
+
         roomManager.Initialize(transitionController);
 
         playerManager.Initialize(roomManager);
-
 
         shopManager.Initialize(inventoryManager);
 
@@ -178,8 +177,7 @@ public class GameRoot : Singleton<GameRoot>
 
         CombatRewardEnergyService = new CombatRewardEnergyService(inventoryManager);
 
-
-
+        // 订阅服务的事件
         FloorRewardSystemService.Subscribe();
         PassiveCardApplicationService.Subscribe();
         RoomPlayerSkillLimitService.Subscribe();
@@ -192,7 +190,7 @@ public class GameRoot : Singleton<GameRoot>
     {
         if (obj == null)
         {
-            CDTU.Utils.CDLogger.LogError($"[GameRoot] {name} is not assigned.");
+            CDLogger.LogError($"[GameRoot] {name} is not assigned.");
             return false;
         }
         return true;

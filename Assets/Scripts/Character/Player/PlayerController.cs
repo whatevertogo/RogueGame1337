@@ -159,6 +159,7 @@ public class PlayerController : CharacterBase
 
 		//更新人物朝向
 		Vector3 mouseWorldPos = _mainCamera.ScreenToWorldPoint(UnityEngine.InputSystem.Mouse.current.position.ReadValue());
+		if (mouseWorldPos.x < transform.position.x) return;
 		transform.localScale = new Vector3(mouseWorldPos.x > transform.position.x ? 1f : -1f, transform.localScale.y, transform.localScale.z);
 
 
@@ -256,7 +257,6 @@ public class PlayerController : CharacterBase
 		//通知PlayerManager玩家死亡
 		EventBus.Publish<PlayerDiedEvent>(new PlayerDiedEvent(this));
 
-		// TODO- UIManager.Instance.Show<DeadUIView>
 		// 播放死亡动画
 		playerAnim.PlayDie();
 		CDTU.Utils.CDLogger.Log("💀 玩家死亡");
