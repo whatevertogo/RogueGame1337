@@ -115,7 +115,8 @@ public class GameRoot : Singleton<GameRoot>
         // statLimitConfig 是可选的，如果未配置则使用默认值
         if (statLimitConfig == null)
         {
-            CDLogger.LogWarning("[GameRoot] StatLimitConfig 未配置");
+            CDLogger.LogError("[GameRoot] StatLimitConfig 未配置, 使用默认值");
+            statLimitConfig = ScriptableObject.CreateInstance<StatLimitConfig>();
         }
 
         if (!ok)

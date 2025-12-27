@@ -40,12 +40,32 @@ public sealed class GameFlowCoordinator : MonoBehaviour, IGameStateManager
     }
 
     private bool _isTransitioning = false;
-    private bool _subscribed = false;
-    // 每层已清理的战斗房间数（GameStateManager 为权威）
+
+    // 每层已清理的战斗房间数（GameFlowCoordinator 为权威）
     private int _roomsClearedThisLayer = 0;
     private bool _bossUnlockedThisLayer = false;
 
     private bool _restoredRunHandled = false;
+
+
+    private void OnEnable()
+    {
+        EventBus.Subscribe<DoorEnterRequestedEvent>(HandleDoorRequested);
+        EventBus.Subscribe<RoomClearedEvent>(HandleRoomClearedEvent);
+        EventBus.Subscribe<RoomEnteredEvent>(HandleRoomEnteredEvent);
+        EventBus.Subscribe<CombatStartedEvent>(HandleCombatStartedEvent);
+
+    }
+
+    private void OnDisable()
+    {
+        EventBus.Unsubscribe<DoorEnterRequestedEvent>(HandleDoorRequested);
+        EventBus.Unsubscribe<RoomClearedEvent>(HandleRoomClearedEvent);
+        EventBus.Unsubscribe<RoomEnteredEvent>(HandleRoomEnteredEvent);
+        EventBus.Unsubscribe<CombatStartedEvent>(HandleCombatStartedEvent);
+        // 退订 Run 存档加载事件
+        try { SaveManager.OnRunSaveLoaded -= HandleRunSaveLoaded; } catch { }
+    }
 
     private void Start()
     {
@@ -76,16 +96,6 @@ public sealed class GameFlowCoordinator : MonoBehaviour, IGameStateManager
             return;
         }
 
-        // 订阅事实事件，确保在 RoomManager 启动并发布事件时能被捕获。
-        if (!_subscribed)
-        {
-            EventBus.Subscribe<DoorEnterRequestedEvent>(HandleDoorRequested);
-            EventBus.Subscribe<RoomClearedEvent>(HandleRoomClearedEvent);
-            EventBus.Subscribe<RoomEnteredEvent>(HandleRoomEnteredEvent);
-            EventBus.Subscribe<CombatStartedEvent>(HandleCombatStartedEvent);
-            _subscribed = true;
-        }
-
         // 将层级初始化交由 GameFlowCoordinator 处理：设置 CurrentLayer 并委托 RoomManager 启动该层
         CurrentLayer = 1;
         _roomsClearedThisLayer = 0;
@@ -104,21 +114,6 @@ public sealed class GameFlowCoordinator : MonoBehaviour, IGameStateManager
             CurrentRoomId = latest.Meta?.Index ?? 0;
             CurrentRoomInstanceId = latest.InstanceId;
         }
-    }
-
-    private void OnDisable()
-    {
-        if (_subscribed)
-        {
-            EventBus.Unsubscribe<DoorEnterRequestedEvent>(HandleDoorRequested);
-            EventBus.Unsubscribe<RoomClearedEvent>(HandleRoomClearedEvent);
-            EventBus.Unsubscribe<RoomEnteredEvent>(HandleRoomEnteredEvent);
-            EventBus.Unsubscribe<CombatStartedEvent>(HandleCombatStartedEvent);
-            _subscribed = false;
-        }
-
-        // 退订 Run 存档加载事件
-        try { SaveManager.OnRunSaveLoaded -= HandleRunSaveLoaded; } catch { }
     }
 
     private RoomInstanceState GetLatestInstanceFromRepository()
@@ -301,7 +296,7 @@ public sealed class GameFlowCoordinator : MonoBehaviour, IGameStateManager
         try
         {
             // 发布层间过渡事件
-            EventBus.Publish(new LayerTransitionEvent(from,CurrentLayer));
+            EventBus.Publish(new LayerTransitionEvent(from, CurrentLayer));
 
             // 触发层间奖励系统
             EventBus.Publish(new RewardSelectionRequestedEvent(

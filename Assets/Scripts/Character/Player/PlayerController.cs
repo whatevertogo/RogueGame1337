@@ -175,20 +175,20 @@ public class PlayerController : CharacterBase
 		Vector2 aimDir = GetAimDirection();
 		Combat.SetAim(aimDir);
 
-		// 检测攻击输入
-		if (GameInput.Instance.AttackIsPressed)
-		{
-			bool success = Combat.TryAttack();
+		// // 检测攻击输入
+		// if (GameInput.Instance.AttackIsPressed)
+		// {
+		// 	bool success = Combat.TryAttack();
 
-			// if (success)
-			// {
-			// 	CDTU.Utils.Logger.Log(" 攻击输入成功！");
-			// }
-			// else
-			// {
-			// 	CDTU.Utils.Logger.Log($"攻击失败 - CanAttack: {Combat.CanAttack}, IsOnCooldown: {Combat.IsOnCooldown}, IsDisabled: {Combat.IsDisabled}");
-			// }
-		}
+		// 	if (success)
+		// 	{
+		// 		CDTU.Utils.CDLogger.Log(" 攻击输入成功！");
+		// 	}
+		// 	else
+		// 	{
+		// 		CDTU.Utils.CDLogger.Log($"攻击失败 - CanAttack: {Combat.CanAttack}, IsOnCooldown: {Combat.IsOnCooldown}, IsDisabled: {Combat.IsDisabled}");
+		// 	}
+		// }
 	}
 
 
