@@ -1,12 +1,11 @@
 using System;
 using System.Collections.Generic;
-using UnityEngine;
 using System.Linq;
 
 public static class EventBus
 {
-    private static readonly Dictionary<Type, List<Delegate>> _listeners
-        = new Dictionary<Type, List<Delegate>>();
+    private static readonly Dictionary<Type, HashSet<Delegate>> _listeners
+        = new Dictionary<Type, HashSet<Delegate>>();
 
     /// <summary>
     /// 订阅事件
@@ -16,14 +15,12 @@ public static class EventBus
     public static void Subscribe<T>(Action<T> callback)
     {
         var type = typeof(T);
-        if (!_listeners.TryGetValue(type, out var list))
+        if (!_listeners.TryGetValue(type, out var set))
         {
-            list = new List<Delegate>();
-            _listeners[type] = list;
+            set = new HashSet<Delegate>();
+            _listeners[type] = set;
         }
-
-        if (!list.Contains(callback))
-            list.Add(callback);
+        set.Add(callback); // HashSet 自动去重
     }
 
     /// <summary>
@@ -34,10 +31,10 @@ public static class EventBus
     public static void Unsubscribe<T>(Action<T> callback)
     {
         var type = typeof(T);
-        if (_listeners.TryGetValue(type, out var list))
+        if (_listeners.TryGetValue(type, out var set))
         {
-            list.Remove(callback);
-            if (!list.Any())
+            set.Remove(callback);
+            if (set.Count == 0)
                 _listeners.Remove(type);
         }
     }
@@ -49,26 +46,30 @@ public static class EventBus
     /// <param name="evt"></param>
     public static void Publish<T>(T evt)
     {
-        if (evt == null) {
+        if (evt == null)
+        {
             CDTU.Utils.CDLogger.LogWarning($"[EventBus] Publish: Event of type {typeof(T).Name} is null");
             return;
         }
-
         var type = typeof(T);
-        if (!_listeners.TryGetValue(type, out var list))
-            return; // 没有监听器是正常情况
+        if (!_listeners.TryGetValue(type, out var set))
+            return;
 
-        // 防止回调中修改列表
-        var snapshot = list.ToArray();
-        for (int i = 0; i < snapshot.Length; i++)
+        // 创建副本以防在回调中修改订阅列表
+        var snapshot = set.ToArray();
+        foreach (var d in snapshot)
         {
-            try {
-                ((Action<T>)snapshot[i])?.Invoke(evt);
-            } catch (System.Exception ex) {
-                CDTU.Utils.CDLogger.LogError($"[EventBus] 事件处理失败 (事件类型: {type.Name}, 索引: {i}): {ex.Message}");
+            try
+            {
+                ((Action<T>)d)?.Invoke(evt);
+            }
+            catch (Exception ex)
+            {
+                CDTU.Utils.CDLogger.LogError($"[EventBus] Publish: Exception in event handler for {typeof(T).Name}: {ex}");
             }
         }
     }
+
 
     public static void Clear()
     {
