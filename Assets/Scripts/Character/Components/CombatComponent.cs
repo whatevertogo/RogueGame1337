@@ -25,8 +25,6 @@ namespace Character.Components
         [SerializeField] private bool enableDebugLog = false;
         [SerializeField] private bool drawGizmos = true;
 
-        [Tooltip("始终显示可视化（否则仅在调试或需求时显示）")]
-        public bool showVisualizer = true;
 
         // 组件缓存
         private CharacterStats stats;

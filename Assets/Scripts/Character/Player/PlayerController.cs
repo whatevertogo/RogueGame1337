@@ -87,7 +87,7 @@ public class PlayerController : CharacterBase
 		CDTU.Utils.CDLogger.Log($"[PlayerController] Awake: {gameObject.name}, tag={gameObject.tag}, layer={LayerMask.LayerToName(gameObject.layer)}, Rigidbody2D={(rb != null ? "Yes" : "No")}, Collider2D={(col != null ? "Yes" : "No")}");
 	}
 
-	 void OnEnable()
+	void OnEnable()
 	{
 	}
 
@@ -159,8 +159,8 @@ public class PlayerController : CharacterBase
 
 		//更新人物朝向
 		Vector3 mouseWorldPos = _mainCamera.ScreenToWorldPoint(UnityEngine.InputSystem.Mouse.current.position.ReadValue());
-		if (mouseWorldPos.x < transform.position.x) return;
-		transform.localScale = new Vector3(mouseWorldPos.x > transform.position.x ? 1f : -1f, transform.localScale.y, transform.localScale.z);
+		float direction = mouseWorldPos.x > transform.position.x ? 1f : -1f;
+		transform.localScale = new Vector3(direction, transform.localScale.y, transform.localScale.z);
 
 
 		// 更新动画
@@ -175,20 +175,20 @@ public class PlayerController : CharacterBase
 		Vector2 aimDir = GetAimDirection();
 		Combat.SetAim(aimDir);
 
-		// // 检测攻击输入
-		// if (GameInput.Instance.AttackIsPressed)
-		// {
-		// 	bool success = Combat.TryAttack();
+		// 检测攻击输入
+		if (GameInput.Instance.AttackIsPressed)
+		{
+			bool success = Combat.TryAttack();
 
-		// 	if (success)
-		// 	{
-		// 		CDTU.Utils.CDLogger.Log(" 攻击输入成功！");
-		// 	}
-		// 	else
-		// 	{
-		// 		CDTU.Utils.CDLogger.Log($"攻击失败 - CanAttack: {Combat.CanAttack}, IsOnCooldown: {Combat.IsOnCooldown}, IsDisabled: {Combat.IsDisabled}");
-		// 	}
-		// }
+			if (success)
+			{
+				CDTU.Utils.CDLogger.Log(" 攻击输入成功！");
+			}
+			else
+			{
+				CDTU.Utils.CDLogger.Log($"攻击失败 - CanAttack: {Combat.CanAttack}, IsOnCooldown: {Combat.IsOnCooldown}, IsDisabled: {Combat.IsDisabled}");
+			}
+		}
 	}
 
 

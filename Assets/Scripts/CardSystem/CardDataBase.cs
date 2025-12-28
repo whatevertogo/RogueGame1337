@@ -6,7 +6,6 @@ using System.Linq;
 [CreateAssetMenu(fileName = "New Card Database", menuName = "Card System/Card Database")]
 /// <summary>
 /// 全局卡牌定义注册表：通过 cardId 查找 CardDefinition(SO)
-/// 运行时自动初始化；编辑器下会扫描工程中的所有 CardDefinition 并做唯一性检查。
 /// </summary>
 public class CardDataBase : ScriptableObject
 {
