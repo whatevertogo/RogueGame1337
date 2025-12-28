@@ -6,6 +6,7 @@ using Character.Components;
 using Character.Components.Interface;
 using Character.Player.Skill.Targeting;
 using Character.Player.Skill.Runtime;
+using Core.Events;
 using RogueGame.Events;
 
 namespace Character.Player

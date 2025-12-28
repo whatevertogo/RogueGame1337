@@ -1,5 +1,6 @@
 using UnityEngine;
 using RogueGame.Map;
+using Core.Events;
 using RogueGame.Events;
 using System.Collections;
 using UI;

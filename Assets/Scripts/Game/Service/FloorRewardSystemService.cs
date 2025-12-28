@@ -1,5 +1,6 @@
 using System;
 using Character.Components;
+using Core.Events;
 using RogueGame.Events;
 using UnityEngine;
 

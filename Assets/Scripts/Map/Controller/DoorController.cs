@@ -1,5 +1,7 @@
 using UnityEngine;
 using System;
+using Core.Events;
+using RogueGame.Events;
 
 namespace RogueGame.Map
 {

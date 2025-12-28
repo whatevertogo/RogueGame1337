@@ -1,20 +1,19 @@
-using System;
-using UnityEngine;
-using RogueGame.Events;
 using Core;
+using Core.Events;
+using RogueGame.Events;
 
 /// <summary>
 /// 订阅 ClearAllSlotsRequestedEvent 并执行槽位清理的集中服务
 /// 将此组件放在场景中（例如 GameRoot 或 UI 根对象）以确保能在运行时接收事件
 /// </summary>
-public class SlotService : MonoBehaviour
+public class SlotClearService
 {
-    private void Awake()
+    public void Subscribe()
     {
         EventBus.Subscribe<ClearAllSlotsRequestedEvent>(OnClearAllSlotsRequested);
     }
 
-    private void OnDestroy()
+    public void Unsubscribe()
     {
         EventBus.Unsubscribe<ClearAllSlotsRequestedEvent>(OnClearAllSlotsRequested);
     }

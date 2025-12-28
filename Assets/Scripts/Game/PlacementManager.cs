@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using CDTU.Utils;
+using Core.Events;
+using RogueGame.Events;
 
 /// <summary>
 /// 放置物体管理器：管理所有通过技能放置的物体

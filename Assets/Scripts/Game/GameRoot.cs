@@ -67,10 +67,7 @@ public class GameRoot : Singleton<GameRoot>
 
     public GameInput GameInput => gameInput;
 
-    // Services
-    // SlotService放GameRoot了
-    // public SlotService SlotService => GetComponent<SlotService>();
-
+    // -------------Services----------------
 
     //战斗奖励技能服务
     public SkillChargeSyncService SkillChargeSyncService { get; private set; }
@@ -89,6 +86,10 @@ public class GameRoot : Singleton<GameRoot>
 
     //RoomPlayerSkillLimitService房间技能限制服务
     public RoomPlayerSkillLimitService RoomPlayerSkillLimitService { get; private set; }
+
+    //slotService 放在 GameRoot 上，确保运行时存在
+    public SlotClearService SlotService { get; private set; }
+
 
 
     protected override void Awake()
@@ -125,12 +126,6 @@ public class GameRoot : Singleton<GameRoot>
             return;
         }
 
-        // 确保 SlotService 在运行时存在，用于处理槽位相关集中逻辑（例如响应 ClearAllSlotsRequestedEvent）
-        if (GetComponent<SlotService>() == null)
-        {
-            gameObject.AddComponent<SlotService>();
-            CDLogger.Log("[GameRoot] SlotService added to GameRoot at runtime");
-        }
 
         CDLogger.Log("[GameRoot] All required references assigned. Initializing CardDatabase.");
         cardDatabase.Initialize();
@@ -179,10 +174,15 @@ public class GameRoot : Singleton<GameRoot>
 
         CombatRewardEnergyService = new CombatRewardEnergyService(inventoryManager);
 
+        // 初始化 SlotService
+        SlotService = new SlotClearService();
+
+
         // 订阅服务的事件
         FloorRewardSystemService.Subscribe();
         PassiveCardApplicationService.Subscribe();
         RoomPlayerSkillLimitService.Subscribe();
+        SlotService.Subscribe();
 
         // 启动时加载元游戏存档
         SaveManager.LoadMeta();
@@ -207,6 +207,7 @@ public class GameRoot : Singleton<GameRoot>
         FloorRewardSystemService?.Unsubscribe();
         PassiveCardApplicationService?.Unsubscribe();
         RoomPlayerSkillLimitService?.Unsubscribe();
+        SlotService?.Unsubscribe();
 
         base.OnDestroy();
     }

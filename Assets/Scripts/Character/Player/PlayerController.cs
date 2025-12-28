@@ -1,6 +1,7 @@
 using UnityEngine;
 using Character;
 using Character.Player;
+using Core.Events;
 using UI;
 using RogueGame.Events;
 

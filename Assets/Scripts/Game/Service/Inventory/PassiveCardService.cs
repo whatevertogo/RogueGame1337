@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using CDTU.Utils;
+using Core.Events;
 using RogueGame.Events;
 using RogueGame.Items;
 

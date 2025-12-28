@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using CardSystem.SkillSystem.TargetingSystem;
+using Card.SkillSystem.TargetingSystem;
 using UnityEngine;
 
 

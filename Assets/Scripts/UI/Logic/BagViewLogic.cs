@@ -1,10 +1,9 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 using UI;
 using Character.Components;
-using Unity.VisualScripting;
 using Character.Player;
 using RogueGame.Items;
+using Core.Events;
 
 namespace Game.UI
 {

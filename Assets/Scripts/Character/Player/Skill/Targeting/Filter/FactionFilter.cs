@@ -18,7 +18,7 @@ public enum TargetFaction
 //// <summary>
 /// 阵营过滤器：根据目标阵营过滤目标
 /// </summary>
-public class FactionFliter : TargetFilterSO
+public class FactionFilter : TargetFilterSO
 {
     [SerializeField] private TargetFaction targetFaction = TargetFaction.Enemy;
 

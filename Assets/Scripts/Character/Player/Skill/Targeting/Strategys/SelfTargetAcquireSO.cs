@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Character;
 using UnityEngine;
-using CardSystem.SkillSystem.TargetingSystem;
+using Card.SkillSystem.TargetingSystem;
 using Character.Player.Skill.Targeting;
 
 /// <summary>

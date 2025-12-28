@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using Character.Components;
 using Character.Components.Interface;
+using Core.Events;
 using RogueGame.Events;
 
 namespace Character.Player

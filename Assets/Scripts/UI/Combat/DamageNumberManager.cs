@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using CDTU.Utils;
+using Core.Events;
 using RogueGame.Events;
 
 namespace UI.Combat

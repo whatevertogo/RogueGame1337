@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
+using Core.Events;
 using RogueGame.Events;
 using CDTU.Utils;
 using Character.Player;

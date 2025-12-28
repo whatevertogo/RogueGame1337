@@ -3,6 +3,7 @@ using UnityEngine;
 using RogueGame.Map.Data;
 using System;
 using System.Threading.Tasks;
+using Core.Events;
 using RogueGame.Events;
 
 namespace RogueGame.Map

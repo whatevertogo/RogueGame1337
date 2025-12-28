@@ -4,6 +4,7 @@ using Character;
 using Character.Components;
 using Character.Effects;
 using Character.Player;
+using Core.Events;
 using RogueGame.Events;
 using UnityEngine;
 

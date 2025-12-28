@@ -3,7 +3,7 @@ using Character;
 using Character.Player.Skill.Targeting;
 using UnityEngine;
 
-namespace CardSystem.SkillSystem.TargetingSystem
+namespace Card.SkillSystem.TargetingSystem
 {
     /// <summary>
     /// 目标获取策略抽象基类

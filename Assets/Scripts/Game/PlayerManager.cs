@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using RogueGame.Map;
+using Core.Events;
 using RogueGame.Events;
 using CDTU.Utils;
 using Character.Player;

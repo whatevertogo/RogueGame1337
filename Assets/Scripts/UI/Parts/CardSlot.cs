@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
+using Core.Events;
 using RogueGame.Events;
 using UnityEngine.UI;
 using DG.Tweening;

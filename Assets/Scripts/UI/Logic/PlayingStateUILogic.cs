@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using UI;
 using System.Threading.Tasks;
+using Core.Events;
 using RogueGame.Events;
 
 namespace Game.UI
