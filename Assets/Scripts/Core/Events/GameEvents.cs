@@ -85,7 +85,7 @@ namespace RogueGame.Events
         public RoomType RoomType;
         public int CurrentLayer;
 
-        public RewardSelectionRequestedEvent(int roomId, int instanceId, RoomType roomType,int currentLayer)
+        public RewardSelectionRequestedEvent(int roomId, int instanceId, RoomType roomType, int currentLayer)
         {
             RoomId = roomId;
             InstanceId = instanceId;
