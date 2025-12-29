@@ -78,15 +78,11 @@ public class PlayerManager : Singleton<PlayerManager>
 
     /// <summary>
     /// 处理房间进入事件
-    /// 重置所有玩家的技能使用状态（仅本房间标记）
     /// </summary>
     /// <param name="evt"></param>
     private void HandleRoomEnteredEvent(RoomEnteredEvent evt)
     {
-        ResetSkillUsageForAllPlayers();
     }
-
-
 
     /// <summary>
     /// 处理实体击杀事件
@@ -97,23 +93,6 @@ public class PlayerManager : Singleton<PlayerManager>
     {
         if (evt == null) return;
         NotifyEnemyKilled(evt.Attacker, evt.Victim, evt.RoomType);
-    }
-
-    /// <summary>
-    /// 重置所有玩家的技能使用状态（仅本房间标记）
-    /// </summary>
-    private void ResetSkillUsageForAllPlayers()
-    {
-        foreach (var kv in _players)
-        {
-            var state = kv.Value;
-            if (state?.Controller == null) continue;
-            var comp = state.Controller.GetComponent<PlayerSkillComponent>();
-            if (comp != null)
-            {
-                comp.OnRoomEnter();
-            }
-        }
     }
 
     /// <summary>

@@ -144,30 +144,6 @@ namespace Character.Player
             }
         }
 
-        /// <summary>
-        /// 标记槽位在当前房间已使用
-        /// </summary>
-        public void MarkSlotUsedInRoom(int slotIndex, bool used = true)
-        {
-            if (slotIndex < 0 || slotIndex >= _playerSkillSlots.Length) return;
-            var rt = _playerSkillSlots[slotIndex]?.Runtime;
-            if (rt != null) rt.UsedInCurrentRoom = used;
-        }
-
-        /// <summary>
-        /// 当进入新房间时重置房间使用标记
-        /// </summary>
-        public void OnRoomEnter()
-        {
-            if (_playerSkillSlots == null) return;
-            for (int i = 0; i < _playerSkillSlots.Length; i++)
-            {
-                var s = _playerSkillSlots[i];
-                var rt = s?.Runtime;
-                if (rt == null) continue;
-                rt.UsedInCurrentRoom = false;
-            }
-        }
 
         #endregion
     }

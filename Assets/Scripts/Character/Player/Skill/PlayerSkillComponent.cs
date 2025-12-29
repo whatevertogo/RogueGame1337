@@ -40,12 +40,20 @@ namespace Character.Player
         /// </summary>
         public PlayerSkillLimiter SkillLimiter;
 
+
+        /// <summary>
+        /// 缓存的服务引用（避免重复获取单例）
+        /// </summary>
+        private InventoryServiceManager _inventory;
+
+
         #endregion
 
         #region 生命周期
 
         private void Awake()
         {
+            _inventory = InventoryServiceManager.Instance;
             // TODO-将其加入难度系统里面通过服务模式
             SkillLimiter = new PlayerSkillLimiter();
             SkillLimiter.SetNoCooldownMode(); // 默认无冷却模式

@@ -18,11 +18,6 @@ namespace RogueGame.Game.Service.SkillLimit
         DisableAllSkills,
 
         /// <summary>
-        /// 每个房间只能使用一次：每个槽位的技能在当前房间内只能使用一次
-        /// </summary>
-        OneTimePerRoom,
-
-        /// <summary>
         /// 进入房间时重置充能：进入房间时将技能充能重置为满
         /// </summary>
         ResetOnEnter,

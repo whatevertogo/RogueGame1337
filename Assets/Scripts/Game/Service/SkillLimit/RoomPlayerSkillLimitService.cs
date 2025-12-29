@@ -121,20 +121,12 @@ namespace RogueGame.Game.Service.SkillLimit
             // 清除之前的规则
             skillLimiter.Clear();
 
-            // 重置房间使用记录
-            skillLimiter.ResetRoomUsage();
-
             // 根据规则应用限制
             switch (rule)
             {
                 case RoomSkillRule.DisableAllSkills:
                     skillLimiter.DisableAll();
                     CDTU.Utils.CDLogger.Log($"[RoomPlayerSkillLimitService] 房间 {room.RoomMeta.Index}: 禁用所有技能");
-                    break;
-
-                case RoomSkillRule.OneTimePerRoom:
-                    skillLimiter.SetOneTimeLimit();
-                    CDTU.Utils.CDLogger.Log($"[RoomPlayerSkillLimitService] 房间 {room.RoomMeta.Index}: 每个房间只能使用一次技能");
                     break;
 
                 case RoomSkillRule.ResetOnEnter:

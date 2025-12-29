@@ -1,6 +1,7 @@
 
 using System;
 using System.Collections.Generic;
+using Card;
 using Character.Player.Skill.Evolution;
 using Character.Player.Skill.Modifiers;
 using Character.Player.Skill.Targeting;
@@ -21,7 +22,6 @@ namespace Character.Player.Skill.Runtime
         // 链接到 InventoryServiceManager 中的 ActiveCardState.instanceId
         public string InstanceId;
         public float LastUseTime;
-        public bool UsedInCurrentRoom;
 
         // 运行时协程引用（非序列化）用于取消延迟/选择流程
         [NonSerialized]
@@ -68,6 +68,33 @@ namespace Character.Player.Skill.Runtime
         [NonSerialized]
         public float BounceRange = 5f;
 
+        // ========== 卡牌配置缓存 ==========
+        /// <summary>
+        /// 缓存的卡牌定义（避免频繁从 CardDatabase.Resolve 查找）
+        /// </summary>
+        [NonSerialized]
+        private CardDefinition _cachedCardDefinition;
+
+        /// <summary>
+        /// 获取缓存的卡牌定义（懒加载）
+        /// </summary>
+        public CardDefinition CachedCardDefinition
+        {
+            get
+            {
+                if (_cachedCardDefinition == null && !string.IsNullOrEmpty(CardId))
+                {
+                    _cachedCardDefinition = GameRoot.Instance?.CardDatabase?.Resolve(CardId);
+                }
+                return _cachedCardDefinition;
+            }
+        }
+
+        /// <summary>
+        /// 获取缓存的 ActiveCardConfig（便捷访问）
+        /// </summary>
+        public ActiveCardConfig CachedActiveConfig => CachedCardDefinition?.activeCardConfig;
+
         // ========== 构造函数 ==========
         public ActiveSkillRuntime(string cardId, SkillDefinition skill, string instanceId)
         {
@@ -75,7 +102,6 @@ namespace Character.Player.Skill.Runtime
             Skill = skill;
             InstanceId = instanceId;
             LastUseTime = -999f;
-            UsedInCurrentRoom = false;
 
             // 初始化动态属性
             EffectiveCooldown = skill?.cooldown ?? 1f;

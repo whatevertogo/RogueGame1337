@@ -12,7 +12,6 @@ namespace Character.Player
     {
         // 限制状态
         private bool _disableAll;
-        private bool _oneTimeOnly;
         private bool _noCooldown;
         private readonly bool[] _slotUsedInRoom = new bool[2]; // 追踪每个槽位在当前房间是否已使用
 
@@ -20,11 +19,6 @@ namespace Character.Player
         /// 当前是否处于"禁用所有技能"状态
         /// </summary>
         public bool IsAllDisabled => _disableAll;
-
-        /// <summary>
-        /// 当前是否处于"每个房间只能使用一次"状态
-        /// </summary>
-        public bool IsOneTimeLimit => _oneTimeOnly;
 
         /// <summary>
         /// 当前是否处于"无冷却"状态
@@ -39,13 +33,6 @@ namespace Character.Player
             _disableAll = true;
         }
 
-        /// <summary>
-        /// 设置每个房间只能使用一次的限制
-        /// </summary>
-        public void SetOneTimeLimit()
-        {
-            _oneTimeOnly = true;
-        }
 
         /// <summary>
         /// 设置无冷却模式（测试用）
@@ -61,18 +48,9 @@ namespace Character.Player
         public void Clear()
         {
             _disableAll = false;
-            _oneTimeOnly = false;
             _noCooldown = false;
 
             // 清除房间使用记录
-            Array.Clear(_slotUsedInRoom, 0, _slotUsedInRoom.Length);
-        }
-
-        /// <summary>
-        /// 重置房间使用记录（进入新房间时调用）
-        /// </summary>
-        public void ResetRoomUsage()
-        {
             Array.Clear(_slotUsedInRoom, 0, _slotUsedInRoom.Length);
         }
 
@@ -88,18 +66,6 @@ namespace Character.Player
             if (_disableAll)
             {
                 return false;
-            }
-
-            // 检查 2: 每个房间只能使用一次
-            if (_oneTimeOnly)
-            {
-                if (slotIndex >= 0 && slotIndex < _slotUsedInRoom.Length)
-                {
-                    if (_slotUsedInRoom[slotIndex])
-                    {
-                        return false; // 当前房间已使用过
-                    }
-                }
             }
 
             return true;
@@ -137,9 +103,6 @@ namespace Character.Player
         {
             if (_disableAll)
                 return "所有技能已禁用";
-
-            if (_oneTimeOnly)
-                return "每个房间只能使用一次技能";
 
             if (_noCooldown)
                 return "无冷却模式";

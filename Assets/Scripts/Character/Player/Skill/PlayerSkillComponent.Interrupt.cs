@@ -24,11 +24,7 @@ namespace Character.Player
             if (rt == null) return;
             if (rt.RunningCoroutine != null)
             {
-                try
-                {
-                    StopCoroutine(rt.RunningCoroutine);
-                }
-                catch { }
+                StopCoroutine(rt.RunningCoroutine);
                 rt.RunningCoroutine = null;
             }
         }
@@ -78,29 +74,19 @@ namespace Character.Player
             // 取消协程
             if (rt.RunningCoroutine != null)
             {
-                try
-                {
-                    StopCoroutine(rt.RunningCoroutine);
-                }
-                catch { }
+                StopCoroutine(rt.RunningCoroutine);
                 rt.RunningCoroutine = null;
             }
 
-            // 如果需要退还充能
+            // 如果需要退还充能（使用缓存配置）
             if (refundCharges && !string.IsNullOrEmpty(rt.InstanceId))
             {
-                var inv = InventoryServiceManager.Instance;
-                var cardDef = GameRoot.Instance?.CardDatabase?.Resolve(rt.CardId);
-                if (inv != null && cardDef != null && cardDef.activeCardConfig != null && cardDef.activeCardConfig.requiresCharge)
+                var config = rt.CachedActiveConfig;
+                if (_inventory != null && config?.requiresCharge == true)
                 {
-                    // 退还能量阈值（用于打断技能时返还消耗的能量）
-                    int refundAmount = cardDef.activeCardConfig.energyThreshold;
-                    inv.AddEnergy(rt.InstanceId, refundAmount);
+                    _inventory.AddEnergy(rt.InstanceId, config.energyThreshold);
                 }
             }
-
-            // 重置使用标记（允许再次使用）
-            rt.UsedInCurrentRoom = false;
         }
 
         #endregion

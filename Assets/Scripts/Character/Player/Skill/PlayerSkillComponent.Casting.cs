@@ -18,7 +18,26 @@ namespace Character.Player
     {
         private EffectFactory _effectFactory = new EffectFactory();
 
+
         #region 技能释放
+
+        /// <summary>
+        /// 检查指定槽位的技能冷却是否就绪
+        /// </summary>
+        private bool IsCooldownReady(int slotIndex)
+        {
+            if (SkillLimiter.IsNoCooldown) return true;
+
+            var rt = _playerSkillSlots[slotIndex]?.Runtime;
+            if (rt?.Skill == null) return false;
+
+            var baseCd = rt.Skill.cooldown;
+            var stats = GetComponent<CharacterStats>();
+            var reduction = stats?.SkillCooldownReductionRate.Value ?? 0f;
+            var effectiveCd = Mathf.Max(0f, baseCd * (1f - reduction));
+
+            return Time.time - rt.LastUseTime >= effectiveCd;
+        }
 
         /// <summary>
         /// 检查技能是否可用（统一的可用性检查入口）
@@ -29,37 +48,20 @@ namespace Character.Player
             var rt = _playerSkillSlots[slotIndex]?.Runtime;
             if (rt == null || rt.Skill == null) return false;
 
-            // 检查 0: 房间规则限制（通过 SkillLimiter）
-            if (!SkillLimiter.CanUseSkill(slotIndex))
+            // 房间规则限制
+            if (!SkillLimiter.CanUseSkill(slotIndex)) return false;
+
+            // 冷却检查
+            if (!IsCooldownReady(slotIndex)) return false;
+
+            // 能量检查（使用缓存配置）
+            var config = rt.CachedActiveConfig;
+            if (config?.requiresCharge == true)
             {
-                return false;
-            }
+                if (_inventory == null || string.IsNullOrEmpty(rt.InstanceId)) return false;
 
-            // 检查 1: 冷却判断
-            var baseCd = rt.Skill.cooldown;
-
-            // 检查无冷却模式（测试用）
-            if (!SkillLimiter.IsNoCooldown)
-            {
-                var stats = GetComponent<CharacterStats>();
-                var reduction = stats != null ? stats.SkillCooldownReductionRate.Value : 0f;
-                var effectiveCd = Mathf.Max(0f, baseCd * (1f - reduction));
-                if (Time.time - rt.LastUseTime < effectiveCd) return false;
-            }
-
-            // 检查 2: 能量检查（如果卡牌需要能量）
-            var cardDef = GameRoot.Instance?.CardDatabase?.Resolve(rt.CardId);
-            if (cardDef != null && cardDef.activeCardConfig != null && cardDef.activeCardConfig.requiresCharge)
-            {
-                var inv = InventoryServiceManager.Instance;
-                if (inv == null || string.IsNullOrEmpty(rt.InstanceId)) return false;
-
-                var state = inv.GetActiveCardState(rt.InstanceId);
-                if (state == null) return false;
-
-                // 符合策划案：能量需要达到阈值才能使用
-                int requiredEnergy = cardDef.activeCardConfig.energyThreshold;
-                if (state.CurrentCharges < requiredEnergy) return false;
+                var state = _inventory.GetActiveCardState(rt.InstanceId);
+                if (state == null || state.CurrentCharges < config.energyThreshold) return false;
             }
 
             return true;
@@ -90,15 +92,11 @@ namespace Character.Player
 
             // 启动协程处理（包含手动选择 / 消耗 / 冷却 / 延迟执行）
             // 取消并替换已有同槽位的流程，避免并发执行
-            try
+            if (rt.RunningCoroutine != null)
             {
-                if (rt.RunningCoroutine != null)
-                {
-                    StopCoroutine(rt.RunningCoroutine);
-                    rt.RunningCoroutine = null;
-                }
+                StopCoroutine(rt.RunningCoroutine);
+                rt.RunningCoroutine = null;
             }
-            catch { }
 
             rt.RunningCoroutine = StartCoroutine(ManualSelectAndExecute(def, ctx, slotIndex));
         }
@@ -119,22 +117,16 @@ namespace Character.Player
             var rt = slot?.Runtime;
             if (rt == null || rt.Skill == null) yield break;
 
-            // 如果卡牌要求消耗能量（或充能），在这里检查并消耗
-            bool requiresCharge = false;
-            var cdLookup = GameRoot.Instance?.CardDatabase?.Resolve(rt.CardId);
-            if (cdLookup != null && cdLookup.activeCardConfig != null)
-            {
-                requiresCharge = cdLookup.activeCardConfig.requiresCharge;
-            }
+            // 使用缓存配置检查是否需要消耗能量
+            var config = rt.CachedActiveConfig;
+            bool requiresCharge = config?.requiresCharge == true;
 
             if (requiresCharge)
             {
-                // 消耗技能能量（符合策划案：释放后清零或减少阈值）
-                var inv = InventoryServiceManager.Instance;
-                if (inv == null || string.IsNullOrEmpty(rt.InstanceId)) yield break;
+                // 消耗技能能量
+                if (_inventory == null || string.IsNullOrEmpty(rt.InstanceId)) yield break;
 
-                // 使用能量消耗方法，事件会自动触发 UI 更新
-                if (!inv.ConsumeSkillEnergy(rt.InstanceId))
+                if (!_inventory.ConsumeSkillEnergy(rt.InstanceId))
                 {
                     yield break;
                 }
@@ -143,7 +135,6 @@ namespace Character.Player
             // 标记为本房间已使用（房间内一次性规则）并记录使用时间（用于冷却计算）
             // 使用 SkillLimiter 而不是直接设置 rt.UsedInCurrentRoom
             SkillLimiter.MarkSkillUsed(slotIndex);
-            rt.UsedInCurrentRoom = true; // 保留旧字段以兼容其他可能的引用
             rt.LastUseTime = Time.time;
 
             // 触发已使用事件（UI/上层监听）
@@ -161,7 +152,7 @@ namespace Character.Player
             yield return DelayedExecute(def, ctx.AimPoint, slotIndex);
 
             // 清理运行时协程引用
-            try { rt.RunningCoroutine = null; } catch { }
+            rt.RunningCoroutine = null;
             yield break;
         }
 
@@ -173,7 +164,7 @@ namespace Character.Player
             // 关键检查：技能定义必须存在
             if (def == null)
             {
-                yield break;
+                yield break; 
             }
 
             // 等待检测延迟
