@@ -93,8 +93,12 @@ namespace Character.Player
             if (rt.RunningCoroutine != null)
             {
                 StopCoroutine(rt.RunningCoroutine);
-                // 取消旧协程时退还能量（如果已消耗）
-                if (rt.EnergyConsumed) RestoreEnergyIfConsumed(rt);
+                // 取消旧协程时退还能量（如果已消耗），并立刻重置标志，避免重复退还
+                if (rt.EnergyConsumed)
+                {
+                    RestoreEnergyIfConsumed(rt);
+                    rt.EnergyConsumed = false;
+                }
                 rt.RunningCoroutine = null;
             }
 

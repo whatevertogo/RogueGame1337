@@ -55,9 +55,7 @@ namespace RogueGame.Game.Service.SkillLimit
         /// <summary>
         /// 房间进入事件处理
         /// </summary>
-        /// <summary>
-        /// 当玩家进入房间时触发的事件处理方法
-        /// </summary>
+
         /// <param name="evt">房间进入事件对象，包含房间相关信息</param>
         private void OnRoomEntered(RoomEnteredEvent evt)
         {

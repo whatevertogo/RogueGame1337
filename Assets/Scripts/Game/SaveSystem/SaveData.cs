@@ -72,7 +72,6 @@ namespace RogueGame.SaveSystem
         public string CardId;
         public string InstanceId;  // 实例 ID
         public int CurrentEnergy;  // 当前能量
-        public int MaxEnergy;      // 最大能量
         public bool IsEquipped;
         public string EquippedPlayerId;
         public int Level = 1;  // 技能等级（Lv1-Lv5）

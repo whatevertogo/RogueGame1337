@@ -27,7 +27,6 @@ public struct DamageResult
 
     /// <summary>
     /// 伤害来源对象（例如施放者或子弹的 GameObject）
-    /// 计算最终伤害（在应用所有修改器后调用）
     /// 注意：DamageResult 为 struct（值类型），如果作为参数传递并希望此计算结果生效，
     /// 请确保使用 ref 传递，或在调用后使用返回的结构体实例而不是原始拷贝。
     public GameObject Source;

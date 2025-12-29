@@ -21,8 +21,10 @@ namespace Character.Player.Skill.Targeting
 
         /// <summary>
         /// 技能槽位索引（用于回溯 ActiveSkillRuntime）
-        /// 取值范围：通常为从 0 开始的非负整数，对应技能栏/快捷栏中的槽位索引
         /// </summary>
+        /// <remarks>
+        /// 取值范围：通常为从 0 开始的非负整数，对应技能栏/快捷栏中的槽位索引
+        /// </remarks>
         public int SlotIndex;
 
         // ========== 阶段2：目标获取配置（由 TargetingModifier 修改）==========
