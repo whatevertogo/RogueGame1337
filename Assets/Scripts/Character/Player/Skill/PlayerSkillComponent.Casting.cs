@@ -31,10 +31,8 @@ namespace Character.Player
             var rt = _playerSkillSlots[slotIndex]?.Runtime;
             if (rt?.Skill == null) return false;
 
-            var baseCd = rt.Skill.cooldown;
-            var stats = GetComponent<CharacterStats>();
-            var reduction = stats?.SkillCooldownReductionRate.Value ?? 0f;
-            var effectiveCd = Mathf.Max(0f, baseCd * (1f - reduction));
+            // 统一使用 EffectiveCooldown 作为冷却依据（已包含修改器影响）
+            var effectiveCd = rt.EffectiveCooldown;
 
             return Time.time - rt.LastUseTime >= effectiveCd;
         }
@@ -114,13 +112,38 @@ namespace Character.Player
             var rt = slot?.Runtime;
             if (rt == null || rt.Skill == null) yield break;
 
+            // 初始化技能上下文并应用修改器（必须在能量消耗之前）
+            var caster = GetComponent<CharacterBase>();
+            if (caster == null)
+            {
+                CDTU.Utils.CDLogger.LogError("[PlayerSkillComponent] CharacterBase component not found");
+                yield break;
+            }
+
+            // 创建技能上下文
+            ctx = new SkillTargetContext
+            {
+                Caster = caster,
+                AimPoint = ctx.AimPoint,
+                AimDirection = (ctx.AimPoint - transform.position).normalized,
+                SlotIndex = slotIndex,
+
+                // 使用嵌套结构的默认值
+                Targeting = TargetingConfig.Default,
+                EnergyCost = EnergyCostConfig.Default,
+                Damage = DamageResult.Default,
+            };
+
+            // 应用技能修改器（必须在能量消耗前生效）
+            rt?.ApplyAllModifiers(ref ctx);
+
             // 使用缓存配置检查是否需要消耗能量
             var config = rt.CachedActiveConfig;
             bool requiresCharge = config?.requiresCharge == true;
 
             if (requiresCharge)
             {
-                // 消耗技能能量
+                // 消耗技能能量（已在 ApplyAllModifiers 后应用能量消耗修改器）
                 if (string.IsNullOrEmpty(rt.InstanceId)) yield break;
 
                 if (!_inventory.ConsumeSkillEnergy(rt.InstanceId))
@@ -143,7 +166,7 @@ namespace Character.Player
 
             // 开始执行（处理 detectionDelay 和 executor）
             // 将 DelayedExecute 嵌入到当前协程内，保证单一协程句柄可用于取消
-            yield return DelayedExecute(def, ctx.AimPoint, slotIndex);
+            yield return DelayedExecute(def, ctx, slotIndex);
 
             // 清理运行时协程引用
             rt.RunningCoroutine = null;
@@ -153,20 +176,17 @@ namespace Character.Player
         /// <summary>
         /// 延迟执行技能
         /// </summary>
-        private IEnumerator DelayedExecute(SkillDefinition def, Vector3? aimPoint, int slotIndex)
+        private IEnumerator DelayedExecute(SkillDefinition def, SkillTargetContext ctx, int slotIndex)
         {
             // 关键检查：技能定义必须存在
             if (def == null)
             {
-                yield break; 
+                yield break;
             }
 
             // 等待检测延迟
             if (def.detectionDelay > 0f)
                 yield return new WaitForSeconds(def.detectionDelay);
-
-            // 计算目标点（若未指定，则使用施法者位置）
-            Vector3 origin = aimPoint ?? transform.position;
 
             // 获取施法者（已在组件初始化时验证，运行时应存在）
             var caster = GetComponent<CharacterBase>();
@@ -176,20 +196,7 @@ namespace Character.Player
                 yield break;
             }
 
-            // 获取运行时状态以应用修改器
             var rt = _playerSkillSlots[slotIndex]?.Runtime;
-
-            // 创建技能上下文
-            var ctx = new SkillTargetContext
-            {
-                Caster = caster,
-                AimPoint = origin,
-                AimDirection = (origin - transform.position).normalized,
-                PowerMultiplier = 1.0f // 可扩展：从 Buff 或技能等级读取
-            };
-
-            // 应用技能修改器（如果存在）
-            rt?.ApplyAllModifiers(ref ctx);
 
             // 播放 VFX（如果有）
             if (def.vfxPrefab != null)

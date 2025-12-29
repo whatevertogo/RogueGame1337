@@ -1,31 +1,48 @@
-public class DamageResult
+using UnityEngine;
+
+/// <summary>
+/// 伤害计算结果（独立结构体，用于 DamageModifier）
+/// </summary>
+public struct DamageResult
 {
     /// <summary>
-    /// 造成的最终伤害值（使用浮点以保留小数精度）
+    /// 伤害倍率（由修改器修改，默认 1.0）
     /// </summary>
-    public float FinalDamage { get; set; }
+    public float PowerMultiplier;
 
     /// <summary>
-    /// 伤害来源的标识（例如角色名称或ID）
+    /// 固定伤害加值（由修改器添加）
     /// </summary>
-    public string SourceId { get; set; }
+    public float FlatDamage;
 
     /// <summary>
-    /// 表示无伤害的结果（便捷常量）
+    /// 是否为真实伤害（无视防御）
     /// </summary>
-    public static readonly DamageResult Zero = new DamageResult(0f, null);
+    public bool IsTrueDamage;
 
     /// <summary>
-    /// 构造一个伤害结果
+    /// 最终伤害值（由修改器计算后传递到效果系统）
     /// </summary>
-    public DamageResult(float damage, string sourceId)
+    public float FinalDamage;
+
+    public GameObject Source;
+    /// <summary>
+    /// 计算最终伤害（在应用所有修改器后调用）
+    /// </summary>
+    public void CalculateFinalDamage(float baseDamage)
     {
-        FinalDamage = damage;
-        SourceId = sourceId;
+        FinalDamage = (baseDamage * PowerMultiplier) + FlatDamage;
     }
 
-    public override string ToString()
+    /// <summary>
+    /// 初始化默认值
+    /// </summary>
+    public static DamageResult Default => new DamageResult
     {
-        return $"DamageResult {{ FinalDamage = {FinalDamage}, SourceId = {SourceId} }}";
-    }
+        PowerMultiplier = 1.0f,
+        FlatDamage = 0f,
+        IsTrueDamage = false,
+        FinalDamage = 0f,
+        Source = null
+    };
 }

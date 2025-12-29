@@ -219,13 +219,13 @@ namespace Character.Components
         public DamageResult TakeDamage(DamageInfo info)
         {
 
-            if (IsDead) return new DamageResult(0, info.Source?.name ?? "Unknown");
+            if (IsDead) return DamageResult.Default;
 
             // 闪避判定（_dodge.Value 已经包含了上限限制）
             float actualDodge = _dodge.Value; // Stat 类会自动应用上限
             if (UnityEngine.Random.value < actualDodge)
             {
-                return new DamageResult(0, info.Source?.name ?? "Unknown");
+                return DamageResult.Default;
             }
 
             // 计算伤害
@@ -245,8 +245,17 @@ namespace Character.Components
             int finalDamage = Mathf.Max(1, Mathf.RoundToInt(damage));
             CurrentHP -= finalDamage;
 
-            return new DamageResult(finalDamage, info.Source?.name ?? "Unknown");
+            return new DamageResult
+            {
+                PowerMultiplier = 1.0f,
+                FlatDamage = 0f,
+                IsTrueDamage = false,
+                FinalDamage = finalDamage,
+                Source = info.Source
+            };
         }
+            
+        
 
 
         /// <summary>

@@ -52,7 +52,7 @@ public class HealthComponent : MonoBehaviour, IDamageable, IHealable
         public DamageResult TakeDamage(DamageInfo damageInfo)
         {
             if (stats == null || IsDead)
-                return DamageResult.Zero;
+                return DamageResult.Default;
 
             // 让状态效果修改受到的伤害
             if (statusEffects != null)

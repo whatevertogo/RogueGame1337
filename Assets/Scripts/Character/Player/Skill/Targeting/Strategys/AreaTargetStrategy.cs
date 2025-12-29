@@ -21,7 +21,10 @@ public class AreaTargetStrategy : TargetAcquireSO
         // 保护性检查：优先确保 ctx.Caster 或 AimPoint 合理（ctx 为 struct）
         Vector3 aimPoint = ctx.AimPoint;
 
-        Collider[] hitColliders = Physics.OverlapSphere(aimPoint, Radius, targetMask);
+        // 优先使用上下文中的半径配置，否则使用配置值
+        float searchRadius = ctx.Targeting.Radius > 0 ? ctx.Targeting.Radius : Radius;
+
+        Collider[] hitColliders = Physics.OverlapSphere(aimPoint, searchRadius, targetMask);
         List<CharacterBase> targets = new List<CharacterBase>();
 
         foreach (var collider in hitColliders)
