@@ -24,7 +24,6 @@ public sealed class GameInput : Singleton<GameInput>
 
     public event Action OnSkillQPressed;
     public event Action OnSkillEPressed;
-    public event Action OnAttackPressed;
 
     protected override void Awake()
     {
@@ -66,12 +65,6 @@ public sealed class GameInput : Singleton<GameInput>
         playerInput.PlayerControl.SkillQ.performed += OnSkillQPerformed;
         playerInput.PlayerControl.SkillE.performed += OnSkillEPerformed;
         playerInput.UI.ESC.performed += OnESCPerformed;
-        playerInput.PlayerControl.Attack.performed += OnAttackPerformed; 
-    }
-
-    private void OnAttackPerformed(InputAction.CallbackContext context)
-    {
-        OnAttackPressed?.Invoke();
     }
 
 
@@ -87,7 +80,6 @@ public sealed class GameInput : Singleton<GameInput>
         {
             playerInput.PlayerControl.SkillQ.performed -= OnSkillQPerformed;
             playerInput.PlayerControl.SkillE.performed -= OnSkillEPerformed;
-            playerInput.PlayerControl.Attack.performed -= OnAttackPreformed;
             playerInput.UI.ESC.performed -= OnESCPerformed;
         }
     }
