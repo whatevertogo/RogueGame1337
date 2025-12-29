@@ -27,17 +27,17 @@ namespace Character.Player.Skill.Runtime
         public Coroutine RunningCoroutine;
 
         /// <summary>
-        /// 能量已消耗标志（用于协程取消时退还能量）
-        /// </summary>
-        [NonSerialized]
-        public bool EnergyConsumed;
-
-        /// <summary>
         /// 实际消耗的能量值（用于协程取消时退还，包含修改器影响）
         /// </summary>
         [NonSerialized]
         public int ActualEnergyConsumed;
 
+
+        /// <summary>
+        /// 能量已消耗标志（用于协程取消时退还能量）
+        /// </summary>
+        [NonSerialized]
+        public bool EnergyConsumed;
         /// <summary>
         /// 修改器列表脏标志（需要重新排序时设为 true）
         /// </summary>
