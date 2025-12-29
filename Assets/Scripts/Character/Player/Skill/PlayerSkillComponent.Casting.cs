@@ -159,6 +159,11 @@ namespace Character.Player
                 {
                     yield break;
                 }
+
+                // 计算并保存实际消耗的能量值（用于退还）
+                var cardDef = GameRoot.Instance?.CardDatabase?.Resolve(rt.CardId);
+                int baseCost = cardDef?.activeCardConfig?.energyThreshold ?? 0;
+                rt.ActualEnergyConsumed = ctx.EnergyCost.CalculateFinalCost(baseCost);
                 rt.EnergyConsumed = true;
             }
 
@@ -285,15 +290,10 @@ namespace Character.Player
         /// </summary>
         private void RestoreEnergyIfConsumed(ActiveSkillRuntime rt)
         {
-            if (string.IsNullOrEmpty(rt.InstanceId)) return;
+            if (string.IsNullOrEmpty(rt.InstanceId) || rt.ActualEnergyConsumed <= 0) return;
 
-            var cardDef = GameRoot.Instance?.CardDatabase?.Resolve(rt.CardId);
-            int baseCost = cardDef?.activeCardConfig?.energyThreshold ?? 0;
-
-            if (baseCost > 0)
-            {
-                _inventory.AddEnergy(rt.InstanceId, baseCost);
-            }
+            _inventory.AddEnergy(rt.InstanceId, rt.ActualEnergyConsumed);
+            rt.ActualEnergyConsumed = 0;
         }
 
         #endregion

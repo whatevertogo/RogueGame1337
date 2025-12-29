@@ -1,7 +1,6 @@
 
 using System;
 using System.Collections.Generic;
-using Card;
 using Character.Player.Skill.Evolution;
 using Character.Player.Skill.Modifiers;
 using Character.Player.Skill.Targeting;
@@ -32,6 +31,12 @@ namespace Character.Player.Skill.Runtime
         /// </summary>
         [NonSerialized]
         public bool EnergyConsumed;
+
+        /// <summary>
+        /// 实际消耗的能量值（用于协程取消时退还，包含修改器影响）
+        /// </summary>
+        [NonSerialized]
+        public int ActualEnergyConsumed;
 
         /// <summary>
         /// 修改器列表脏标志（需要重新排序时设为 true）
