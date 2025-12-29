@@ -187,6 +187,7 @@ namespace Character.Player
             yield return DelayedExecute(def, ctx, slotIndex);
 
             // 检查协程是否被取消（RunningCoroutine 被替换为新协程）
+            // 即 使用新技能视为取消旧协程
             if (rt.RunningCoroutine != currentCoroutine)
             {
                 // 协程被取消，退还能量

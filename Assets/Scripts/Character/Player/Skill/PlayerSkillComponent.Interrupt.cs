@@ -16,12 +16,18 @@ namespace Character.Player
         /// <summary>
         /// 取消指定槽位正在运行的技能协程（若有）
         /// </summary>
+        /// <param name="slotIndex">技能槽位的索引</param>
         public void CancelSlotCoroutine(int slotIndex)
         {
+            // 检查玩家技能槽数组是否为空
             if (_playerSkillSlots == null) return;
+            // 检查索引是否有效，防止数组越界
             if (slotIndex < 0 || slotIndex >= _playerSkillSlots.Length) return;
+            // 获取指定槽位的运行时信息
             var rt = _playerSkillSlots[slotIndex]?.Runtime;
+            // 如果运行时信息为空，则直接返回
             if (rt == null) return;
+            // 如果存在正在运行的协程，则停止它并清除引用
             if (rt.RunningCoroutine != null)
             {
                 StopCoroutine(rt.RunningCoroutine);
@@ -65,9 +71,13 @@ namespace Character.Player
         /// <summary>
         /// 打断单个技能槽位
         /// </summary>
+        /// <param name="slotIndex">技能槽位索引</param>
+        /// <param name="refundCharges">是否退还充能</param>
         private void InterruptSingleSkill(int slotIndex, bool refundCharges)
         {
+            // 检查槽位索引是否有效，无效则直接返回
             if (slotIndex < 0 || slotIndex >= _playerSkillSlots.Length) return;
+            // 获取技能槽位对应的运行时对象，如果为空则直接返回
             var rt = _playerSkillSlots[slotIndex]?.Runtime;
             if (rt == null) return;
 

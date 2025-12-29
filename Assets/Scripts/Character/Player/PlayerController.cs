@@ -147,11 +147,13 @@ public class PlayerController : CharacterBase
 	{
 		if (Health != null && Health.IsDead) return;
 
-		HandleMovementInput();
-		HandleAttackInput();
+		var mousePosition = MouseHelper2D.GetWorldPosition2D();
+
+		HandleMovementInput(mousePosition);
+		HandleAttackInput(mousePosition);
 	}
 
-	private void HandleMovementInput()
+	private void HandleMovementInput(Vector2 mousePosition)
 	{
 		Vector2 moveDir = GameInput.Instance.MoveDir;
 
@@ -159,8 +161,7 @@ public class PlayerController : CharacterBase
 		Movement?.SetInput(moveDir);
 
 		//更新人物朝向
-		Vector3 mouseWorldPos = _mainCamera.ScreenToWorldPoint(UnityEngine.InputSystem.Mouse.current.position.ReadValue());
-		float direction = mouseWorldPos.x > transform.position.x ? 1f : -1f;
+		float direction = mousePosition.x > transform.position.x ? 1f : -1f;
 		transform.localScale = new Vector3(direction, transform.localScale.y, transform.localScale.z);
 
 
@@ -168,12 +169,12 @@ public class PlayerController : CharacterBase
 		UpdateAnimator(moveDir);
 	}
 
-	private void HandleAttackInput()
+	private void HandleAttackInput(Vector2 mousePosition)
 	{
 		if (Combat == null) return;
 
 		// 设置瞄准方向
-		Vector2 aimDir = GetAimDirection();
+		Vector2 aimDir = GetAimDirection(mousePosition);
 		Combat.SetAim(aimDir);
 
 		// 检测攻击输入
@@ -195,8 +196,8 @@ public class PlayerController : CharacterBase
 
 	public void TryActivateSkill(int slotIndex)
 	{
+		Vector3 aimWorld = MouseHelper2D.GetWorldPosition();
 		// 计算鼠标世界坐标作为瞄点，尝试找到显式目标（2D 优先），否则把瞄点传给技能
-		Vector3 aimWorld = _mainCamera.ScreenToWorldPoint(UnityEngine.InputSystem.Mouse.current.position.ReadValue());
 		aimWorld.z = 0f;
 		// 我们使用范围伤害（AOE），不需要显式目标检测，直接把瞄点传给技能
 		skillComponent.UseSkill(slotIndex, aimWorld);
@@ -206,7 +207,7 @@ public class PlayerController : CharacterBase
 	/// <summary>
 	/// 获取瞄准方向
 	/// </summary>
-	private Vector2 GetAimDirection()
+	private Vector2 GetAimDirection(Vector2 mousePosition)
 	{
 		//方案一类似以撒
 		// Vector2 moveDir = GameInput.Instance.MoveDir;
@@ -219,8 +220,7 @@ public class PlayerController : CharacterBase
 		// return lastFacingDirection;
 
 		//方案二以鼠标方向为准
-		Vector3 mouseWorldPos = _mainCamera.ScreenToWorldPoint(UnityEngine.InputSystem.Mouse.current.position.ReadValue());
-		Vector2 aimDir = (mouseWorldPos - transform.position).normalized;
+		Vector2 aimDir = (mousePosition - (Vector2)transform.position).normalized;
 		return aimDir;
 	}
 

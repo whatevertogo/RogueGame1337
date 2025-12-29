@@ -24,18 +24,19 @@ public sealed class GameInput : Singleton<GameInput>
 
     public event Action OnSkillQPressed;
     public event Action OnSkillEPressed;
+    public event Action OnAttackPressed;
 
     protected override void Awake()
     {
         base.Awake();
-        CDTU.Utils.CDLogger.Log("GameInput Awake called");
+        CDLogger.Log("GameInput Awake called");
         
         try {
             playerInput = new PlayerInputSystem();
             playerInput.Enable();
-            CDTU.Utils.CDLogger.Log("PlayerInputSystem enabled successfully");
+            CDLogger.Log("PlayerInputSystem enabled successfully");
         } catch (System.Exception ex) {
-            CDTU.Utils.CDLogger.LogError($"[GameInput] 初始化输入系统失败: {ex.Message}");
+            CDLogger.LogError($"[GameInput] 初始化输入系统失败: {ex.Message}");
             // 尝试继续运行，但记录错误
         }
     }
@@ -65,7 +66,14 @@ public sealed class GameInput : Singleton<GameInput>
         playerInput.PlayerControl.SkillQ.performed += OnSkillQPerformed;
         playerInput.PlayerControl.SkillE.performed += OnSkillEPerformed;
         playerInput.UI.ESC.performed += OnESCPerformed;
+        playerInput.PlayerControl.Attack.performed += OnAttackPerformed; 
     }
+
+    private void OnAttackPerformed(InputAction.CallbackContext context)
+    {
+        OnAttackPressed?.Invoke();
+    }
+
 
     private void HandleESCPressed()
     {
@@ -79,6 +87,7 @@ public sealed class GameInput : Singleton<GameInput>
         {
             playerInput.PlayerControl.SkillQ.performed -= OnSkillQPerformed;
             playerInput.PlayerControl.SkillE.performed -= OnSkillEPerformed;
+            playerInput.PlayerControl.Attack.performed -= OnAttackPreformed;
             playerInput.UI.ESC.performed -= OnESCPerformed;
         }
     }
