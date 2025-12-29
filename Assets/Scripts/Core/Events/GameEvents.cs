@@ -266,10 +266,10 @@ namespace RogueGame.Events
     /// 主动卡能量变化事件：ActiveCardService 在能量增减时发布此事件
     /// PlayerSkillComponent 订阅此事件以自动更新 UI
     /// </summary>
-    public class ActiveCardChargesChangedEvent
+    public class ActiveCardEnergyChangedEvent
     {
         public string InstanceId;
-        public int NewCharges;
+        public int NewEnergy;
     }
 
 }

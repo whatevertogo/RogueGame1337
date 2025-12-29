@@ -16,11 +16,11 @@ public sealed class SkillChargeSyncService
         this.playerManager = playerManager;
         this.db = db;
 
-        inv.OnActiveCardChargesChanged += OnChargesChanged;
+        inv.OnActiveCardEnergyChanged += OnEnergyChanged;
         // 注意：金币变化由 UI 系统处理，此服务不需要关心
     }
 
-    public void OnChargesChanged(string instanceId, int charges)
+    public void OnEnergyChanged(string instanceId, int energy)
     {
         foreach (var pr in playerManager.GetAllPlayersData())
         {
@@ -34,7 +34,7 @@ public sealed class SkillChargeSyncService
 
                 var def = db.Resolve(rt.CardId);
                 int max = def?.activeCardConfig.maxEnergy ?? 100;
-                float norm = (float)charges / max;
+                float norm = (float)energy / max;
 
                 playerManager.RaisePlayerSkillEnergyChanged(
                     pr.PlayerId, i, norm

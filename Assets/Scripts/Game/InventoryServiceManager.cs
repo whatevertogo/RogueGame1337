@@ -33,7 +33,7 @@ public sealed class InventoryServiceManager : Singleton<InventoryServiceManager>
         // 转发事件（保持外部订阅兼容）
         CoinService.OnCoinsChanged += coins => OnCoinsChanged?.Invoke(coins);
         ActiveCardService.OnActiveCardInstanceAdded += id => OnActiveCardInstanceAdded?.Invoke(id);
-        ActiveCardService.OnActiveCardChargesChanged += (id, charges) => OnActiveCardChargesChanged?.Invoke(id, charges);
+        ActiveCardService.OnActiveCardEnergyChanged += (id, energy) => OnActiveCardEnergyChanged?.Invoke(id, energy);
         ActiveCardService.OnActiveCardEquipChanged += id => OnActiveCardEquipChanged?.Invoke(id);
         ActiveCardUpgradeService.OnCardLevelUp += (id, level) => OnActiveCardLevelUp?.Invoke(id, level);
     }
@@ -51,7 +51,7 @@ public sealed class InventoryServiceManager : Singleton<InventoryServiceManager>
 
     public event Action<int> OnCoinsChanged;
     public event Action<string> OnActiveCardInstanceAdded;
-    public event Action<string, int> OnActiveCardChargesChanged;
+    public event Action<string, int> OnActiveCardEnergyChanged;
     public event Action<string> OnActiveCardEquipChanged;
     public event Action<string, int> OnActiveCardLevelUp;
 
@@ -69,8 +69,8 @@ public sealed class InventoryServiceManager : Singleton<InventoryServiceManager>
 
     #region 主动卡 API（委托给 ActiveCardService）
 
-    public string CreateActiveCardInstanceInternal(string cardId, int initialCharges)
-        => ActiveCardService.CreateInstance(cardId, initialCharges);
+    public string CreateActiveCardInstanceInternal(string cardId, int initialEnergy)
+        => ActiveCardService.CreateInstance(cardId, initialEnergy);
 
     public ActiveCardState GetActiveCard(string instanceId) => ActiveCardService.GetCard(instanceId);
     public ActiveCardState GetActiveCardState(string instanceId) => ActiveCardService.GetCard(instanceId);
@@ -107,7 +107,7 @@ public sealed class InventoryServiceManager : Singleton<InventoryServiceManager>
     #region 能量 API（委托给 ActiveCardService）
 
     public void AddEnergy(string instanceId, int amount) => ActiveCardService.AddEnergy(instanceId, amount);
-    public bool ConsumeSkillEnergy(string instanceId, bool consumeAll = true) => ActiveCardService.ConsumeSkillEnergy(instanceId, consumeAll);
+    public bool ConsumeSkillEnergy(string instanceId, in Character.Player.Skill.Targeting.EnergyCostConfig costConfig) => ActiveCardService.ConsumeSkillEnergy(instanceId, costConfig);
     public void AddChargesForKill(string playerId) => ActiveCardEnergyService.AddChargesForKill(playerId);
     public int GetCurrentEnergy(string instanceId) => ActiveCardService.GetCurrentEnergy(instanceId);
     public int GetMaxEnergy(string instanceId) => ActiveCardService.GetMaxEnergy(instanceId);

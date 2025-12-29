@@ -21,6 +21,7 @@ namespace Character.Player.Skill.Targeting
 
         /// <summary>
         /// 技能槽位索引（用于回溯 ActiveSkillRuntime）
+        /// 取值范围：通常为从 0 开始的非负整数，对应技能栏/快捷栏中的槽位索引
         /// </summary>
         public int SlotIndex;
 
@@ -102,7 +103,7 @@ namespace Character.Player.Skill.Targeting
         public int Flat;
 
         /// <summary>
-        /// 计算最终能量消耗
+        /// 计算最终能量消耗（仅用于 Threshold 模式）
         /// </summary>
         public int CalculateFinalCost(int baseCost)
         {

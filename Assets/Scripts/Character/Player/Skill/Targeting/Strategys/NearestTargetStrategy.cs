@@ -1,6 +1,7 @@
 
 using System.Collections.Generic;
 using Card.SkillSystem.TargetingSystem;
+using CDTU.Utils;
 using Character;
 using Character.Player.Skill.Targeting;
 using UnityEngine;
@@ -8,11 +9,12 @@ using UnityEngine;
 
 
 
-
+/// <summary>
+/// 根据施法者位置，获取一定范围内最近的目标
+/// </summary>
 [CreateAssetMenu(fileName = "Nearest Target Strategy", menuName = "Card System/Skill System/Targeting System/Strategies/Nearest Target Strategy")]
 public class NearestTargetStrategy : TargetAcquireSO
 {
-    [SerializeField] private float Range;
     [SerializeField] private LayerMask targetMask;
 
     [Header("过滤设置")]
@@ -26,9 +28,15 @@ public class NearestTargetStrategy : TargetAcquireSO
             return new List<CharacterBase>();
 
         // 优先使用上下文中的范围配置，否则使用配置值
-        float searchRange = ctx.Targeting.Range > 0 ? ctx.Targeting.Range : Range;
+        float searchRange =  ctx.Targeting.Range;
 
-        Collider[] hitColliders = Physics.OverlapSphere(ctx.Caster.transform.position, searchRange, targetMask);
+        // 边界值检查：当范围小于等于 0 时，直接返回空结果，避免 OverlapSphere 无效调用
+        if (searchRange <= 0f)
+        {
+            CDLogger.LogWarning("[NearestTargetStrategy] Search range is non-positive, no targets acquired.");
+            return new List<CharacterBase>();
+        }
+        Collider2D[] hitColliders = Physics2D.OverlapCircleAll(ctx.Caster.transform.position, searchRange, targetMask);
         CharacterBase nearestTarget = null;
         float nearestDistanceSqr = float.MaxValue;
 

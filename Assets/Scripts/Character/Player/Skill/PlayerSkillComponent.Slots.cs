@@ -101,7 +101,7 @@ namespace Character.Player
                 if (inv != null && !string.IsNullOrEmpty(instanceId))
                 {
                     var state = inv.GetActiveCardState(instanceId);
-                    if (state != null) current = state.CurrentCharges;
+                    if (state != null) current = state.CurrentEnergy;
                 }
 
                 float norm = (float)current / max;

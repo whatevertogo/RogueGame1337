@@ -9,7 +9,7 @@ namespace RogueGame.Items
         public string InstanceId;
         public bool IsEquipped;
         public string EquippedPlayerId;
-        public int Charges;
+        public int Energy;
         public int Level;
     }
 }

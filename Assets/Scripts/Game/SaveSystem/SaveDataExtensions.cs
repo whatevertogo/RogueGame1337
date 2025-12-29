@@ -21,7 +21,7 @@ namespace RogueGame.SaveSystem
             {
                 CardId = state.CardId,
                 InstanceId = state.InstanceId,
-                CurrentCharges = state.CurrentCharges,
+                CurrentEnergy = state.CurrentEnergy,
                 IsEquipped = state.IsEquipped,
                 EquippedPlayerId = state.EquippedPlayerId,
                 Level = state.Level  // 保存技能等级
@@ -48,7 +48,7 @@ namespace RogueGame.SaveSystem
             {
                 CardId = saveData.CardId,
                 InstanceId = saveData.InstanceId,
-                CurrentCharges = saveData.CurrentCharges,
+                CurrentEnergy = saveData.CurrentEnergy,
                 IsEquipped = saveData.IsEquipped,
                 EquippedPlayerId = saveData.EquippedPlayerId,
                 Level = saveData.Level,  // 恢复技能等级

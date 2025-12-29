@@ -245,18 +245,12 @@ namespace Character.Components
             int finalDamage = Mathf.Max(1, Mathf.RoundToInt(damage));
             CurrentHP -= finalDamage;
 
-            return new DamageResult
-            {
-                PowerMultiplier = 1.0f,
-                FlatDamage = 0f,
-                IsTrueDamage = false,
-                FinalDamage = finalDamage,
-                Source = info.Source
-            };
+            var result = DamageResult.Default;
+            result.FinalDamage = finalDamage;
+            result.Source = info.Source;
+            return result;
         }
             
-        
-
 
         /// <summary>
         /// 治疗

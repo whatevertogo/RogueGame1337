@@ -55,14 +55,20 @@ namespace RogueGame.Game.Service.SkillLimit
         /// <summary>
         /// 房间进入事件处理
         /// </summary>
+        /// <summary>
+        /// 当玩家进入房间时触发的事件处理方法
+        /// </summary>
+        /// <param name="evt">房间进入事件对象，包含房间相关信息</param>
         private void OnRoomEntered(RoomEnteredEvent evt)
         {
+            // 检查事件对象是否为空
             if (evt == null) return;
 
-            // 获取本地玩家
+            // 获取本地玩家对象
             var localPlayer = GetLocalPlayer();
             if (localPlayer == null)
             {
+                // 如果没有找到本地玩家，记录警告日志并退出
                 CDTU.Utils.CDLogger.LogWarning("[RoomPlayerSkillLimitService] 没有本地玩家");
                 return;
             }

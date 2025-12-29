@@ -27,6 +27,18 @@ namespace Character.Player.Skill.Runtime
         [NonSerialized]
         public Coroutine RunningCoroutine;
 
+        /// <summary>
+        /// 能量已消耗标志（用于协程取消时退还能量）
+        /// </summary>
+        [NonSerialized]
+        public bool EnergyConsumed;
+
+        /// <summary>
+        /// 修改器列表脏标志（需要重新排序时设为 true）
+        /// </summary>
+        [NonSerialized]
+        private bool _modifiersDirty;
+
         // ========== 修改器系统 ==========
         [NonSerialized]
         private List<ISkillModifier> _activeModifiers = new List<ISkillModifier>();
@@ -108,9 +120,9 @@ namespace Character.Player.Skill.Runtime
             BounceCount = 0;
         }
 
-        // ========== 修改器管理 ==========
+        #region 修改器管理
         /// <summary>
-        /// 添加修改器并按优先级排序
+        /// 添加修改器（惰性排序，在应用时才排序）
         /// </summary>
         public void AddModifier(ISkillModifier modifier)
         {
@@ -118,7 +130,7 @@ namespace Character.Player.Skill.Runtime
             if (_activeModifiers.Contains(modifier)) return;
 
             _activeModifiers.Add(modifier);
-            _activeModifiers.Sort((a, b) => a.Priority.CompareTo(b.Priority));
+            _modifiersDirty = true;
         }
 
         /// <summary>
@@ -151,6 +163,13 @@ namespace Character.Player.Skill.Runtime
         /// </summary>
         public void ApplyAllModifiers(ref SkillTargetContext ctx)
         {
+            // 惰性排序：仅在需要时排序
+            if (_modifiersDirty)
+            {
+                _activeModifiers.Sort((a, b) => a.Priority.CompareTo(b.Priority));
+                _modifiersDirty = false;
+            }
+
             foreach (var modifier in _activeModifiers)
             {
                 try
@@ -164,6 +183,7 @@ namespace Character.Player.Skill.Runtime
             }
         }
 
+        #endregion
         // ========== 进化管理 ==========
         /// <summary>
         /// 设置进化节点并应用分支修改器

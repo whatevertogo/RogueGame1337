@@ -30,20 +30,13 @@ namespace Character.Player
         private void SubscribeEvents()
         {
             // 订阅清空槽位事件
-            EventBus.Subscribe<ClearAllSlotsRequestedEvent>(evt =>
-            {
-                // 清理所有槽位
-                for (int i = 0; i < _playerSkillSlots.Length; i++)
-                {
-                    UnequipActiveCardBySlotIndex(i);
-                }
-            });
+            EventBus.Subscribe<ClearAllSlotsRequestedEvent>(OnClearAllSlotsRequested);
 
             // 订阅技能装备变化事件
             EventBus.Subscribe<OnPlayerSkillEquippedEvent>(OnPlayerSlotCardChanged);
 
             // 订阅能量变化事件，自动更新 UI
-            EventBus.Subscribe<ActiveCardChargesChangedEvent>(OnEnergyChangedFromInventory);
+            EventBus.Subscribe<ActiveCardEnergyChangedEvent>(OnEnergyChangedFromInventory);
         }
 
         /// <summary>
@@ -51,8 +44,9 @@ namespace Character.Player
         /// </summary>
         private void UnsubscribeEvents()
         {
+            EventBus.Unsubscribe<ClearAllSlotsRequestedEvent>(OnClearAllSlotsRequested);
             EventBus.Unsubscribe<OnPlayerSkillEquippedEvent>(OnPlayerSlotCardChanged);
-            EventBus.Unsubscribe<ActiveCardChargesChangedEvent>(OnEnergyChangedFromInventory);
+            EventBus.Unsubscribe<ActiveCardEnergyChangedEvent>(OnEnergyChangedFromInventory);
         }
 
         /// <summary>
@@ -81,6 +75,26 @@ namespace Character.Player
             {
                 // 装备新卡
                 EquipActiveCardToSlotIndex(slotIndex, newCardId);
+            }
+        }
+
+        /// <summary>
+        /// 处理清空所有槽位请求事件
+        /// </summary>
+        private void OnClearAllSlotsRequested(ClearAllSlotsRequestedEvent evt)
+        {
+            // 如果指定了 PlayerId 且不匹配，则忽略
+            if (!string.IsNullOrEmpty(evt.PlayerId))
+            {
+                var pc = GetComponent<PlayerController>();
+                var pr = PlayerManager.Instance?.GetPlayerRuntimeStateByController(pc);
+                if (pr == null || evt.PlayerId != pr.PlayerId) return;
+            }
+
+            // 清理所有槽位
+            for (int i = 0; i < _playerSkillSlots.Length; i++)
+            {
+                UnequipActiveCardBySlotIndex(i);
             }
         }
 

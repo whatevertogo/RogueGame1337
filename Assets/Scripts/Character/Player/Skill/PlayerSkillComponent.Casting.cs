@@ -18,6 +18,9 @@ namespace Character.Player
     {
         private EffectFactory _effectFactory = new EffectFactory();
 
+        // 目标列表池（避免重复创建 List<CharacterBase>）
+        private readonly List<CharacterBase> _targetListPool = new List<CharacterBase>();
+
 
         #region 技能释放
 
@@ -56,7 +59,7 @@ namespace Character.Player
                 if (string.IsNullOrEmpty(rt.InstanceId)) return false;
 
                 var state = _inventory.GetActiveCardState(rt.InstanceId);
-                if (state == null || state.CurrentCharges < config.energyThreshold) return false;
+                if (state == null || state.CurrentEnergy < config.energyThreshold) return false;
             }
 
             return true;
@@ -90,6 +93,8 @@ namespace Character.Player
             if (rt.RunningCoroutine != null)
             {
                 StopCoroutine(rt.RunningCoroutine);
+                // 取消旧协程时退还能量（如果已消耗）
+                if (rt.EnergyConsumed) RestoreEnergyIfConsumed(rt);
                 rt.RunningCoroutine = null;
             }
 
@@ -135,7 +140,7 @@ namespace Character.Player
             };
 
             // 应用技能修改器（必须在能量消耗前生效）
-            rt?.ApplyAllModifiers(ref ctx);
+            rt.ApplyAllModifiers(ref ctx);
 
             // 使用缓存配置检查是否需要消耗能量
             var config = rt.CachedActiveConfig;
@@ -143,13 +148,14 @@ namespace Character.Player
 
             if (requiresCharge)
             {
-                // 消耗技能能量（已在 ApplyAllModifiers 后应用能量消耗修改器）
+                // 消耗技能能量（使用修改器配置后的能量消耗）
                 if (string.IsNullOrEmpty(rt.InstanceId)) yield break;
 
-                if (!_inventory.ConsumeSkillEnergy(rt.InstanceId))
+                if (!_inventory.ConsumeSkillEnergy(rt.InstanceId, ctx.EnergyCost))
                 {
                     yield break;
                 }
+                rt.EnergyConsumed = true;
             }
 
             rt.LastUseTime = Time.time;
@@ -166,10 +172,21 @@ namespace Character.Player
 
             // 开始执行（处理 detectionDelay 和 executor）
             // 将 DelayedExecute 嵌入到当前协程内，保证单一协程句柄可用于取消
+
+            // 保存当前协程引用（用于检测是否被取消）
+            var currentCoroutine = rt.RunningCoroutine;
             yield return DelayedExecute(def, ctx, slotIndex);
+
+            // 检查协程是否被取消（RunningCoroutine 被替换为新协程）
+            if (rt.RunningCoroutine != currentCoroutine)
+            {
+                // 协程被取消，退还能量
+                if (rt.EnergyConsumed) RestoreEnergyIfConsumed(rt);
+            }
 
             // 清理运行时协程引用
             rt.RunningCoroutine = null;
+            rt.EnergyConsumed = false;
             yield break;
         }
 
@@ -257,6 +274,22 @@ namespace Character.Player
             }
 
             yield break;
+        }
+
+        /// <summary>
+        /// 退还能量（协程取消时调用）
+        /// </summary>
+        private void RestoreEnergyIfConsumed(ActiveSkillRuntime rt)
+        {
+            if (string.IsNullOrEmpty(rt.InstanceId)) return;
+
+            var cardDef = GameRoot.Instance?.CardDatabase?.Resolve(rt.CardId);
+            int baseCost = cardDef?.activeCardConfig?.energyThreshold ?? 0;
+
+            if (baseCost > 0)
+            {
+                _inventory.AddEnergy(rt.InstanceId, baseCost);
+            }
         }
 
         #endregion

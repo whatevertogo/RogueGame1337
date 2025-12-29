@@ -5,6 +5,7 @@ using UnityEngine;
 using Core.Events;
 using RogueGame.Items;
 using RogueGame.Events;
+using Character.Player.Skill.Targeting;
 
 namespace RogueGame.Game.Service.Inventory
 {
@@ -18,19 +19,19 @@ namespace RogueGame.Game.Service.Inventory
         public IReadOnlyList<ActiveCardState> ActiveCardStates => _activeCards;
 
         public event Action<string> OnActiveCardInstanceAdded;
-        public event Action<string, int> OnActiveCardChargesChanged;
+        public event Action<string, int> OnActiveCardEnergyChanged;
         public event Action<string> OnActiveCardEquipChanged;
 
         /// <summary>
         /// 触发能量变化事件（内部方法，统一事件发布逻辑）
         /// </summary>
-        private void NotifyChargesChanged(string instanceId, int newCharges)
+        private void NotifyEnergyChanged(string instanceId, int newEnergy)
         {
-            OnActiveCardChargesChanged?.Invoke(instanceId, newCharges);
-            EventBus.Publish(new ActiveCardChargesChangedEvent
+            OnActiveCardEnergyChanged?.Invoke(instanceId, newEnergy);
+            EventBus.Publish(new ActiveCardEnergyChangedEvent
             {
                 InstanceId = instanceId,
-                NewCharges = newCharges
+                NewEnergy = newEnergy
             });
         }
 
@@ -41,20 +42,20 @@ namespace RogueGame.Game.Service.Inventory
                 InstanceId = st.InstanceId,
                 IsEquipped = st.IsEquipped,
                 EquippedPlayerId = st.EquippedPlayerId,
-                Charges = st.CurrentCharges,
+                Energy = st.CurrentEnergy,
                 Level = st.Level
             });
 
         /// <summary>
         /// 创建新主动卡实例
         /// </summary>
-        public string CreateInstance(string cardId, int initialCharges)
+        public string CreateInstance(string cardId, int initialEnergy)
         {
             var state = new ActiveCardState
             {
                 CardId = cardId,
                 InstanceId = Guid.NewGuid().ToString(),
-                CurrentCharges = Mathf.Max(0, initialCharges),
+                CurrentEnergy = Mathf.Max(0, initialEnergy),
                 IsEquipped = false,
                 EquippedPlayerId = null,
                 CooldownRemaining = 0f
@@ -85,10 +86,10 @@ namespace RogueGame.Game.Service.Inventory
         {
             var st = GetCard(instanceId);
             if (st == null || amount <= 0) return false;
-            if (st.CurrentCharges < amount) return false;
+            if (st.CurrentEnergy < amount) return false;
 
-            st.CurrentCharges -= amount;
-            NotifyChargesChanged(instanceId, st.CurrentCharges);
+            st.CurrentEnergy -= amount;
+            NotifyEnergyChanged(instanceId, st.CurrentEnergy);
             return true;
         }
 
@@ -97,14 +98,14 @@ namespace RogueGame.Game.Service.Inventory
             remaining = 0;
             var st = GetCard(instanceId);
             if (st == null || amount <= 0) return false;
-            if (st.CurrentCharges < amount)
+            if (st.CurrentEnergy < amount)
             {
-                remaining = st.CurrentCharges;
+                remaining = st.CurrentEnergy;
                 return false;
             }
-            st.CurrentCharges -= amount;
-            remaining = st.CurrentCharges;
-            NotifyChargesChanged(instanceId, st.CurrentCharges);
+            st.CurrentEnergy -= amount;
+            remaining = st.CurrentEnergy;
+            NotifyEnergyChanged(instanceId, st.CurrentEnergy);
             return true;
         }
 
@@ -113,12 +114,12 @@ namespace RogueGame.Game.Service.Inventory
             var st = GetCard(instanceId);
             if (st == null || amount <= 0) return;
 
-            int before = st.CurrentCharges;
-            st.CurrentCharges = Mathf.Min(max, st.CurrentCharges + amount);
+            int before = st.CurrentEnergy;
+            st.CurrentEnergy = Mathf.Min(max, st.CurrentEnergy + amount);
 
-            if (before != st.CurrentCharges)
+            if (before != st.CurrentEnergy)
             {
-                NotifyChargesChanged(instanceId, st.CurrentCharges);
+                NotifyEnergyChanged(instanceId, st.CurrentEnergy);
             }
         }
 
@@ -133,12 +134,12 @@ namespace RogueGame.Game.Service.Inventory
                 max = cardDef?.activeCardConfig?.maxEnergy ?? 999;
             }
 
-            int before = st.CurrentCharges;
-            st.CurrentCharges = Mathf.Clamp(charges, 0, max.Value);
+            int before = st.CurrentEnergy;
+            st.CurrentEnergy = Mathf.Clamp(charges, 0, max.Value);
 
-            if (before != st.CurrentCharges)
+            if (before != st.CurrentEnergy)
             {
-                NotifyChargesChanged(instanceId, st.CurrentCharges);
+                NotifyEnergyChanged(instanceId, st.CurrentEnergy);
             }
         }
 
@@ -173,7 +174,7 @@ namespace RogueGame.Game.Service.Inventory
         #region 能量管理 API
 
         /// <summary>
-        /// 增加技能能量（自动触发 OnActiveCardChargesChanged 事件）
+        /// 增加技能能量（自动触发 OnActiveCardEnergyChanged 事件）
         /// </summary>
         public void AddEnergy(string instanceId, int amount)
         {
@@ -183,19 +184,22 @@ namespace RogueGame.Game.Service.Inventory
             var cardDef = GameRoot.Instance?.CardDatabase?.Resolve(st.CardId);
             int maxEnergy = cardDef?.activeCardConfig?.maxEnergy ?? 999;
 
-            int before = st.CurrentCharges;
-            st.CurrentCharges = Mathf.Min(maxEnergy, st.CurrentCharges + amount);
+            int before = st.CurrentEnergy;
+            st.CurrentEnergy = Mathf.Min(maxEnergy, st.CurrentEnergy + amount);
 
-            if (before != st.CurrentCharges)
+            if (before != st.CurrentEnergy)
             {
-                NotifyChargesChanged(instanceId, st.CurrentCharges);
+                NotifyEnergyChanged(instanceId, st.CurrentEnergy);
             }
         }
 
         /// <summary>
-        /// 消耗技能能量（释放技能时调用，自动触发事件）
+        /// 消耗技能能量（统一入口，根据配置的消耗模式执行不同逻辑）
         /// </summary>
-        public bool ConsumeSkillEnergy(string instanceId, bool consumeAll = true)
+        /// <param name="instanceId">卡牌实例 ID</param>
+        /// <param name="costConfig">能量消耗配置（由修改器修改，仅影响 Threshold 模式的数值）</param>
+        /// <returns>是否成功消耗</returns>
+        public bool ConsumeSkillEnergy(string instanceId, in EnergyCostConfig costConfig)
         {
             var st = GetCard(instanceId);
             if (st == null) return false;
@@ -203,21 +207,27 @@ namespace RogueGame.Game.Service.Inventory
             var cardDef = GameRoot.Instance?.CardDatabase?.Resolve(st.CardId);
             if (cardDef?.activeCardConfig == null) return false;
 
-            int before = st.CurrentCharges;
+            int before = st.CurrentEnergy;
 
-            if (consumeAll || cardDef.activeCardConfig.consumeAllEnergy)
+            // 根据配置的消耗模式执行不同的消耗逻辑
+            switch (cardDef.activeCardConfig.consumptionMode)
             {
-                st.CurrentCharges = 0;
-            }
-            else
-            {
-                int threshold = cardDef.activeCardConfig.energyThreshold;
-                st.CurrentCharges = Mathf.Max(0, st.CurrentCharges - threshold);
+                case EnergyConsumptionMode.All:
+                    // 全部模式：清空能量（忽略修改器）
+                    st.CurrentEnergy = 0;
+                    break;
+
+                case EnergyConsumptionMode.Threshold:
+                    // 阈值模式：扣除修改后的阈值
+                    int baseCost = cardDef.activeCardConfig.energyThreshold;
+                    int finalCost = costConfig.CalculateFinalCost(baseCost);
+                    st.CurrentEnergy = Mathf.Max(0, st.CurrentEnergy - finalCost);
+                    break;
             }
 
-            if (before != st.CurrentCharges)
+            if (before != st.CurrentEnergy)
             {
-                NotifyChargesChanged(instanceId, st.CurrentCharges);
+                NotifyEnergyChanged(instanceId, st.CurrentEnergy);
             }
 
             return true;
@@ -228,7 +238,7 @@ namespace RogueGame.Game.Service.Inventory
         /// </summary>
         public int GetCurrentEnergy(string instanceId)
         {
-            return GetCard(instanceId)?.CurrentCharges ?? 0;
+            return GetCard(instanceId)?.CurrentEnergy ?? 0;
         }
 
         /// <summary>
@@ -254,12 +264,12 @@ namespace RogueGame.Game.Service.Inventory
             var cardDef = GameRoot.Instance?.CardDatabase?.Resolve(st.CardId);
             int maxEnergy = cardDef?.activeCardConfig?.maxEnergy ?? 100;
 
-            int before = st.CurrentCharges;
-            st.CurrentCharges = maxEnergy;
+            int before = st.CurrentEnergy;
+            st.CurrentEnergy = maxEnergy;
 
-            if (before != st.CurrentCharges)
+            if (before != st.CurrentEnergy)
             {
-                NotifyChargesChanged(instanceId, st.CurrentCharges);
+                NotifyEnergyChanged(instanceId, st.CurrentEnergy);
             }
         }
 

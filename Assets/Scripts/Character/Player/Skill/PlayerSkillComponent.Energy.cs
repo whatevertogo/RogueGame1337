@@ -52,7 +52,7 @@ namespace Character.Player
             if (!TryGetRuntime(slotIndex, out var rt)) return false;
 
             var state = _inventory.GetActiveCardState(rt.InstanceId);
-            return state?.CurrentCharges >= threshold;
+            return state?.CurrentEnergy >= threshold;
         }
 
         /// <summary>
@@ -63,7 +63,7 @@ namespace Character.Player
             if (slotIndex < 0 || slotIndex >= _playerSkillSlots.Length) return 0;
             if (!TryGetRuntime(slotIndex, out var rt)) return 0;
 
-            return _inventory.GetActiveCardState(rt.InstanceId)?.CurrentCharges ?? 0;
+            return _inventory.GetActiveCardState(rt.InstanceId)?.CurrentEnergy ?? 0;
         }
 
         /// <summary>
@@ -95,7 +95,7 @@ namespace Character.Player
         /// <summary>
         /// 当能量变化时，自动更新对应槽位的 UI
         /// </summary>
-        private void OnEnergyChangedFromInventory(ActiveCardChargesChangedEvent evt)
+        private void OnEnergyChangedFromInventory(ActiveCardEnergyChangedEvent evt)
         {
             // 查找使用此 instanceId 的槽位
             for (int i = 0; i < _playerSkillSlots.Length; i++)
@@ -105,7 +105,7 @@ namespace Character.Player
                 {
                     // 使用缓存配置获取最大能量并归一化
                     int maxEnergy = rt.CachedActiveConfig?.maxEnergy ?? DefaultMaxEnergy;
-                    float norm = maxEnergy > 0 ? (float)evt.NewCharges / maxEnergy : 0f;
+                    float norm = maxEnergy > 0 ? (float)evt.NewEnergy / maxEnergy : 0f;
                     OnEnergyChanged?.Invoke(i, norm);
                     break;
                 }

@@ -60,7 +60,7 @@ namespace RogueGame.SaveSystem
             foreach (var cardData in data.ActiveCards)
             {
                 // 使用内部方法创建实例（不触发升级逻辑）
-                var instanceId = inv.CreateActiveCardInstanceInternal(cardData.CardId, cardData.CurrentCharges);
+                var instanceId = inv.CreateActiveCardInstanceInternal(cardData.CardId, cardData.CurrentEnergy);
                 var state = inv.GetActiveCardState(instanceId);
                 if (state != null)
                 {

@@ -1,6 +1,7 @@
 
 using System;
 using UnityEngine;
+using Character.Player.Skill.Targeting;
 
 [Serializable]
 public class ActiveCardConfig
@@ -15,14 +16,31 @@ public class ActiveCardConfig
     [Tooltip("击杀一名敌人时获得的能量")]
     public int energyPerKill = 10;
 
-    [Tooltip("释放技能后是否清空能量（true=清零，false=只减少阈值）")]
-    public bool consumeAllEnergy = true;
-
-
+    [Header("能量消耗模式")]
+    [Tooltip("能量消耗模式（决定释放技能后的消耗行为）")]
+    public EnergyConsumptionMode consumptionMode = EnergyConsumptionMode.All;
 
     [Tooltip("若为 true 则此卡需要消耗能量才能使用；否则可按冷却使用")]
     public bool requiresCharge = true;
 
-    //
+    //技能定义
     public SkillDefinition skill;
+
+    #region 数据迁移
+    [SerializeField, HideInInspector]
+    private bool consumeAllEnergy = true;
+
+    /// <summary>
+    /// 数据迁移：将旧的 consumeAllEnergy 布尔值映射到新的 consumptionMode 枚举
+    /// </summary>
+#if UNITY_EDITOR
+    private void OnValidate()
+    {
+        if (consumeAllEnergy)
+            consumptionMode = EnergyConsumptionMode.All;
+        else
+            consumptionMode = EnergyConsumptionMode.Threshold;
+    }
+#endif
+    #endregion
 }
