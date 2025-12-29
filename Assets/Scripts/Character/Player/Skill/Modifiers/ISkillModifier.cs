@@ -15,8 +15,8 @@ namespace Character.Player.Skill.Modifiers
         int Priority { get; }
 
         /// <summary>
-        /// 修改器来源标识（用于批量移除）
-        /// 例如：遗物ID、被动卡ID、进化分支等
+        /// 修改器来源对象，用于标识该修改器的来源（例如某个技能、Buff、装备等）
+        /// 常用于批量移除某个来源添加的所有修改器
         /// </summary>
         object Source { get; }
 

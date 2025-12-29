@@ -231,8 +231,11 @@ namespace Character.Components
             // 计算伤害
             float damage = info.Amount;
 
-            // 应用护甲减伤
-            damage = ApplyArmor(damage);
+            // 真伤无视护甲，普通伤害应用护甲减伤
+            if (!info.IsTrueDamage)
+            {
+                damage = ApplyArmor(damage);
+            }
 
             // 应用状态效果对受到伤害的修改（例如伤害减免 buff）
             var effectComp = GetComponent<StatusEffectComponent>();
@@ -247,6 +250,7 @@ namespace Character.Components
 
             var result = DamageResult.Default;
             result.FinalDamage = finalDamage;
+            result.IsTrueDamage = info.IsTrueDamage;
             result.Source = info.Source;
             return result;
         }

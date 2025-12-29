@@ -13,6 +13,10 @@ public struct ProjectileData
 
     // 伤害信息
     public float Damage;
+    /// <summary>
+    /// 是否为真实伤害（无视护甲）
+    /// </summary>
+    public bool IsTrueDamage;
     // public bool IsCrit;
 
     // 运动信息
@@ -45,13 +49,15 @@ public struct ProjectileData
         Transform owner,
         LayerMask hitMask,
         StatusEffectDefinitionSO[] effects = null,
-        bool isCrit = false)
+        bool isCrit = false,
+        bool isTrueDamage = false)
     {
         return new ProjectileData
         {
             Owner = owner,
             OwnerTeam = ownerTeam,
             Damage = damage * config.damageMultiplier,
+            IsTrueDamage = isTrueDamage,
             // IsCrit = isCrit,
             Direction = direction.normalized,
             Speed = config.speed,

@@ -6,16 +6,6 @@ using UnityEngine;
 public struct DamageResult
 {
     /// <summary>
-    /// 伤害倍率（由修改器修改，默认 1.0）
-    /// </summary>
-    public float PowerMultiplier;
-
-    /// <summary>
-    /// 固定伤害加值（由修改器添加）
-    /// </summary>
-    public float FlatDamage;
-
-    /// <summary>
     /// 是否为真实伤害（无视防御）
     /// </summary>
     public bool IsTrueDamage;
@@ -31,20 +21,10 @@ public struct DamageResult
     /// 请确保使用 ref 传递，或在调用后使用返回的结构体实例而不是原始拷贝。
     public GameObject Source;
     /// <summary>
-    /// 计算最终伤害（在应用所有修改器后调用）
-    /// </summary>
-    public void CalculateFinalDamage(float baseDamage)
-    {
-        FinalDamage = (baseDamage * PowerMultiplier) + FlatDamage;
-    }
-
-    /// <summary>
     /// 初始化默认值
     /// </summary>
     public static DamageResult Default => new DamageResult
     {
-        PowerMultiplier = 1.0f,
-        FlatDamage = 0f,
         IsTrueDamage = false,
         FinalDamage = 0f,
         Source = null

@@ -147,15 +147,6 @@ namespace Character.Player.Skill.Runtime
         }
 
         /// <summary>
-        /// 移除来自指定源的所有修改器
-        /// </summary>
-        public void RemoveAllModifiersFromSource(object source)
-        {
-            if (source == null) return;
-            _activeModifiers.RemoveAll(m => m.Source == source);
-        }
-
-        /// <summary>
         /// 清除所有修改器
         /// </summary>
         public void ClearAllModifiers()

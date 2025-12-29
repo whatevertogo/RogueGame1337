@@ -28,7 +28,7 @@ using Character;
             // 每帧造成伤害
             if (stats != null)
             {
-                var damageInfo = DamageInfo.Create(_def.damagePerSecond * dt);
+                var damageInfo = DamageInfo.Create(_def.damagePerSecond * dt, IsTrueDamage);
                 // 设置伤害来源
                 if (_damageSource != null)
                 {

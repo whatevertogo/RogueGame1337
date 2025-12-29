@@ -46,7 +46,7 @@ using Character.Components;
             // 应用伤害
             if (stats != null)
             {
-                var damageInfo = DamageInfo.Create(damage);
+                var damageInfo = DamageInfo.Create(damage, IsTrueDamage);
                 // 设置伤害来源
                 if (_damageSource != null)
                 {

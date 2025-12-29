@@ -140,7 +140,7 @@ namespace Character.Player
                 // 使用嵌套结构的默认值
                 Targeting = TargetingConfig.Default,
                 EnergyCost = EnergyCostConfig.Default,
-                Damage = DamageResult.Default,
+                DamageResult = DamageResult.Default,
             };
 
             // 应用技能修改器（必须在能量消耗前生效）
@@ -278,6 +278,9 @@ namespace Character.Player
                     {
                         continue;
                     }
+
+                    // 从修改器上下文传递真伤标记到效果实例
+                    effectInstance.IsTrueDamage = ctx.DamageResult.IsTrueDamage;
 
                     statusComp.AddEffect(effectInstance);
                 }

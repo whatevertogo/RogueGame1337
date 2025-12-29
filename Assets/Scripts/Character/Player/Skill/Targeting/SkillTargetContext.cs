@@ -43,7 +43,7 @@ namespace Character.Player.Skill.Targeting
         /// <summary>
         /// 伤害计算结果（由修改器修改）
         /// </summary>
-        public DamageResult Damage;
+        public DamageResult DamageResult;
 
 
         // ========== 便捷属性（不占用存储空间，仅计算属性）==========

@@ -8,6 +8,11 @@ public abstract class StatusEffectInstanceBase : IStatusEffect
     protected readonly bool isStackable;
     public virtual bool IsStackable => isStackable;
 
+    /// <summary>
+    /// 是否为真实伤害（仅对伤害类效果生效）
+    /// </summary>
+    public bool IsTrueDamage { get; set; }
+
     protected float duration;          // 0 = 无限（移除 readonly 以支持动态修改）
     protected float remainingTime;
 
@@ -21,6 +26,7 @@ public abstract class StatusEffectInstanceBase : IStatusEffect
         this.duration = duration;
         this.remainingTime = duration;
         this.isStackable = isStackable;
+        IsTrueDamage = false;
     }
 
     public virtual void OnApply(CharacterStats stats, StatusEffectComponent comp)

@@ -140,10 +140,10 @@ public class ProjectileBase : MonoBehaviour
     /// 便捷初始化方法（兼容旧代码）
     /// </summary>
     public void Init(ProjectileConfig config, Vector2 direction, float damage,
-        TeamType ownerTeam, Transform owner, LayerMask hitMask, StatusEffectDefinitionSO[] effects = null, bool isCrit = false)
+        TeamType ownerTeam, Transform owner, LayerMask hitMask, StatusEffectDefinitionSO[] effects = null, bool isCrit = false, bool isTrueDamage = false)
     {
         var projectileData = ProjectileData.FromConfig(
-            config, direction, damage, ownerTeam, owner, hitMask, effects);
+            config, direction, damage, ownerTeam, owner, hitMask, effects, isTrueDamage);
         Init(projectileData);
 
         if (enabledebug)
@@ -435,6 +435,7 @@ public class ProjectileBase : MonoBehaviour
         var damageInfo = new DamageInfo
         {
             Amount = data.Damage,
+            IsTrueDamage = data.IsTrueDamage,
             // IsCrit = data.IsCrit,
             Source = data.Owner?.gameObject,
             HitPoint = transform.position,

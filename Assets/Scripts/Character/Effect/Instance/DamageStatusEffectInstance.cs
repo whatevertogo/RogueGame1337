@@ -115,14 +115,14 @@ public class DamageStatusEffectInstance : StatusEffectInstanceBase, IDamageSourc
     /// </summary>
     private DamageInfo CreateDamageInfo(float damage)
     {
-        var damageInfo = DamageInfo.Create(damage);
-        
+        var damageInfo = DamageInfo.Create(damage, IsTrueDamage);
+
         // 设置伤害来源
         if (_def.useCasterAsSource && _damageSource != null)
         {
             damageInfo.Source = _damageSource.gameObject;
         }
-        
+
         return damageInfo;
     }
     
