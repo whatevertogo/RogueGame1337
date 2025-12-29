@@ -18,31 +18,25 @@ public class DamageSkillModifier : ISkillModifier
     public int Priority => ModifierPriority.DAMAGE_MULTIPLIER;
 
     /// <summary>
-    /// 修改器来源标识（用于批量移除）
-    /// </summary>
-    public object Source { get; private set; }
-
-    /// <summary>
     /// 创建伤害修改器
     /// </summary>
     /// <param name="damageMultiplier">伤害倍率</param>
     /// <param name="damageAddend">伤害加值</param>
     /// <param name="setTrueDamage">是否设置为真伤（默认 false）</param>
     /// <param name="source">修改器来源</param>
-    public DamageModifier(float damageMultiplier, float damageAddend = 0f, bool setTrueDamage = false, object source = null)
+    public DamageSkillModifier(float damageMultiplier, float damageAddend = 0f, bool setTrueDamage = false)
     {
         DamageMultiplier = damageMultiplier;
         DamageAddend = damageAddend;
         SetTrueDamage = setTrueDamage;
-        Source = source;
     }
 
     /// <summary>
     /// 创建覆盖式伤害修改器（强制设置伤害值，且为真伤）
     /// </summary>
-    public static DamageModifier Override(float damageOverride, object source = null)
+    public static DamageSkillModifier Override(float damageOverride, object source = null)
     {
-        return new DamageModifier(1f, 0f, true, source)
+        return new DamageSkillModifier(1f, 0f, true)
         {
             DamageOverride = damageOverride
         };

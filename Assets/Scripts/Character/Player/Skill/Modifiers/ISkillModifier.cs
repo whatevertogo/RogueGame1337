@@ -15,12 +15,6 @@ namespace Character.Player.Skill.Modifiers
         int Priority { get; }
 
         /// <summary>
-        /// 修改器来源对象，用于标识该修改器的来源（例如某个技能、Buff、装备等）
-        /// 常用于批量移除某个来源添加的所有修改器
-        /// </summary>
-        object Source { get; }
-
-        /// <summary>
         /// 应用修改器效果
         /// </summary>
         /// <param name="runtime">技能运行时状态</param>
