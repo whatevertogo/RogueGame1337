@@ -26,7 +26,7 @@ namespace Character.Player
         /// </summary>
         private bool IsCooldownReady(int slotIndex)
         {
-            if (SkillLimiter.IsNoCooldown) return true;
+            if (_noCooldownMode) return true;
 
             var rt = _playerSkillSlots[slotIndex]?.Runtime;
             if (rt?.Skill == null) return false;
@@ -48,9 +48,6 @@ namespace Character.Player
             var rt = _playerSkillSlots[slotIndex]?.Runtime;
             if (rt == null || rt.Skill == null) return false;
 
-            // 房间规则限制
-            if (!SkillLimiter.CanUseSkill(slotIndex)) return false;
-
             // 冷却检查
             if (!IsCooldownReady(slotIndex)) return false;
 
@@ -58,7 +55,7 @@ namespace Character.Player
             var config = rt.CachedActiveConfig;
             if (config?.requiresCharge == true)
             {
-                if (_inventory == null || string.IsNullOrEmpty(rt.InstanceId)) return false;
+                if (string.IsNullOrEmpty(rt.InstanceId)) return false;
 
                 var state = _inventory.GetActiveCardState(rt.InstanceId);
                 if (state == null || state.CurrentCharges < config.energyThreshold) return false;
@@ -124,7 +121,7 @@ namespace Character.Player
             if (requiresCharge)
             {
                 // 消耗技能能量
-                if (_inventory == null || string.IsNullOrEmpty(rt.InstanceId)) yield break;
+                if (string.IsNullOrEmpty(rt.InstanceId)) yield break;
 
                 if (!_inventory.ConsumeSkillEnergy(rt.InstanceId))
                 {
@@ -132,9 +129,6 @@ namespace Character.Player
                 }
             }
 
-            // 标记为本房间已使用（房间内一次性规则）并记录使用时间（用于冷却计算）
-            // 使用 SkillLimiter 而不是直接设置 rt.UsedInCurrentRoom
-            SkillLimiter.MarkSkillUsed(slotIndex);
             rt.LastUseTime = Time.time;
 
             // 触发已使用事件（UI/上层监听）
@@ -201,8 +195,7 @@ namespace Character.Player
             if (def.vfxPrefab != null)
             {
                 // TODO-临时用transform.position，后续可改为技能定义中的挂点
-                var vfx = Instantiate(def.vfxPrefab, transform.position, Quaternion.identity);
-                var vfxsr = vfx.GetComponent<SpriteRenderer>();
+                Instantiate(def.vfxPrefab, transform.position, Quaternion.identity);
             }
 
             // 获取目标

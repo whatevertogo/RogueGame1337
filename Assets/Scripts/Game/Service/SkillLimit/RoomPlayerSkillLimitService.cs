@@ -8,14 +8,8 @@ using UnityEngine;
 namespace RogueGame.Game.Service.SkillLimit
 {
     /// <summary>
-    /// 房间技能限制服务：规则驱动的协调器
-    /// 职责：监听房间事件，根据房间规则对玩家技能系统下达限制/重置指令
-    ///
-    /// 设计原则：
-    /// - 只负责一件事：根据"房间规则"限制或重置玩家技能的可用状态
-    /// - 不负责技能释放、不计算伤害、不管 UI、不持有复杂状态
-    /// - 监听房间事件（进入/退出/清理），对 PlayerSkillLimiter 下达指令
-    /// - 面向接口/意图，不直接操作 Player 内部细节
+    /// 房间技能限制服务：监听房间事件，根据房间技能规则调整玩家技能状态
+    /// 当前实现：当进入房间时重置玩家技能能量；DisableAllSkills / NoCooldown 等规则仅保留处理框架，尚未启用
     /// </summary>
     public sealed class RoomPlayerSkillLimitService
     {
@@ -42,7 +36,6 @@ namespace RogueGame.Game.Service.SkillLimit
             if (_subscribed) return;
 
             EventBus.Subscribe<RoomEnteredEvent>(OnRoomEntered);
-            EventBus.Subscribe<RoomClearedEvent>(OnRoomCleared);
             _subscribed = true;
 
             CDTU.Utils.CDLogger.Log("[RoomPlayerSkillLimitService] 已订阅房间事件");
@@ -56,7 +49,6 @@ namespace RogueGame.Game.Service.SkillLimit
             if (!_subscribed) return;
 
             EventBus.Unsubscribe<RoomEnteredEvent>(OnRoomEntered);
-            EventBus.Unsubscribe<RoomClearedEvent>(OnRoomCleared);
             _subscribed = false;
         }
 
@@ -88,18 +80,6 @@ namespace RogueGame.Game.Service.SkillLimit
         }
 
         /// <summary>
-        /// 房间清理完成事件处理（战斗结束，可以切换技能）
-        /// </summary>
-        private void OnRoomCleared(RoomClearedEvent evt)
-        {
-            if (evt == null) return;
-
-            // 房间清理完成后，技能限制仍然生效，但玩家可以在背包中切换技能
-            // 这里不做任何操作，只是记录日志
-            CDTU.Utils.CDLogger.Log($"[RoomPlayerSkillLimitService] 房间清理完成 (RoomId={evt.RoomId})");
-        }
-
-        /// <summary>
         /// 应用房间技能规则到玩家
         /// </summary>
         private void ApplySkillRule(RoomController room, PlayerController player)
@@ -110,38 +90,16 @@ namespace RogueGame.Game.Service.SkillLimit
             RoomSkillRule rule = GetRoomSkillRule(room);
             _currentRule = rule;
 
-            // 获取玩家的技能限制器
-            var skillLimiter = player.GetComponent<PlayerSkillComponent>()?.SkillLimiter;
-            if (skillLimiter == null)
-            {
-                CDTU.Utils.CDLogger.LogError("[RoomPlayerSkillLimitService] 玩家没有 PlayerSkillLimiter");
-                return;
-            }
-
-            // 清除之前的规则
-            skillLimiter.Clear();
-
-            // 根据规则应用限制
             switch (rule)
             {
-                case RoomSkillRule.DisableAllSkills:
-                    skillLimiter.DisableAll();
-                    CDTU.Utils.CDLogger.Log($"[RoomPlayerSkillLimitService] 房间 {room.RoomMeta.Index}: 禁用所有技能");
-                    break;
-
                 case RoomSkillRule.ResetOnEnter:
                     ResetSkillEnergy(player);
                     CDTU.Utils.CDLogger.Log($"[RoomPlayerSkillLimitService] 房间 {room.RoomMeta.Index}: 重置技能充能");
                     break;
 
-                case RoomSkillRule.NoCooldown:
-                    skillLimiter.SetNoCooldownMode();
-                    CDTU.Utils.CDLogger.Log($"[RoomPlayerSkillLimitService] 房间 {room.RoomMeta.Index}: 无冷却模式（测试用）");
-                    break;
-
                 case RoomSkillRule.None:
                 default:
-                    CDTU.Utils.CDLogger.Log($"[RoomPlayerSkillLimitService] 房间 {room.RoomMeta.Index}: 无技能限制");
+                    CDTU.Utils.CDLogger.Log($"[RoomPlayerSkillLimitService] 房间 {room.RoomMeta.Index}: 无特殊规则");
                     break;
             }
         }

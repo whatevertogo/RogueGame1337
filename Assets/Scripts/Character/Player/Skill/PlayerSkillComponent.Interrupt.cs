@@ -79,10 +79,11 @@ namespace Character.Player
             }
 
             // 如果需要退还充能（使用缓存配置）
-            if (refundCharges && !string.IsNullOrEmpty(rt.InstanceId))
+            // 增加 _inventory 非空检查，避免在初始化失败时抛出 NullReferenceException
+            if (refundCharges && !string.IsNullOrEmpty(rt.InstanceId) && _inventory != null)
             {
                 var config = rt.CachedActiveConfig;
-                if (_inventory != null && config?.requiresCharge == true)
+                if (config?.requiresCharge == true)
                 {
                     _inventory.AddEnergy(rt.InstanceId, config.energyThreshold);
                 }

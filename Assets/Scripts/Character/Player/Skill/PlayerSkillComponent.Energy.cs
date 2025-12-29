@@ -4,6 +4,7 @@ using Character.Components;
 using Character.Components.Interface;
 using Character.Player.Skill.Runtime;
 using RogueGame.Events;
+using CDTU.Utils;
 
 namespace Character.Player
 {
@@ -12,25 +13,33 @@ namespace Character.Player
     /// </summary>
     public partial class PlayerSkillComponent : MonoBehaviour, ISkillComponent
     {
-        #region 常量
-
+        /// <summary>
+        /// 默认最大能量值。
+        /// 注意：该值应与卡牌配置（如 ActiveCardConfig / 配置表）中 maxEnergy 的默认值保持一致，
+        /// 如需调整默认最大能量，请同时修改配置与此常量，避免出现数据不同步的问题。
+        /// </summary>
         private const int DefaultMaxEnergy = 100;
-
-        #endregion
 
         #region 能量验证
 
         /// <summary>
-        /// 尝试获取指定槽位的运行时数据
+        /// 尝试获取指定槽位的运行时数据（调用方需保证 slotIndex 有效）
         /// </summary>
         private bool TryGetRuntime(int slotIndex, out ActiveSkillRuntime runtime)
         {
+            // 防御式检查：即使调用方未验证索引，也不应抛出异常
             runtime = null;
-            if (slotIndex < 0 || slotIndex >= _playerSkillSlots.Length) return false;
 
-            var slot = _playerSkillSlots[slotIndex];
-            runtime = slot?.Runtime;
+            if (_playerSkillSlots == null)
+            {
+                return false;
+            }
 
+            if (slotIndex < 0 || slotIndex >= _playerSkillSlots.Length)
+            {
+                return false;
+            }
+            runtime = _playerSkillSlots[slotIndex]?.Runtime;
             return runtime != null && !string.IsNullOrEmpty(runtime.InstanceId);
         }
 
@@ -39,8 +48,8 @@ namespace Character.Player
         /// </summary>
         public bool HasEnoughEnergy(int slotIndex, int threshold)
         {
+            if (slotIndex < 0 || slotIndex >= _playerSkillSlots.Length) return false;
             if (!TryGetRuntime(slotIndex, out var rt)) return false;
-            if (_inventory == null) return false;
 
             var state = _inventory.GetActiveCardState(rt.InstanceId);
             return state?.CurrentCharges >= threshold;
@@ -51,8 +60,8 @@ namespace Character.Player
         /// </summary>
         public int GetCurrentEnergy(int slotIndex)
         {
+            if (slotIndex < 0 || slotIndex >= _playerSkillSlots.Length) return 0;
             if (!TryGetRuntime(slotIndex, out var rt)) return 0;
-            if (_inventory == null) return 0;
 
             return _inventory.GetActiveCardState(rt.InstanceId)?.CurrentCharges ?? 0;
         }
@@ -62,7 +71,12 @@ namespace Character.Player
         /// </summary>
         public int GetMaxEnergy(int slotIndex)
         {
-            if (!TryGetRuntime(slotIndex, out var rt)) return DefaultMaxEnergy;
+            if (slotIndex < 0 || slotIndex >= _playerSkillSlots.Length) return DefaultMaxEnergy;
+            if (!TryGetRuntime(slotIndex, out var rt))
+            {
+                CDLogger.LogWarning($"[PlayerSkillComponent] GetMaxEnergy failed: invalid runtime for slotIndex={slotIndex}");
+                return DefaultMaxEnergy;
+            }
 
             var config = rt.CachedActiveConfig;
             return Mathf.Max(1, config?.maxEnergy ?? DefaultMaxEnergy);
