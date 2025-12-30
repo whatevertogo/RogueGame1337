@@ -1,4 +1,4 @@
-public class CombatRewardEnergyService
+public sealed class CombatRewardEnergyService
 {
     public InventoryServiceManager InventoryManager;
 
