@@ -62,9 +62,7 @@ namespace UI
 
         private Transform GetLayerRoot(UILayer layer)
         {
-            return _layerRoots.TryGetValue(layer, out var root)
-                ? root
-                : transform;
+            return _layerRoots.TryGetValue(layer, out var root) ? root : transform;
         }
 
         #endregion

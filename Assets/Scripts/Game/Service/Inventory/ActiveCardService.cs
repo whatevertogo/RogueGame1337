@@ -82,67 +82,6 @@ namespace RogueGame.Game.Service.Inventory
             OnActiveCardEquipChanged?.Invoke(instanceId);
         }
 
-        public bool TryConsumeCharge(string instanceId, int amount)
-        {
-            var st = GetCard(instanceId);
-            if (st == null || amount <= 0) return false;
-            if (st.CurrentEnergy < amount) return false;
-
-            st.CurrentEnergy -= amount;
-            NotifyEnergyChanged(instanceId, st.CurrentEnergy);
-            return true;
-        }
-
-        public bool TryConsumeCharge(string instanceId, int amount, out int remaining)
-        {
-            remaining = 0;
-            var st = GetCard(instanceId);
-            if (st == null || amount <= 0) return false;
-            if (st.CurrentEnergy < amount)
-            {
-                remaining = st.CurrentEnergy;
-                return false;
-            }
-            st.CurrentEnergy -= amount;
-            remaining = st.CurrentEnergy;
-            NotifyEnergyChanged(instanceId, st.CurrentEnergy);
-            return true;
-        }
-
-        public void AddCharges(string instanceId, int amount, int max)
-        {
-            var st = GetCard(instanceId);
-            if (st == null || amount <= 0) return;
-
-            int before = st.CurrentEnergy;
-            st.CurrentEnergy = Mathf.Min(max, st.CurrentEnergy + amount);
-
-            if (before != st.CurrentEnergy)
-            {
-                NotifyEnergyChanged(instanceId, st.CurrentEnergy);
-            }
-        }
-
-        public void SetCharges(string instanceId, int charges, int? max = null)
-        {
-            var st = GetCard(instanceId);
-            if (st == null) return;
-
-            if (!max.HasValue)
-            {
-                var cardDef = GameRoot.Instance?.CardDatabase?.Resolve(st.CardId);
-                max = cardDef?.activeCardConfig?.maxEnergy ?? 999;
-            }
-
-            int before = st.CurrentEnergy;
-            st.CurrentEnergy = Mathf.Clamp(charges, 0, max.Value);
-
-            if (before != st.CurrentEnergy)
-            {
-                NotifyEnergyChanged(instanceId, st.CurrentEnergy);
-            }
-        }
-
         public void RemoveInstance(string instanceId)
         {
             var st = GetCard(instanceId);
