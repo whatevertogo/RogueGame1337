@@ -39,11 +39,24 @@ namespace Character.Player.Skill.Targeting
         /// </summary>
         public EnergyCostConfig EnergyCost;
 
-        // ========== 阶段4：伤害计算结果（由 DamageModifier 修改）==========
+        // ========== 阶段4：伤害计算结果（由 IDamageModifier 修改）==========
         /// <summary>
         /// 伤害计算结果（由修改器修改）
         /// </summary>
         public DamageResult DamageResult;
+
+        // // ========== 阶段5：投射物配置（由 IProjectileModifier 修改）==========
+        // /// <summary>
+        // /// 投射物配置（由修改器修改，用于弹道、穿透、弹射等）
+        // /// </summary>
+        // public ProjectileConfig Projectile;
+
+        // ========== 阶段6：目标获取结果（策略执行后填充，修改器只读）==========
+        /// <summary>
+        /// 目标获取结果（由策略填充，供跨阶段修改器读取）
+        /// 用于跨阶段修改器（例如："根据目标数量调整能量消耗"）
+        /// </summary>
+        public TargetResult TargetResult;
 
 
         // ========== 便捷属性（不占用存储空间，仅计算属性）==========
@@ -122,5 +135,35 @@ namespace Character.Player.Skill.Targeting
         };
     }
 
-    
+
+    // /// <summary>
+    // /// 投射物配置（独立结构体，用于 IProjectileModifier）
+    // /// </summary>
+    // public struct ProjectileConfig
+    // {
+    //     /// <summary>
+    //     /// 弹射次数（由修改器修改）
+    //     /// </summary>
+    //     public int BounceCount;
+
+    //     /// <summary>
+    //     /// 弹射范围（由修改器修改）
+    //     /// </summary>
+    //     public float BounceRange;
+
+    //     /// <summary>
+    //     /// 穿透次数（由修改器修改，0 表示不穿透）
+    //     /// </summary>
+    //     public int PierceCount;
+
+    //     /// <summary>
+    //     /// 初始化默认值
+    //     /// </summary>
+    //     public static ProjectileConfig Default => new ProjectileConfig
+    //     {
+    //         BounceCount = 0,
+    //         BounceRange = 5f,
+    //         PierceCount = 0
+    //     };
+    // }
 }

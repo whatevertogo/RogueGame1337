@@ -129,6 +129,7 @@ namespace Character.Player
                 yield break;
             }
 
+            // ========== 阶段化初始化 ==========
             // 创建技能上下文
             ctx = new SkillTargetContext
             {
@@ -141,10 +142,12 @@ namespace Character.Player
                 Targeting = TargetingConfig.Default,
                 EnergyCost = EnergyCostConfig.Default,
                 DamageResult = DamageResult.Default,
+                //TODO-完善子弹
+                // Projectile = ProjectileConfig.Default,
             };
 
-            // 应用技能修改器（必须在能量消耗前生效）
-            rt.ApplyAllModifiers(ref ctx);
+            // ========== 阶段1：应用能量消耗修改器 ==========
+            rt.ApplyEnergyCostModifiers(ref ctx.EnergyCost);
 
             // 使用缓存配置检查是否需要消耗能量
             var config = rt.CachedActiveConfig;
@@ -205,12 +208,6 @@ namespace Character.Player
         /// </summary>
         private IEnumerator DelayedExecute(SkillDefinition def, SkillTargetContext ctx, int slotIndex)
         {
-            // 关键检查：技能定义必须存在
-            if (def == null)
-            {
-                yield break;
-            }
-
             // 等待检测延迟
             if (def.detectionDelay > 0f)
                 yield return new WaitForSeconds(def.detectionDelay);
@@ -225,6 +222,9 @@ namespace Character.Player
 
             var rt = _playerSkillSlots[slotIndex]?.Runtime;
 
+            // ========== 阶段2：应用目标获取修改器 ==========
+            rt.ApplyTargetingModifiers(ref ctx.Targeting);
+
             // 播放 VFX（如果有）
             if (def.vfxPrefab != null)
             {
@@ -232,7 +232,7 @@ namespace Character.Player
                 Instantiate(def.vfxPrefab, transform.position, Quaternion.identity);
             }
 
-            // 获取目标
+            // ========== 阶段3：获取目标 ==========
             var targets = new List<CharacterBase>();
             if (def.TargetAcquireSO != null)
             {
@@ -252,7 +252,23 @@ namespace Character.Player
                 yield break;
             }
 
-            // 应用效果到所有有效目标
+            // 保存目标结果到上下文（供跨阶段修改器使用）
+            ctx.TargetResult = new TargetResult
+            {
+                Targets = validTargets,
+                Point = ctx.AimPoint
+            };
+
+            // ========== 阶段4：应用跨阶段修改器 ==========
+            rt.ApplyCrossPhaseModifiers(ref ctx);
+
+            // ========== 阶段5：应用伤害修改器 ==========
+            rt.ApplyDamageModifiers(ref ctx.DamageResult);
+
+            // ========== 阶段6：应用投射物修改器 ==========
+            // rt.ApplyProjectileModifiers(ref ctx.Projectile);
+
+            // ========== 阶段7：应用效果到所有有效目标 ==========
             if (def.Effects == null || def.Effects.Count == 0)
             {
                 yield break;
@@ -285,6 +301,9 @@ namespace Character.Player
                     statusComp.AddEffect(effectInstance);
                 }
             }
+
+            // ========== 阶段8：应用冷却修改器 ==========
+            rt.ApplyCooldownModifiers();
 
             yield break;
         }

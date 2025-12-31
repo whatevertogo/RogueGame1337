@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 using Character.Player.Skill.Evolution;
@@ -38,11 +37,6 @@ namespace Character.Player.Skill.Runtime
         /// </summary>
         [NonSerialized]
         public bool EnergyConsumed;
-        /// <summary>
-        /// 修改器列表脏标志（需要重新排序时设为 true）
-        /// </summary>
-        [NonSerialized]
-        private bool _modifiersDirty;
 
         // ========== 修改器系统 ==========
         [NonSerialized]
@@ -73,17 +67,17 @@ namespace Character.Player.Skill.Runtime
         [NonSerialized]
         public float EffectiveCooldown;
 
-        /// <summary>
-        /// 弹射次数
-        /// </summary>
-        [NonSerialized]
-        public int BounceCount;
+        // /// <summary>
+        // /// 弹射次数
+        // /// </summary>
+        // [NonSerialized]
+        // public int BounceCount;
 
-        /// <summary>
-        /// 弹射范围
-        /// </summary>
-        [NonSerialized]
-        public float BounceRange = 5f;
+        // /// <summary>
+        // /// 弹射范围
+        // /// </summary>
+        // [NonSerialized]
+        // public float BounceRange = 5f;
 
         // ========== 卡牌配置缓存 ==========
         /// <summary>
@@ -122,7 +116,7 @@ namespace Character.Player.Skill.Runtime
 
             // 初始化动态属性
             EffectiveCooldown = skill?.cooldown ?? 1f;
-            BounceCount = 0;
+            // BounceCount = 0;
         }
 
         #region 修改器管理
@@ -135,7 +129,6 @@ namespace Character.Player.Skill.Runtime
             if (_activeModifiers.Contains(modifier)) return;
 
             _activeModifiers.Add(modifier);
-            _modifiersDirty = true;
         }
 
         /// <summary>
@@ -155,26 +148,113 @@ namespace Character.Player.Skill.Runtime
         }
 
         /// <summary>
-        /// 应用所有修改器到上下文
+        /// 应用所有修改器到上下文（旧版 API，已废弃）
         /// </summary>
+        [Obsolete("请使用具体的阶段方法（ApplyEnergyCostModifiers, ApplyTargetingModifiers 等）")]
         public void ApplyAllModifiers(ref SkillTargetContext ctx)
         {
-            // 惰性排序：仅在需要时排序
-            if (_modifiersDirty)
-            {
-                _activeModifiers.Sort((a, b) => a.Priority.CompareTo(b.Priority));
-                _modifiersDirty = false;
-            }
+            ApplyEnergyCostModifiers(ref ctx.EnergyCost);
+            ApplyTargetingModifiers(ref ctx.Targeting);
+            ApplyDamageModifiers(ref ctx.DamageResult);
+        }
 
+        #endregion
+
+        #region 阶段化修改器应用
+
+        /// <summary>
+        /// 阶段1：应用能量消耗修改器
+        /// 在能量消耗前调用
+        /// </summary>
+        public void ApplyEnergyCostModifiers(ref EnergyCostConfig config)
+        {
             foreach (var modifier in _activeModifiers)
             {
-                try
+                if (modifier is IEnergyCostModifier energyModifier)
                 {
-                    modifier.Apply(this, ref ctx);
+                    energyModifier.ApplyEnergyCost(this, ref config);
                 }
-                catch (Exception ex)
+            }
+        }
+
+        /// <summary>
+        /// 阶段2：应用目标获取修改器
+        /// 在目标获取前调用
+        /// </summary>
+        public void ApplyTargetingModifiers(ref TargetingConfig config)
+        {
+            foreach (var modifier in _activeModifiers)
+            {
+                if (modifier is ITargetingModifier targetingModifier)
                 {
-                    Debug.LogError($"[ActiveSkillRuntime] 修改器 {modifier.GetType().Name} 应用失败: {ex.Message}");
+                    targetingModifier.ApplyTargeting(this, ref config);
+                }
+            }
+        }
+
+        // /// <summary>
+        // /// 阶段3：应用投射物修改器
+        // /// 在创建投射物时调用
+        // /// </summary>
+        // public void ApplyProjectileModifiers(ref ProjectileConfig config)
+        // {
+        //     foreach (var modifier in _activeModifiers)
+        //     {
+        //         if (modifier is IProjectileModifier projectileModifier)
+        //         {
+        //             try
+        //             {
+        //                 projectileModifier.ApplyProjectile(this, ref config);
+        //             }
+        //             catch (Exception ex)
+        //             {
+        //                 Debug.LogError($"[ActiveSkillRuntime] 投射物修改器 {modifier.ModifierId} 应用失败: {ex.Message}");
+        //             }
+        //         }
+        //     }
+        // }
+
+        /// <summary>
+        /// 阶段4：应用伤害修改器
+        /// 在应用效果前调用
+        /// </summary>
+        public void ApplyDamageModifiers(ref DamageResult result)
+        {
+            foreach (var modifier in _activeModifiers)
+            {
+                if (modifier is IDamageModifier damageModifier)
+                {
+                    damageModifier.ApplyDamage(this, ref result);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 阶段5：应用冷却修改器
+        /// 在技能使用后调用
+        /// </summary>
+        public void ApplyCooldownModifiers()
+        {
+            foreach (var modifier in _activeModifiers)
+            {
+                if (modifier is ICooldownModifier cooldownModifier)
+                {
+                    cooldownModifier.ApplyCooldown(this);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 阶段6：应用跨阶段修改器
+        /// 在所有阶段完成后调用（用于处理跨阶段逻辑）
+        /// </summary>
+        public void ApplyCrossPhaseModifiers(ref SkillTargetContext ctx)
+        {
+            foreach (var modifier in _activeModifiers)
+            {
+                if (modifier is ICrossPhaseModifier crossPhaseModifier)
+                {
+                    crossPhaseModifier.ApplyCrossPhase(this, ref ctx);
                 }
             }
         }
