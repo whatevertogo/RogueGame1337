@@ -1,4 +1,7 @@
 using System.Collections.Generic;
+using Character.Components;
+using Character.Effects;
+using Character.Player.Skill.Modifiers;
 using UnityEngine;
 
 namespace Character.Player.Skill.Evolution
@@ -12,13 +15,10 @@ namespace Character.Player.Skill.Evolution
         public string branchName;
         [TextArea] public string description;
 
-        [Header("标签")]
-        public SkillTag[] tags;
-
         [Header("修改器")]
-        public List<ScriptableObject> modifiers;
+        public List<ISkillModifier> modifiers;
 
         [Header("该分支特有效果")]
-        public List<StatusEffectDefinitionSO> effects;
+        public List<StatusEffectComponent> effects;
     }
 }
