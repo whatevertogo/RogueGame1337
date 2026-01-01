@@ -4,7 +4,7 @@ using UI;
 /// <summary>
 /// GameFlowCoordinator 的抽象接口（最小），方便其它系统通过接口与之交互。
 /// </summary>
-public interface IGameStateManager
+public interface IGameFlowCoordinator
 {
     void StartRun(RoomMeta meta);
     void EnterRoom(RoomType type, int roomId);

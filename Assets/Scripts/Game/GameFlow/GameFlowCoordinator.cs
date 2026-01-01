@@ -11,7 +11,7 @@ using UnityEngine.SceneManagement;
 /// 轻量级 GameStateManager：负责发布状态变更事件，保持最小实现以便快速验证流程。
 /// 使用已有的 EventBus 进行解耦。用于替代/补充现有的 GameFlowController。
 /// </summary>
-public sealed class GameFlowCoordinator : MonoBehaviour, IGameStateManager
+public sealed class GameFlowCoordinator : MonoBehaviour, IGameFlowCoordinator
 {
     public GameFlowState CurrentState { get; private set; } = GameFlowState.None;
 
