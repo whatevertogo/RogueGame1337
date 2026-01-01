@@ -2,10 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using Core.Events;
 using RogueGame.Items;
-using RogueGame.Events;
-using Character.Player.Skill.Targeting;
 
 namespace RogueGame.Game.Service.Inventory
 {

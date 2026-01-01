@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using CDTU.Utils;
 using RogueGame.Events;
 using RogueGame.Game.Service.Inventory;
