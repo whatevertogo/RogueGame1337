@@ -8,7 +8,7 @@ using UnityEngine;
 /// <summary>
 /// 根据鼠标瞄准点为中心，获取一定范围内的所有目标
 /// </summary>
-[CreateAssetMenu(fileName = "Area Target Strategy", menuName = "Card System/Skill System/Targeting System/Strategies/Area Target Strategy")]
+[CreateAssetMenu(fileName = "AreaTargetStrategy", menuName = "RogueGame/Skill/Targeting/Strategies/AreaTargetStrategy")]
 public class AreaTargetStrategy : TargetAcquireSO
 {
     [SerializeField] private LayerMask targetMask;

@@ -198,4 +198,22 @@ public class PlayerController : CharacterBase
 		playerAnim?.PlayHurt();
 
 	}
+
+	public void EquipSkill(int slotIndex, string cardID)
+	{
+		skillComponent.EquipActiveCardToSlotIndex(slotIndex, cardID);
+	}
+
+	public void UnequipSkill(int slotIndex)
+	{
+		skillComponent.UnequipActiveCardBySlotIndex(slotIndex);
+	}
+
+	public void UnequipAllSkills()
+	{
+		for (int i = 0; i < skillComponent.SlotCount; i++)
+		{
+			skillComponent.UnequipActiveCardBySlotIndex(i);
+		}
+	}
 }

@@ -1,7 +1,7 @@
 using Character;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "EnemyConfig", menuName = "RogueGame/Enemy Config")]
+[CreateAssetMenu(fileName = "Enemy", menuName = "RogueGame/Character/Enemy")]
 public class EnemyConfigSO : ScriptableObject
 {
     public int KillEnergy = 5;

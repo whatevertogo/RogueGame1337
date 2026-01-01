@@ -17,8 +17,6 @@ namespace Game.UI
         private CharacterStats localCharacterStats;
         private PlayerController localplayerController;
 
-        private PlayerSkillComponent localPlayerSkillComponent;
-
 
         public virtual void Bind(UIViewBase view)
         {
@@ -36,9 +34,8 @@ namespace Game.UI
                 return;
             }
 
-            localplayerController = GameRoot.Instance.PlayerManager?.GetLocalPlayerData()?.Controller;
+            localplayerController = GameRoot.Instance.PlayerManager?.GetLocalPlayerRuntimeState()?.Controller;
             localCharacterStats = localplayerController?.GetComponent<CharacterStats>();
-            localPlayerSkillComponent = localplayerController?.GetComponent<PlayerSkillComponent>();
             if (localCharacterStats != null)
             {
                 // 防止重复订阅：先移除再添加
@@ -131,7 +128,6 @@ namespace Game.UI
 
             _view.ClearCardViews();
             RefreshActiveCardViews();
-            // RefreshPassiveCardViews();
         }
 
         public void OnClearCardButtonClicked()
@@ -140,7 +136,7 @@ namespace Game.UI
             RefreshAllCardViews();
 
             // 发布事件请求，由 SlotService 或其他订阅方执行具体清理（实现解耦）
-            var playerId = GameRoot.Instance.PlayerManager.GetLocalPlayerData()?.PlayerId;
+            var playerId = GameRoot.Instance.PlayerManager.GetLocalPlayerRuntimeState()?.PlayerId;
             EventBus.Publish(new RogueGame.Events.ClearAllSlotsRequestedEvent { PlayerId = playerId });
         }
 
@@ -185,7 +181,7 @@ namespace Game.UI
             var pm =GameRoot.Instance.PlayerManager;
             if (pm != null)
             {
-                var player = pm.GetLocalPlayerData()?.Controller;
+                var player = pm.GetLocalPlayerRuntimeState()?.Controller;
                 if (player != null)
                 {
                     if (localCharacterStats != null)

@@ -61,10 +61,6 @@ namespace Character.Player.Skill.Slots
             // 注意：
             // 这里有意仅获取玩家背包中「该卡牌的首个实例」，
             // 用于将技能运行时与库存中的某个具体实例（InstanceId）建立关联。
-            // 当前设计下，当背包中存在多个相同 cardId 的实例时：
-            // - 并不区分具体使用哪一个实例，只要能代表该卡牌的库存状态即可；
-            // - 如果后续需要根据耐久度、锁定状态、数量等维度精确选择实例，
-            //   应在此处扩展更明确的实例选择策略，而不是直接依赖“第一个”的实现细节。
             var cardState = _inventory.GetFirstInstanceByCardId(cardId);
             var runtime = new ActiveSkillRuntime(
                 cardId,

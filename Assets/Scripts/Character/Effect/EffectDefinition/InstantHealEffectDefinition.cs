@@ -6,7 +6,7 @@ using Character;
     /// 瞬时治疗效果定义
     /// 用于技能造成的即时治疗（非持续治疗）
     /// </summary>
-    [CreateAssetMenu(fileName = "InstantHealEffectDefinition", menuName = "Character/Effects/Instant Heal")]
+    [CreateAssetMenu(fileName = "InstantHeal", menuName = "RogueGame/Character/Effects/Damage/InstantHeal")]
     public class InstantHealEffectDefinition : StatusEffectDefinitionSO
     {
         [Header("瞬时治疗设置")]

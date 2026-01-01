@@ -5,7 +5,7 @@ namespace Character.Player.Skill.Evolution
 {/// <summary>
  /// 技能进化节点（阶段3完整实现）
  /// </summary>
-    [CreateAssetMenu(fileName = "NewSkillNode", menuName = "Skill/Definition/Node")]
+    [CreateAssetMenu(fileName = "SkillNode", menuName = "RogueGame/Skill/Definition/Node")]
     public class SkillNode : ScriptableObject
     {
         [Header("等级")]

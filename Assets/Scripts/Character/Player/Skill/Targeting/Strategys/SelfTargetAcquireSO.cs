@@ -8,7 +8,7 @@ using Character.Player.Skill.Targeting;
 /// 自我目标获取策略
 /// 返回施法者自身作为技能目标，可应用过滤器进行筛选
 /// </summary>
-[CreateAssetMenu(fileName = "Self Target Acquire", menuName = "Card System/Skill System/Targeting System/Strategies/Self Target Acquire")]
+[CreateAssetMenu(fileName = "SelfTargetAcquire", menuName = "RogueGame/Skill/Targeting/Strategies/SelfTargetAcquire")]
 public class SelfTargetAcquireSO : TargetAcquireSO
 {
     [Header("过滤设置")]

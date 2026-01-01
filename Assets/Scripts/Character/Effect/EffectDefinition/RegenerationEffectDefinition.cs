@@ -6,8 +6,8 @@ using Character;
 /// 生命再生效果定义（按间隔回复生命）
 /// </summary>
 [CreateAssetMenu(
-    fileName = "RegenerationEffectDefinition",
-    menuName = "Character/Effects/Regeneration")]
+    fileName = "Regeneration",
+    menuName = "RogueGame/Character/Effects/Buffs/Regeneration")]
 public class RegenerationEffectDefinition : StatusEffectDefinitionSO
 {
     [Header("生命再生设置")]

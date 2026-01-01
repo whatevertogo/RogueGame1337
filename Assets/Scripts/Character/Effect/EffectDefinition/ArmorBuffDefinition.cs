@@ -5,7 +5,7 @@ using Character;
 /// <summary>
 /// 护甲增益效果定义
 /// </summary>
-[CreateAssetMenu(fileName = "ArmorBuffDefinition", menuName = "Character/Effects/Armor Buff")]
+[CreateAssetMenu(fileName = "Armor", menuName = "RogueGame/Character/Effects/Buffs/Armor")]
 public class ArmorBuffDefinition : StatusEffectDefinitionSO
 {
     [Header("护甲增益设置")]

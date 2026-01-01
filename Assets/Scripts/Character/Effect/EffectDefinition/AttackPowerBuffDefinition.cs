@@ -5,7 +5,7 @@ using Character;
 /// <summary>
 /// 攻击力增益效果定义
 /// </summary>
-[CreateAssetMenu(fileName = "AttackPowerBuffDefinition", menuName = "Character/Effects/Attack Power Buff")]
+[CreateAssetMenu(fileName = "AttackPower", menuName = "RogueGame/Character/Effects/Buffs/AttackPower")]
 public class AttackPowerBuffDefinition : StatusEffectDefinitionSO
 {
     [Header("攻击力增益设置")]

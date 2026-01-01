@@ -8,7 +8,7 @@ using Character.Player.Skill.Targeting;
 /// 范围伤害目标获取策略
 /// 通过球形范围检测获取所有目标，并可应用过滤器进行筛选
 /// </summary>
-[CreateAssetMenu(fileName = "Area Damage Target Acquire", menuName = "Card System/Skill System/Targeting System/Strategies/Area Damage Target Acquire")]
+[CreateAssetMenu(fileName = "AreaDamageTargetAcquire", menuName = "RogueGame/Skill/Targeting/Strategies/AreaDamageTargetAcquire")]
 public class AreaDamageTargetAcquireSO : TargetAcquireSO
 {
     [Header("范围设置")]
@@ -18,10 +18,6 @@ public class AreaDamageTargetAcquireSO : TargetAcquireSO
     [Tooltip("目标检测层级")]
     [SerializeField] private LayerMask targetLayerMask;
     
-    [Header("过滤设置")]
-    [Tooltip("目标过滤器组，用于筛选符合条件的目标")]
-    //
-    [SerializeField] private TargetFilterGroupSO filterGroup;
     
     /// <summary>
     /// 获取指定范围内的所有目标
@@ -45,13 +41,6 @@ public class AreaDamageTargetAcquireSO : TargetAcquireSO
 
             CharacterBase character = collider.GetComponent<CharacterBase>();
             if (character == null) continue;
-
-            // 如果设置了过滤器组，应用过滤器
-            if (filterGroup != null)
-            {
-                if (!filterGroup.IsValid(ctx, character))
-                    continue;
-            }
 
             resultTargets.Add(character);
         }

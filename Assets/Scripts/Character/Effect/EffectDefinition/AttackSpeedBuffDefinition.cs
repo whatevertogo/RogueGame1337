@@ -5,7 +5,7 @@ using Character;
 /// <summary>
 /// 攻击速度增益效果定义
 /// </summary>
-[CreateAssetMenu(fileName = "AttackSpeedBuffDefinition", menuName = "Character/Effects/Attack Speed Buff")]
+[CreateAssetMenu(fileName = "AttackSpeed", menuName = "RogueGame/Character/Effects/Buffs/AttackSpeed")]
 public class AttackSpeedBuffDefinition : StatusEffectDefinitionSO
 {
     [Header("攻击速度增益设置")]

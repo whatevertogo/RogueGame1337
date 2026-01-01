@@ -18,8 +18,8 @@ public class CardSlot : MonoBehaviour, IDropHandler
             if (_cardID == value) return;
             _cardID = value;
             
-
-            EventBus.Publish(new OnPlayerSkillEquippedEvent(GameRoot.Instance.PlayerManager.GetLocalPlayerData().PlayerId,SlotIndex,CardID));
+            //发布槽位变更事件
+            EventBus.Publish(new OnPlayerSkillEquippedEvent(GameRoot.Instance.PlayerManager.GetLocalPlayerRuntimeState().PlayerId,SlotIndex,CardID));
         }
     }
 

@@ -31,8 +31,8 @@ namespace Game.UI
         }
 
         private void BindComponents() { } // 预留给自动绑定工具使用
-        
-        
+
+
         /// <summary>
         /// 绑定 BagButton 点击事件
         /// </summary>
@@ -45,7 +45,7 @@ namespace Game.UI
                 BagButton.onClick.AddListener(() => onClickAction?.Invoke());
             }
         }
-        
+
 
         /// <summary>更新文本内容</summary>
         public void SetNowLevel(string content)
@@ -61,11 +61,6 @@ namespace Game.UI
         {
             if (bloorBar != null)
             {
-                var f = bloorBar.fillAmount;
-                // DOTween.To(() => f, x => f = x, Mathf.Clamp01(normalized), 0.1f)
-                //     .OnUpdate(() => bloorBar.fillAmount = f)
-                //     .SetEase(Ease.OutCubic);
-
                 //TODO-或许有更好duration的值,现在默认0.1f
                 bloorBar.DOFillAmount(Mathf.Clamp01(normalized), 0.08f).SetEase(Ease.OutCirc).SetUpdate(true);
             }
@@ -113,7 +108,7 @@ namespace Game.UI
 
         public void SetSkillSlotUsed(int slotIndex)
         {
-            if(slotIndex == 0 && skillSlot1Energy != null)
+            if (slotIndex == 0 && skillSlot1Energy != null)
             {
                 //TODO-或许有更好duration的值,现在默认0.04f
                 skillSlot1Energy.DOFillAmount(0f, 0.04f).SetEase(Ease.OutCirc).SetUpdate(true);

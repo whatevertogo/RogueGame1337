@@ -7,13 +7,14 @@ using UnityEngine;
 /// 能量消耗修改器：修改技能的能量消耗
 /// 实现 IEnergyCostModifier 接口，在能量消耗前应用
 /// </summary>
-public class CostModifier : IEnergyCostModifier
+[CreateAssetMenu(fileName = "CostModifier", menuName = "RogueGame/Skill/Modifiers/CostModifier")]
+public class CostModifier : SkillModifierBase, IEnergyCostModifier
 {
     // ========== 配置属性 ==========
     /// <summary>
     /// 能量消耗倍率（默认为1，表示不改变）
     /// </summary>
-    public float CostMultiplier { get; private set; } = 1f;
+    public float CostMultiplier = 1f;
 
     /// <summary>
     /// 能量消耗固定加值（负数表示返还）
@@ -21,7 +22,7 @@ public class CostModifier : IEnergyCostModifier
     public int CostFlat { get; private set; }
 
     // ========== ISkillModifier 实现 ==========
-    public string ModifierId => $"EnergyCost({CostMultiplier}x+{CostFlat})";
+    public override string ModifierId => $"EnergyCost({CostMultiplier}x+{CostFlat})";
 
     // ========== 构造函数 ==========
 

@@ -7,7 +7,8 @@ using UnityEngine;
 /// 目标获取修改器：修改技能的目标获取范围、数量等参数
 /// 实现 ITargetingModifier 接口，在目标获取前应用
 /// </summary>
-public class TargetingModifier : ITargetingModifier
+[CreateAssetMenu(fileName = "TargetingModifier", menuName = "RogueGame/Skill/Modifiers/TargetingModifier")]
+public class TargetingModifier : SkillModifierBase, ITargetingModifier
 {
     // ========== 配置属性 ==========
     /// <summary>
@@ -36,7 +37,7 @@ public class TargetingModifier : ITargetingModifier
     public float RadiusAddend { get; private set; }
 
     // ========== ISkillModifier 实现 ==========
-    public string ModifierId => $"Targeting(Range×{RangeMultiplier}+{RangeAddend},Max+{MaxCountAddend})";
+    public override string ModifierId => $"Targeting(Range×{RangeMultiplier}+{RangeAddend},Max+{MaxCountAddend})";
 
     // ========== 工厂方法 ==========
 

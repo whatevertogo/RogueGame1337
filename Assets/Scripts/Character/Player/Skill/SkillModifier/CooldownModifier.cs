@@ -6,16 +6,17 @@ using UnityEngine;
 /// 冷却修改器：修改技能的有效冷却时间
 /// 实现 ICooldownModifier 接口，在技能使用后应用
 /// </summary>
-public class CooldownModifier : ICooldownModifier
+[CreateAssetMenu(fileName = "CooldownModifier", menuName = "RogueGame/Skill/Modifiers/CooldownModifier")]
+public class CooldownModifier : SkillModifierBase, ICooldownModifier
 {
     // ========== 配置属性 ==========
     /// <summary>
     /// 冷却倍率（0.5 表示冷却减半，2.0 表示冷却翻倍）
     /// </summary>
-    public float CooldownMultiplier { get; private set; }
+    public float CooldownMultiplier;
 
     // ========== ISkillModifier 实现 ==========
-    public string ModifierId => $"Cooldown({CooldownMultiplier}x)";
+    public override string ModifierId => $"Cooldown({CooldownMultiplier}x)";
 
     // ========== 构造函数 ==========
 

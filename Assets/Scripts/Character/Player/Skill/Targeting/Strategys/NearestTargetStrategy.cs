@@ -12,7 +12,7 @@ using UnityEngine;
 /// <summary>
 /// 根据施法者位置，获取一定范围内最近的目标
 /// </summary>
-[CreateAssetMenu(fileName = "Nearest Target Strategy", menuName = "Card System/Skill System/Targeting System/Strategies/Nearest Target Strategy")]
+[CreateAssetMenu(fileName = "NearestTargetStrategy", menuName = "RogueGame/Skill/Targeting/Strategies/NearestTargetStrategy")]
 public class NearestTargetStrategy : TargetAcquireSO
 {
     [SerializeField] private LayerMask targetMask;

@@ -6,7 +6,7 @@ using UnityEngine;
     /// <summary>
     /// 移动速度增益效果定义
     /// </summary>
-    [CreateAssetMenu(fileName = "MoveSpeedBuffDefinition", menuName = "Character/Effects/Move Speed Buff")]
+    [CreateAssetMenu(fileName = "MoveSpeed", menuName = "RogueGame/Character/Effects/Buffs/MoveSpeed")]
     public class MoveSpeedBuffDefinition : StatusEffectDefinitionSO
     {
         [Header("移动速度增益设置")]

@@ -6,7 +6,6 @@ using RogueGame.Map;
 using Core.Events;
 using RogueGame.Events;
 using CDTU.Utils;
-using Character.Player;
 using UI;
 using Game.UI;
 using System.Threading.Tasks;
@@ -37,22 +36,32 @@ public class PlayerManager : Singleton<PlayerManager>
     public event Action<PlayerRuntimeState> OnPlayerRegistered;
     public event Action<PlayerRuntimeState> OnPlayerUnregistered;
 
-    // 转发玩家技能事件（带 playerId）
-    public event Action<string, int, float> OnPlayerSkillEnergyChanged; // (playerId, slotIndex, energy)
-    public event Action<string, int> OnPlayerSkillUsed; // (playerId, slotIndex)
-    public event Action<string, int, string> OnPlayerSkillEquipped; // (playerId, slotIndex, cardId)
-    public event Action<string, int> OnPlayerSkillUnequipped; // (playerId, slotIndex)
-
     protected override void Awake()
     {
         base.Awake();
+    }
 
+    public void OnEnable()
+    {
+        // 订阅技能装备事件
+        EventBus.Subscribe<OnPlayerSkillEquippedEvent>(HandlePalyerSkillEquippedEvent);
+        // 订阅取消所有装备事件
+        EventBus.Subscribe<ClearAllSlotsRequestedEvent>(HandleClearAllSlotsRequestedEvent);
         // 订阅房间进入事件
         EventBus.Subscribe<RoomEnteredEvent>(HandleRoomEnteredEvent);
         // 订阅实体击杀事件，用于分发技能能量
         EventBus.Subscribe<EntityKilledEvent>(HandleEntityKilledEvent);
         // 订阅玩家死亡事件
         EventBus.Subscribe<PlayerDiedEvent>(HandlePlayerDiedEvent);
+    }
+
+
+
+    public void OnDisable()
+    {
+        EventBus.Unsubscribe<OnPlayerSkillEquippedEvent>(HandlePalyerSkillEquippedEvent);
+        EventBus.Unsubscribe<RoomEnteredEvent>(HandleRoomEnteredEvent);
+        EventBus.Unsubscribe<EntityKilledEvent>(HandleEntityKilledEvent);
     }
 
 
@@ -64,15 +73,6 @@ public class PlayerManager : Singleton<PlayerManager>
 
     protected override void OnDestroy()
     {
-        try
-        {
-            EventBus.Unsubscribe<RoomEnteredEvent>(HandleRoomEnteredEvent);
-            EventBus.Unsubscribe<EntityKilledEvent>(HandleEntityKilledEvent);
-        }
-        catch (Exception ex)
-        {
-            CDLogger.LogError($"[PlayerManager] 取消订阅事件失败: {ex.Message}");
-        }
         base.OnDestroy();
     }
 
@@ -173,8 +173,6 @@ public class PlayerManager : Singleton<PlayerManager>
         var state = new PlayerRuntimeState { PlayerId = id, Controller = controller, IsLocal = isLocal };
         _players[id] = state;
 
-        // attach listeners for skill events
-        AttachSkillListeners(state);
 
         OnPlayerRegistered?.Invoke(state);
         return state;
@@ -190,11 +188,6 @@ public class PlayerManager : Singleton<PlayerManager>
 
         if (key == null) return;
         var state = _players[key];
-
-
-        // detach listeners
-        DetachSkillListeners(state);
-
         _players.Remove(key);
         OnPlayerUnregistered?.Invoke(state);
     }
@@ -221,35 +214,9 @@ public class PlayerManager : Singleton<PlayerManager>
     /// <summary>
     /// 获取本地玩家数据
     /// </summary>
-    public PlayerRuntimeState GetLocalPlayerData()
+    public PlayerRuntimeState GetLocalPlayerRuntimeState()
     {
         return _players.Values.FirstOrDefault(p => p.IsLocal);
-    }
-
-    #endregion
-
-    #region 技能转发事件
-
-    private void AttachSkillListeners(PlayerRuntimeState state)
-    {
-        if (state == null || state.Controller == null) return;
-
-        // 获取 SkillComponent 并设置 playerId
-        var skillComponent = state.Controller.GetComponent<PlayerSkillComponent>();
-        if (skillComponent != null)
-        {
-            skillComponent.SetPlayerId(state.PlayerId);
-            skillComponent.EnableEventForwarding();
-        }
-    }
-
-    private void DetachSkillListeners(PlayerRuntimeState state)
-    {
-        if (state == null || state.Controller == null) return;
-
-        // 禁用 SkillComponent 事件转发
-        var skillComponent = state.Controller.GetComponent<PlayerSkillComponent>();
-        skillComponent?.DisableEventForwarding();
     }
 
     #endregion
@@ -259,25 +226,17 @@ public class PlayerManager : Singleton<PlayerManager>
 
     //转发器激活的方法
 
-    internal void RaisePlayerSkillEnergyChanged(string playerId, int slotIndex, float energy)
-    {
-        OnPlayerSkillEnergyChanged?.Invoke(playerId, slotIndex, energy);
-    }
+        private void HandlePalyerSkillEquippedEvent(OnPlayerSkillEquippedEvent evt)
+        {
+            //转发事件
+            GetPlayerRuntimeStateById(evt.PlayerId)?.Controller?.EquipSkill(evt.SlotIndex, evt.NewCardId);
+        }
 
-    internal void RaisePlayerSkillUsed(string playerId, int slotIndex)
-    {
-        OnPlayerSkillUsed?.Invoke(playerId, slotIndex);
-    }
-
-    internal void RaisePlayerSkillEquipped(string playerId, int slotIndex, string cardId)
-    {
-        OnPlayerSkillEquipped?.Invoke(playerId, slotIndex, cardId);
-    }
-
-    internal void RaisePlayerSkillUnequipped(string playerId, int slotIndex)
-    {
-        OnPlayerSkillUnequipped?.Invoke(playerId, slotIndex);
-    }
+        private void HandleClearAllSlotsRequestedEvent(ClearAllSlotsRequestedEvent evt)
+        {
+            //转发事件
+            GetPlayerRuntimeStateById(evt.PlayerId)?.Controller?.UnequipAllSkills();
+        }
 
     public PlayerController ResolveAttacker(GameObject attacker)
     {
@@ -293,6 +252,7 @@ public class PlayerManager : Singleton<PlayerManager>
 
         return projectile.Owner.GetComponentInParent<PlayerController>();
     }
+
 
     /// <summary>
     /// 当敌人被击杀时通知，为击杀者添加能量

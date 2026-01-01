@@ -35,13 +35,16 @@ namespace Character.Player.Skill.Pipeline.Phases
             var config = rt.CachedActiveConfig;
             if (config?.requiresCharge == true)
             {
-                if (!_inventory.ConsumeSkillEnergy(rt.InstanceId, ctx.EnergyCost))
-                    return SkillPhaseResult.Fail;
-
-                // 计算实际消耗（用于退还）
+                // 获取基础能量消耗并计算最终消耗
                 var cardDef = GameRoot.Instance?.CardDatabase?.Resolve(rt.CardId);
                 int baseCost = cardDef?.activeCardConfig?.energyThreshold ?? 0;
-                rt.ActualEnergyConsumed = ctx.EnergyCost.CalculateFinalCost(baseCost);
+                int finalCost = ctx.EnergyCost.CalculateFinalCost(baseCost);
+
+                if (!_inventory.ConsumeSkillEnergy(rt.InstanceId, finalCost))
+                    return SkillPhaseResult.Fail;
+
+                // 记录实际消耗（用于退还）
+                rt.ActualEnergyConsumed = finalCost;
                 rt.EnergyConsumed = true;
             }
 

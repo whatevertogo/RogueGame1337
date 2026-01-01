@@ -40,23 +40,10 @@ namespace Character.Player
             _slots = new SkillSlotCollection(2, inventory);
             _executor = new SkillExecutor(inventory, new EffectFactory());
 
-            // 订阅技能使用事件
-            _executor.OnSkillUsed += OnSkillUsedInternally;
-        }
-
-        private void OnEnable()
-        {
-            EnableEventForwarding();
-        }
-
-        private void OnDisable()
-        {
-            DisableEventForwarding();
         }
 
         private void OnDestroy()
         {
-            DisableEventForwarding();
             _executor?.Dispose();
         }
 
@@ -105,7 +92,6 @@ namespace Character.Player
         public void EquipActiveCardToSlotIndex(int slotIndex, string cardId)
         {
             _slots.Equip(slotIndex, cardId);
-            OnSkillEquippedInternally(slotIndex, cardId);
         }
 
         /// <summary>
@@ -116,7 +102,6 @@ namespace Character.Player
             var rt = GetRuntime(slotIndex);
             string cardId = rt?.CardId;
             _slots.Unequip(slotIndex);
-            OnSkillUnequippedInternally(slotIndex, cardId);
         }
 
         /// <summary>
@@ -130,7 +115,7 @@ namespace Character.Player
         /// <summary>
         /// 获取槽位
         /// </summary>
-        public Skill.Slots.SkillSlot GetSlot(int slotIndex)
+        public SkillSlot GetSlot(int slotIndex)
         {
             return _slots[slotIndex];
         }

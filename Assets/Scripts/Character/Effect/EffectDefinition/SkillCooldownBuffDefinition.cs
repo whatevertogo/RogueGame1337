@@ -5,7 +5,7 @@ using Character;
 /// <summary>
 /// 技能冷却缩减效果定义
 /// </summary>
-[CreateAssetMenu(fileName = "SkillCooldownBuffDefinition", menuName = "Character/Effects/Skill Cooldown Buff")]
+[CreateAssetMenu(fileName = "SkillCooldown", menuName = "RogueGame/Character/Effects/Buffs/SkillCooldown")]
 public class SkillCooldownBuffDefinition : StatusEffectDefinitionSO
 {
     [Header("技能冷却缩减设置")]

@@ -6,8 +6,8 @@ using UnityEngine;
 
 
 [CreateAssetMenu(
-    fileName = "Target Filter Group",
-    menuName = "Skill/Targeting/Filters/Filter Group")]
+    fileName = "TargetFilterGroup",
+    menuName = "RogueGame/Skill/Targeting/Filters/TargetFilterGroup")]
 public class TargetFilterGroupSO : ScriptableObject
 {
     public List<TargetFilterSO> filters;

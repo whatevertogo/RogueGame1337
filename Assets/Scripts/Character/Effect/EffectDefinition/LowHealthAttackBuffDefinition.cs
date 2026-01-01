@@ -6,7 +6,7 @@ using Character;
 /// 低血量攻击力增益效果定义（绝境反击）
 /// 当生命值低于阈值时，提供额外的攻击力加成
 /// </summary>
-[CreateAssetMenu(fileName = "LowHealthAttackBuffDefinition", menuName = "Character/Effects/Low Health Attack Buff")]
+[CreateAssetMenu(fileName = "LowHealthAttack", menuName = "RogueGame/Character/Effects/Buffs/LowHealthAttack")]
 public class LowHealthAttackBuffDefinition : StatusEffectDefinitionSO
 {
     [Header("低血量攻击增益设置")]

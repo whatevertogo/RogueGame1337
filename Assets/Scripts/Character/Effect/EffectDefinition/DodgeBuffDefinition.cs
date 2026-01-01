@@ -5,7 +5,7 @@ using Character;
 /// <summary>
 /// 闪避率增益效果定义
 /// </summary>
-[CreateAssetMenu(fileName = "DodgeBuffDefinition", menuName = "Character/Effects/Dodge Buff")]
+[CreateAssetMenu(fileName = "Dodge", menuName = "RogueGame/Character/Effects/Buffs/Dodge")]
 public class DodgeBuffDefinition : StatusEffectDefinitionSO
 {
     [Header("闪避率增益设置")]

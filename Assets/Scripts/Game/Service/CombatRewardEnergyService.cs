@@ -17,6 +17,8 @@ public sealed class CombatRewardEnergyService
         var inventoryManager = GameRoot.Instance?.InventoryManager;
         if (inventoryManager == null) return;
 
+        // 使用门面方法：为玩家装备的所有卡增加击杀奖励能量
+        // 每张卡根据自己的配置获得不同的能量值
         inventoryManager.AddChargesForKill(playerId);
     }
 }

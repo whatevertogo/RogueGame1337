@@ -28,7 +28,7 @@ public class ShopManager : Singleton<ShopManager>
     public bool BuyBloods(int spendCoins, int healAmount = 50)
     {
         // 获取玩家并检查是否需要治疗
-        var playerState = PlayerManager.Instance?.GetLocalPlayerData();
+        var playerState = PlayerManager.Instance?.GetLocalPlayerRuntimeState();
         if (playerState?.Controller == null)
         {
             CDTU.Utils.CDLogger.LogWarning("[ShopManager] Player not found.");

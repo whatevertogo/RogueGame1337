@@ -4,7 +4,7 @@ using UnityEngine;
 /// 主动卡去重配置
 /// 定义重复主动卡转换为金币的规则
 /// </summary>
-[CreateAssetMenu(fileName = "ActiveCardDeduplicationConfig", menuName = "Game/Active Card Deduplication Config")]
+[CreateAssetMenu(fileName = "ActiveCardDeduplication", menuName = "RogueGame/Game/Active Card Deduplication")]
 public class ActiveCardDeduplicationConfig : ScriptableObject
 {
     [Header("金币转换配置")]

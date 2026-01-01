@@ -5,7 +5,7 @@ using Character.Player.Skill.Evolution;
 using UnityEngine;
 
 
-[CreateAssetMenu(fileName = "NewSkill", menuName = "Card System/Skill Definition")]
+[CreateAssetMenu(fileName = "Skill", menuName = "RogueGame/Card/Skill")]
 public class SkillDefinition : ScriptableObject
 {
     [Header("基础信息")]

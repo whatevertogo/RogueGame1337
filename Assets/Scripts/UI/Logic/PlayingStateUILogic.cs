@@ -79,12 +79,6 @@ namespace Game.UI
         {
             var pm = PlayerManager.Instance;
             if (pm == null) return;
-            if (_skillEventsSubscribed) return;
-            pm.OnPlayerSkillEnergyChanged += this.OnPlayerSkillEnergyChanged;
-            pm.OnPlayerSkillUsed += this.OnPlayerSkillUsed;
-            pm.OnPlayerSkillEquipped += this.OnPlayerSkillEquipped;
-            pm.OnPlayerSkillUnequipped += this.OnPlayerSkillUnequipped;
-            _skillEventsSubscribed = true;
         }
 
         private void UnsubscribeFromSkillEvents()
@@ -92,10 +86,6 @@ namespace Game.UI
             var pm = PlayerManager.Instance;
             if (pm == null) return;
             if (!_skillEventsSubscribed) return;
-            pm.OnPlayerSkillEnergyChanged -= this.OnPlayerSkillEnergyChanged;
-            pm.OnPlayerSkillUsed -= this.OnPlayerSkillUsed;
-            pm.OnPlayerSkillEquipped -= this.OnPlayerSkillEquipped;
-            pm.OnPlayerSkillUnequipped -= this.OnPlayerSkillUnequipped;
             _skillEventsSubscribed = false;
         }
 

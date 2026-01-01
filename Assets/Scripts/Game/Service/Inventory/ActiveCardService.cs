@@ -18,23 +18,6 @@ namespace RogueGame.Game.Service.Inventory
 
         public IReadOnlyList<ActiveCardState> ActiveCardStates => _activeCards;
 
-        public event Action<string> OnActiveCardInstanceAdded;
-        public event Action<string, int> OnActiveCardEnergyChanged;
-        public event Action<string> OnActiveCardEquipChanged;
-
-        /// <summary>
-        /// 触发能量变化事件（内部方法，统一事件发布逻辑）
-        /// </summary>
-        private void NotifyEnergyChanged(string instanceId, int newEnergy)
-        {
-            OnActiveCardEnergyChanged?.Invoke(instanceId, newEnergy);
-            EventBus.Publish(new ActiveCardEnergyChangedEvent
-            {
-                InstanceId = instanceId,
-                NewEnergy = newEnergy
-            });
-        }
-
         public IEnumerable<ActiveCardView> ActiveCardViews =>
             _activeCards.Select(st => new ActiveCardView
             {
@@ -62,7 +45,6 @@ namespace RogueGame.Game.Service.Inventory
             };
 
             _activeCards.Add(state);
-            OnActiveCardInstanceAdded?.Invoke(state.InstanceId);
             return state.InstanceId;
         }
 
@@ -71,17 +53,7 @@ namespace RogueGame.Game.Service.Inventory
 
         public ActiveCardState GetFirstByCardId(string cardId)
             => _activeCards.Find(s => s != null && s.CardId == cardId);
-
-        public void EquipCard(string instanceId, string playerId)
-        {
-            var st = GetCard(instanceId);
-            if (st == null) return;
-
-            st.IsEquipped = !string.IsNullOrEmpty(playerId);
-            st.EquippedPlayerId = playerId;
-            OnActiveCardEquipChanged?.Invoke(instanceId);
-        }
-
+        
         public void RemoveInstance(string instanceId)
         {
             var st = GetCard(instanceId);
@@ -110,108 +82,26 @@ namespace RogueGame.Game.Service.Inventory
         public int GetCount(string cardId)
             => _activeCards.Count(c => c.CardId == cardId);
 
-        #region 能量管理 API
-
-        /// <summary>
-        /// 增加技能能量（自动触发 OnActiveCardEnergyChanged 事件）
-        /// </summary>
-        public void AddEnergy(string instanceId, int amount)
+        public void AddEnergy(string instanceId, int energy)
         {
-            var st = GetCard(instanceId);
-            if (st == null || amount <= 0) return;
-
-            var cardDef = GameRoot.Instance?.CardDatabase?.Resolve(st.CardId);
-            int maxEnergy = cardDef?.activeCardConfig?.maxEnergy ?? 999;
-
-            int before = st.CurrentEnergy;
-            st.CurrentEnergy = Mathf.Min(maxEnergy, st.CurrentEnergy + amount);
-
-            if (before != st.CurrentEnergy)
+            var card = GetCard(instanceId);
+            if (card != null)
             {
-                NotifyEnergyChanged(instanceId, st.CurrentEnergy);
+                card.CurrentEnergy += energy;
+                if (card.CurrentEnergy < 0)
+                    card.CurrentEnergy = 0;
             }
         }
 
-        /// <summary>
-        /// 消耗技能能量（统一入口，根据配置的消耗模式执行不同逻辑）
-        /// </summary>
-        /// <param name="instanceId">卡牌实例 ID</param>
-        /// <param name="costConfig">能量消耗配置（由修改器修改，仅影响 Threshold 模式的数值）</param>
-        /// <returns>是否成功消耗</returns>
-        public bool ConsumeSkillEnergy(string instanceId, in EnergyCostConfig costConfig)
+        public bool ConsumeSkillEnergy(string instanceId, int energy)
         {
-            var st = GetCard(instanceId);
-            if (st == null) return false;
-
-            var cardDef = GameRoot.Instance?.CardDatabase?.Resolve(st.CardId);
-            if (cardDef?.activeCardConfig == null) return false;
-
-            int before = st.CurrentEnergy;
-
-            // 根据配置的消耗模式执行不同的消耗逻辑
-            switch (cardDef.activeCardConfig.consumptionMode)
+            var card = GetCard(instanceId);
+            if (card != null && card.CurrentEnergy >= energy)
             {
-                case EnergyConsumptionMode.All:
-                    // 全部模式：清空能量（忽略修改器）
-                    st.CurrentEnergy = 0;
-                    break;
-
-                case EnergyConsumptionMode.Threshold:
-                    // 阈值模式：扣除修改后的阈值
-                    int baseCost = cardDef.activeCardConfig.energyThreshold;
-                    int finalCost = costConfig.CalculateFinalCost(baseCost);
-                    st.CurrentEnergy = Mathf.Max(0, st.CurrentEnergy - finalCost);
-                    break;
+                card.CurrentEnergy -= energy;
+                return true;
             }
-
-            if (before != st.CurrentEnergy)
-            {
-                NotifyEnergyChanged(instanceId, st.CurrentEnergy);
-            }
-
-            return true;
+            return false;
         }
-
-        /// <summary>
-        /// 获取当前能量值
-        /// </summary>
-        public int GetCurrentEnergy(string instanceId)
-        {
-            return GetCard(instanceId)?.CurrentEnergy ?? 0;
-        }
-
-        /// <summary>
-        /// 获取最大能量值
-        /// </summary>
-        public int GetMaxEnergy(string instanceId)
-        {
-            var st = GetCard(instanceId);
-            if (st == null) return 100;
-
-            var cardDef = GameRoot.Instance?.CardDatabase?.Resolve(st.CardId);
-            return cardDef?.activeCardConfig?.maxEnergy ?? 100;
-        }
-
-        /// <summary>
-        /// 将技能能量重置为最大值
-        /// </summary>
-        public void ResetEnergyToMax(string instanceId)
-        {
-            var st = GetCard(instanceId);
-            if (st == null) return;
-
-            var cardDef = GameRoot.Instance?.CardDatabase?.Resolve(st.CardId);
-            int maxEnergy = cardDef?.activeCardConfig?.maxEnergy ?? 100;
-
-            int before = st.CurrentEnergy;
-            st.CurrentEnergy = maxEnergy;
-
-            if (before != st.CurrentEnergy)
-            {
-                NotifyEnergyChanged(instanceId, st.CurrentEnergy);
-            }
-        }
-
-        #endregion
     }
 }

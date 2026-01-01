@@ -1,7 +1,7 @@
 using UnityEngine;
 
 
-[CreateAssetMenu(fileName = "NewCardDefinition", menuName = "Card System/Card Definition")]
+[CreateAssetMenu(fileName = "CardDefinition", menuName = "RogueGame/Card/Definition")]
 public class CardDefinition : ScriptableObject
 {
     public string CardId;

@@ -5,36 +5,66 @@ using CDTU.Utils;
 using RogueGame.Events;
 using RogueGame.Game.Service.Inventory;
 using RogueGame.Items;
+using UnityEngine;
 
 /// <summary>
 /// InventoryManager - 协调层
 /// 负责协调各服务，提供统一 API
 /// </summary>
-public sealed class InventoryServiceManager : Singleton<InventoryServiceManager>
+public sealed class InventoryServiceManager : MonoBehaviour
 {
+    /// <summary>
+    /// 向后兼容的静态访问点
+    /// 注意：不再继承 Singleton<T>，改为手动维护
+    /// </summary>
+    public static InventoryServiceManager Instance { get; private set; }
+
     // 服务层
     public CoinService CoinService { get; private set; }
     public ActiveCardService ActiveCardService { get; private set; }
     public PassiveCardService PassiveCardService { get; private set; }
     public ActiveCardUpgradeService ActiveCardUpgradeService { get; private set; }
-    public ActiveCardEnergyService ActiveCardEnergyService { get; private set; }
 
-    protected override void Awake()
+    private void Awake()
     {
-        base.Awake();
+        // 防止重复实例
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
 
         // 初始化服务
+        InitializeServices();
+
+        // 转发事件（保持外部订阅兼容）
+        WireUpEvents();
+    }
+
+    private void OnDestroy()
+    {
+        if (Instance == this)
+            Instance = null;
+    }
+
+    /// <summary>
+    /// 显式初始化所有子服务
+    /// </summary>
+    private void InitializeServices()
+    {
         CoinService = new CoinService();
         ActiveCardService = new ActiveCardService();
         PassiveCardService = new PassiveCardService();
         ActiveCardUpgradeService = new ActiveCardUpgradeService(ActiveCardService);
-        ActiveCardEnergyService = new ActiveCardEnergyService(ActiveCardService);
+    }
 
-        // 转发事件（保持外部订阅兼容）
+    /// <summary>
+    /// 连接服务事件到 Facade 层事件
+    /// </summary>
+    private void WireUpEvents()
+    {
         CoinService.OnCoinsChanged += coins => OnCoinsChanged?.Invoke(coins);
-        ActiveCardService.OnActiveCardInstanceAdded += id => OnActiveCardInstanceAdded?.Invoke(id);
-        ActiveCardService.OnActiveCardEnergyChanged += (id, energy) => OnActiveCardEnergyChanged?.Invoke(id, energy);
-        ActiveCardService.OnActiveCardEquipChanged += id => OnActiveCardEquipChanged?.Invoke(id);
         ActiveCardUpgradeService.OnCardLevelUp += (id, level) => OnActiveCardLevelUp?.Invoke(id, level);
     }
 
@@ -50,9 +80,6 @@ public sealed class InventoryServiceManager : Singleton<InventoryServiceManager>
     #region 事件（兼容旧 API）
 
     public event Action<int> OnCoinsChanged;
-    public event Action<string> OnActiveCardInstanceAdded;
-    public event Action<string, int> OnActiveCardEnergyChanged;
-    public event Action<string> OnActiveCardEquipChanged;
     public event Action<string, int> OnActiveCardLevelUp;
 
     #endregion
@@ -76,8 +103,6 @@ public sealed class InventoryServiceManager : Singleton<InventoryServiceManager>
     public ActiveCardState GetActiveCardState(string instanceId) => ActiveCardService.GetCard(instanceId);
     public ActiveCardState GetFirstInstanceByCardId(string cardId) => ActiveCardService.GetFirstByCardId(cardId);
 
-    public void EquipActiveCard(string instanceId, string playerId) => ActiveCardService.EquipCard(instanceId, playerId);
-    public void MarkInstanceEquipped(string instanceId, string playerId) => ActiveCardService.EquipCard(instanceId, playerId);
 
     public void RemoveActiveCardInstance(string instanceId) => ActiveCardService.RemoveInstance(instanceId);
     public bool RemoveActiveCardByCardId(string cardId) => ActiveCardService.RemoveByCardId(cardId);
@@ -101,17 +126,6 @@ public sealed class InventoryServiceManager : Singleton<InventoryServiceManager>
 
     public int GetActiveCardLevel(string cardId) => ActiveCardUpgradeService.GetLevel(cardId);
     public int UpgradeActiveCard(string cardId, int? maxLevel = null) => ActiveCardUpgradeService.UpgradeCard(cardId, maxLevel);
-
-    #endregion
-
-    #region 能量 API（委托给 ActiveCardService）
-
-    public void AddEnergy(string instanceId, int amount) => ActiveCardService.AddEnergy(instanceId, amount);
-    public bool ConsumeSkillEnergy(string instanceId, in Character.Player.Skill.Targeting.EnergyCostConfig costConfig) => ActiveCardService.ConsumeSkillEnergy(instanceId, costConfig);
-    public void AddChargesForKill(string playerId) => ActiveCardEnergyService.AddChargesForKill(playerId);
-    public int GetCurrentEnergy(string instanceId) => ActiveCardService.GetCurrentEnergy(instanceId);
-    public int GetMaxEnergy(string instanceId) => ActiveCardService.GetMaxEnergy(instanceId);
-    public void ResetEnergyToMax(string instanceId) => ActiveCardService.ResetEnergyToMax(instanceId);
 
     #endregion
 
@@ -250,6 +264,58 @@ public sealed class InventoryServiceManager : Singleton<InventoryServiceManager>
         if (cardDef?.activeCardConfig == null) return new ActiveCardAddResult { Success = false };
 
         return AddActiveCardSmart(cardId, cardDef.activeCardConfig.energyPerKill);
+    }
+
+    #endregion
+
+    #region 补充方法（供其他服务调用）
+
+    public void ResetEnergyToMax(string instanceId)
+    {
+        var card = ActiveCardService.GetCard(instanceId);
+        if (card != null)
+        {
+            var def = GameRoot.Instance?.CardDatabase?.Resolve(card.CardId);
+            card.CurrentEnergy = def?.activeCardConfig?.maxEnergy ?? 100;
+        }
+    }
+
+    /// <summary>
+    /// 为玩家装备的所有主动卡发放击杀奖励能量（门面方法）
+    /// 原 ActiveCardEnergyService.AddChargesForKill 的功能
+    /// </summary>
+    public void AddChargesForKill(string playerId)
+    {
+        if (string.IsNullOrEmpty(playerId)) return;
+        var db = GameRoot.Instance?.CardDatabase;
+        if (db == null) return;
+
+        foreach (var st in ActiveCardService.ActiveCardStates)
+        {
+            if (st == null || !st.IsEquipped || st.EquippedPlayerId != playerId) continue;
+            var def = db.Resolve(st.CardId);
+            if (def?.activeCardConfig == null) continue;
+
+            // 增加该卡的击杀奖励能量
+            ActiveCardService.AddEnergy(st.InstanceId, def.activeCardConfig.energyPerKill);
+        }
+    }
+
+    /// <summary>
+    /// 为指定卡牌实例增加能量（委托给 ActiveCardService）
+    /// </summary>
+    public void AddEnergy(string instanceId, int energy)
+    {
+        ActiveCardService.AddEnergy(instanceId, energy);
+    }
+
+    /// <summary>
+    /// 消耗指定卡牌实例的能量（委托给 ActiveCardService）
+    /// </summary>
+    /// <returns>是否成功消耗（能量不足时返回 false）</returns>
+    public bool ConsumeSkillEnergy(string instanceId, int energy)
+    {
+        return ActiveCardService.ConsumeSkillEnergy(instanceId, energy);
     }
 
     #endregion

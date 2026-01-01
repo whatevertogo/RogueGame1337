@@ -5,7 +5,7 @@ using Character;
 /// <summary>
 /// 生命上限增益效果定义
 /// </summary>
-[CreateAssetMenu(fileName = "MaxHealthBuffDefinition", menuName = "Character/Effects/Max Health Buff")]
+[CreateAssetMenu(fileName = "MaxHealth", menuName = "RogueGame/Character/Effects/Buffs/MaxHealth")]
 public class MaxHealthBuffDefinition : StatusEffectDefinitionSO
 {
     [Header("生命上限增益设置")]

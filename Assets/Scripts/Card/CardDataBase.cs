@@ -3,7 +3,7 @@ using UnityEngine;
 using System.Linq;
 
 
-[CreateAssetMenu(fileName = "New Card Database", menuName = "Card System/Card Database")]
+[CreateAssetMenu(fileName = "NewCardDatabase", menuName = "RogueGame/Card/Database")]
 /// <summary>
 /// 全局卡牌定义注册表：通过 cardId 查找 CardDefinition(SO)
 /// </summary>

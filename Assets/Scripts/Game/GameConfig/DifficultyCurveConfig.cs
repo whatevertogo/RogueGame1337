@@ -6,7 +6,7 @@ namespace RogueGame.GameConfig
     /// 游戏难度曲线配置
     /// 定义随层数递增的难度缩放参数，支持线性和指数两种增长模式
     /// </summary>
-    [CreateAssetMenu(fileName = "DifficultyCurveConfig", menuName = "Game/Difficulty Curve")]
+    [CreateAssetMenu(fileName = "DifficultyCurve", menuName = "RogueGame/Game/Difficulty Curve")]
     public class DifficultyCurveConfig : ScriptableObject
     {
         #region 基础属性缩放

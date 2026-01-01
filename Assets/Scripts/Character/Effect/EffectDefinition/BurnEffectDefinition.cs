@@ -6,7 +6,7 @@ using Character;
     /// <summary>
     /// 灼烧效果定义（持续伤害效果）
     /// </summary>
-    [CreateAssetMenu(fileName = "BurnEffectDefinition", menuName = "Character/Effects/Burn Effect")]
+    [CreateAssetMenu(fileName = "Burn", menuName = "RogueGame/Character/Effects/Debuffs/Burn")]
     public class BurnEffectDefinitionSO : StatusEffectDefinitionSO
     {
         [Header("灼烧设置")]

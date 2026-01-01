@@ -2,8 +2,8 @@ using Character;
 using Character.Player.Skill.Targeting;
 using UnityEngine;
 [CreateAssetMenu(
-    fileName = "Alive Filter",
-    menuName = "Skill/Targeting/Filters/Alive")]
+    fileName = "AliveFilter",
+    menuName = "RogueGame/Skill/Targeting/Filters/AliveFilter")]
 /// <summary>
 /// 存活过滤器：仅允许存活的目标通过
 /// </summary>

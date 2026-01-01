@@ -5,7 +5,7 @@ using Character;
     /// <summary>
     /// 伤害减免增益效果（通过修改受到伤害实现）
     /// </summary>
-    [CreateAssetMenu(fileName = "DamageReductionBuffDefinition", menuName = "Character/Effects/Damage Reduction Buff")]
+    [CreateAssetMenu(fileName = "DamageReduction", menuName = "RogueGame/Character/Effects/Buffs/DamageReduction")]
     public class DamageReductionBuffDefinition : StatusEffectDefinitionSO
     {
         [Header("伤害减免设置")]

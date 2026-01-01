@@ -13,8 +13,8 @@ public enum TargetFaction
 }
 
 [CreateAssetMenu(
-    fileName = "Faction Filter",
-    menuName = "Skill/Targeting/Filters/Faction")]
+    fileName = "FactionFilter",
+    menuName = "RogueGame/Skill/Targeting/Filters/FactionFilter")]
 //// <summary>
 /// 阵营过滤器：根据目标阵营过滤目标
 /// </summary>

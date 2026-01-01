@@ -149,7 +149,7 @@ namespace RogueGame.Game.Service.SkillLimit
         /// </summary>
         private PlayerController GetLocalPlayer()
         {
-            var playerData = _playerManager.GetLocalPlayerData();
+            var playerData = _playerManager.GetLocalPlayerRuntimeState();
             return playerData?.Controller;
         }
 

@@ -3,7 +3,7 @@ using UnityEngine;
 /// <summary>
 /// 角色属性配置模板
 /// </summary>
-[CreateAssetMenu(fileName = "CharacterStats", menuName = "RogueGame/Character Stats")]
+[CreateAssetMenu(fileName = "CharacterStats", menuName = "RogueGame/Character/Stats")]
 public class CharacterStatsSO : ScriptableObject
 {
     [Header("基础信息")]

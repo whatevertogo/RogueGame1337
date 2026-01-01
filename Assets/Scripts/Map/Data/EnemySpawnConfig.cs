@@ -31,7 +31,7 @@ namespace RogueGame.Map
     /// <summary>
     /// 敌人生成配置
     /// </summary>
-    [CreateAssetMenu(fileName = "EnemySpawnConfig", menuName = "RogueGame/Room/Enemy Spawn Config")]
+    [CreateAssetMenu(fileName = "EnemySpawn", menuName = "RogueGame/Map/Enemy Spawn Config")]
     public class EnemySpawnConfig :  ScriptableObject
     {
         [Header("权重调整设置")]

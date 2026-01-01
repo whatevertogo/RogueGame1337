@@ -6,7 +6,7 @@ using UnityEngine;
 /// <summary>
 /// 减速减益效果定义
 /// </summary>
-[CreateAssetMenu(fileName = "SlowDebuffDefinition", menuName = "Character/Effects/Slow Debuff")]
+[CreateAssetMenu(fileName = "Slow", menuName = "RogueGame/Character/Effects/Debuffs/Slow")]
 public class SlowDebuffDefinition : StatusEffectDefinitionSO
 {
     [Header("减速设置")]

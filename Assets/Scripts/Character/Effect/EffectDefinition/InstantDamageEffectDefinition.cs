@@ -7,7 +7,7 @@ using UnityEngine;
     /// 瞬时伤害效果定义
     /// 用于技能造成的即时伤害（非持续伤害）
     /// </summary>
-    [CreateAssetMenu(fileName = "InstantDamageEffectDefinition", menuName = "Character/Effects/Instant Damage")]
+    [CreateAssetMenu(fileName = "InstantDamage", menuName = "RogueGame/Character/Effects/Damage/InstantDamage")]
     public class InstantDamageEffectDefinition : StatusEffectDefinitionSO
     {
         [Header("瞬时伤害设置")]

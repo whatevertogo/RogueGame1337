@@ -6,7 +6,7 @@ using UnityEngine;
 /// 伤害状态效果定义
 /// 支持瞬间伤害和持续伤害两种模式
 /// </summary>
-[CreateAssetMenu(fileName = "DamageStatusEffectDefinition", menuName = "Character/Effects/Damage Status")]
+[CreateAssetMenu(fileName = "DamageStatus", menuName = "RogueGame/Character/Effects/Damage/DamageStatus")]
 public class DamageStatusEffectDefinitionSO : StatusEffectDefinitionSO
 {
     [Header("伤害设置")]

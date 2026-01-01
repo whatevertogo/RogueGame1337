@@ -9,7 +9,7 @@ namespace Character.Player.Skill.Evolution
     /// <summary>
     /// 技能进化分支
     /// </summary>
-    [CreateAssetMenu(fileName = "NewSkillBranch", menuName = "Skill/Definition/Branch")]
+    [CreateAssetMenu(fileName = "SkillBranch", menuName = "RogueGame/Skill/Definition/Branch")]
     public class SkillBranch : ScriptableObject
     {
         public string branchName;
@@ -20,7 +20,7 @@ namespace Character.Player.Skill.Evolution
         public List<SkillTag> tags;
 
         [Header("修改器")]
-        public List<ISkillModifier> modifiers;
+        public List<SkillModifierBase> modifiers;
 
         [Header("该分支特有效果")]
         public List<StatusEffectComponent> effects;

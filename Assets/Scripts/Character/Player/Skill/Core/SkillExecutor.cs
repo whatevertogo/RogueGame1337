@@ -90,11 +90,9 @@ namespace Character.Player.Skill.Core
                 DamageResult.Default
             );
 
-            // 启动协程
-            var owner = caster.GetComponent<MonoBehaviour>();
-            if (owner != null)
+            if (caster != null)
             {
-                owner.StartCoroutine(ExecuteAsync(def, ctx, token));
+                caster.StartCoroutine(ExecuteAsync(def, ctx, token));
             }
         }
 
