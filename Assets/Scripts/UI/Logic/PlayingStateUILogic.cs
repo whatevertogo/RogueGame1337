@@ -24,8 +24,6 @@ namespace Game.UI
         private readonly Dictionary<int, (string InstanceId, int MaxEnergy)> _slotMapping = new();
         private readonly Dictionary<string, int> _instanceToSlot = new();
 
-        private const int DefaultMaxEnergy = 100;
-
         public virtual void Bind(UIViewBase view)
         {
             _view = view as PlayingStateUIView;
@@ -84,12 +82,17 @@ namespace Game.UI
         {
             GameInput.Instance.ResumePlayerInput();
         }
+        /// <summary>
+        /// 订阅技能相关的事件
+        /// </summary>
         private void SubscribeToSkillEvents()
         {
+            // 检查玩家状态是否有效，无效则直接返回
             if (_myPlayerState == null) return;
+            // 检查是否已经订阅过技能事件，避免重复订阅
             if (_skillEventsSubscribed) return;
 
-            // 订阅能量变化事件
+            // 订阅能量变化事件，用于处理卡牌能量改变的情况
             EventBus.Subscribe<ActiveCardEnergyChangedEvent>(OnActiveCardEnergyChanged);
 
             // 订阅装备事件（建立映射）
@@ -202,9 +205,12 @@ namespace Game.UI
 
             // 使用反向映射实现 O(1) 查找对应槽位
             if (!_instanceToSlot.TryGetValue(evt.InstanceId, out var slotIndex)) return;
-            if (!_slotMapping.TryGetValue(slotIndex, out var info)) return;
 
-            int maxEnergy = info.MaxEnergy > 0 ? info.MaxEnergy : evt.MaxEnergy > 0 ? evt.MaxEnergy : DefaultMaxEnergy;
+            // 优先使用事件中的 MaxEnergy（发布时从配置获取，更准确）
+            // 回退到映射中缓存的值作为防御
+            int maxEnergy = evt.MaxEnergy > 0 ? evt.MaxEnergy
+                : (_slotMapping.TryGetValue(slotIndex, out var info) ? info.MaxEnergy : 100);
+
             float normalized = Mathf.Clamp01((float)evt.NewEnergy / Mathf.Max(1, maxEnergy));
             _view?.SetSkillSlotEnergy(slotIndex, normalized);
         }
@@ -237,7 +243,7 @@ namespace Game.UI
                     var cardDef = GameRoot.Instance?.CardDatabase?.Resolve(runtime.CardId);
                     var cardState = GameRoot.Instance?.InventoryManager?.ActiveCardService?.GetCard(runtime.InstanceId);
                     // 建立双向映射
-                    int maxEnergy = cardDef?.activeCardConfig?.maxEnergy ?? DefaultMaxEnergy;
+                    int maxEnergy = cardDef?.activeCardConfig?.maxEnergy ?? 100;
                     _slotMapping[i] = (runtime.InstanceId, maxEnergy);
                     _instanceToSlot[runtime.InstanceId] = i;
 
