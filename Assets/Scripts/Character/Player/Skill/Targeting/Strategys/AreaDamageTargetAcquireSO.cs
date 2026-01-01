@@ -36,7 +36,6 @@ public class AreaDamageTargetAcquireSO : TargetAcquireSO
         Vector3 detectionCenter = ctx.AimPoint != Vector3.zero ? ctx.AimPoint : ctx.CasterPosition;
         
         // 使用Physics2D.OverlapCircle检测范围内的所有2D碰撞体
-        // 注意：2D游戏必须使用Physics2D，而不是Physics.OverlapSphere
         Collider2D[] hitColliders = Physics2D.OverlapCircleAll(detectionCenter, radius, targetLayerMask);
 
         // 遍历检测到的碰撞体，提取CharacterBase组件

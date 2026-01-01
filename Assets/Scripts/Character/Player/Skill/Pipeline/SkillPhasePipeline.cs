@@ -1,8 +1,8 @@
+using Character.Player.Skill.Core;
+using Character.Player.Skill.Targeting;
+using System.Collections.Generic;
 namespace Character.Player.Skill.Pipeline
 {
-    using Character.Player.Skill.Core;
-    using System.Collections.Generic;
-    using Context = Character.Player.Skill.Targeting.SkillContext;
 
     /// <summary>
     /// 技能阶段执行管道
@@ -33,7 +33,7 @@ namespace Character.Player.Skill.Pipeline
         /// <param name="ctx">技能上下文</param>
         /// <param name="token">执行令牌</param>
         /// <returns>最终执行结果</returns>
-        public SkillPhaseResult Execute(in Context ctx, SkillExecutionToken token)
+        public SkillPhaseResult Execute(in SkillContext ctx, SkillExecutionToken token)
         {
             foreach (var phase in _phases)
             {

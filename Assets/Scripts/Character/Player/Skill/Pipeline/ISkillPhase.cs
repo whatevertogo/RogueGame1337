@@ -5,8 +5,6 @@ namespace Character.Player.Skill.Pipeline
 
     /// <summary>
     /// Phase 接口：必须是"无状态"的
-    /// ❌ 不要在 Phase 内缓存字段
-    /// ❌ 不要持有 Runtime
     /// ✅ 所有依赖通过 SkillContext 传递
     /// </summary>
     public interface ISkillPhase
