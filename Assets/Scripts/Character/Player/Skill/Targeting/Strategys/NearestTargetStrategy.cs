@@ -21,7 +21,7 @@ public class NearestTargetStrategy : TargetAcquireSO
     [Tooltip("是否排除施法者自身")]
     [SerializeField] private bool excludeSelf = true;
 
-    public override List<CharacterBase> Acquire(SkillTargetContext ctx)
+    public override List<CharacterBase> Acquire(SkillContext ctx)
     {
         // 保护性检查：施法者不能为空
         if (ctx.Caster == null)

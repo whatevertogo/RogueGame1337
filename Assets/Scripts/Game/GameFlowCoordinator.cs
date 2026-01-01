@@ -65,7 +65,7 @@ public sealed class GameFlowCoordinator : MonoBehaviour, IGameStateManager
         EventBus.Unsubscribe<RoomEnteredEvent>(HandleRoomEnteredEvent);
         EventBus.Unsubscribe<CombatStartedEvent>(HandleCombatStartedEvent);
         // 退订 Run 存档加载事件
-        try { SaveManager.OnRunSaveLoaded -= HandleRunSaveLoaded; } catch { }
+        // try { SaveManager.OnRunSaveLoaded -= HandleRunSaveLoaded; } catch { }
     }
 
     private void Start()
@@ -329,12 +329,12 @@ public sealed class GameFlowCoordinator : MonoBehaviour, IGameStateManager
     public void RestartGame()
     {
         // 1. 📊 保存本局统计到元游戏存档
-        var saveManager = GameRoot.Instance?.SaveManager;
-        if (saveManager != null)
-        {
-            saveManager.SaveRunToMetaOnDeath();  // 保存当前单局数据到元游戏存档
-            saveManager.ClearRunSave();          // 清空单局存档
-        }
+        // var saveManager = GameRoot.Instance?.SaveManager;
+        // if (saveManager != null)
+        // {
+        //     saveManager.SaveRunToMetaOnDeath();  // 保存当前单局数据到元游戏存档
+        //     saveManager.ClearRunSave();          // 清空单局存档
+        // }
 
         //2. 重置时间缩放
         Time.timeScale = 1f;

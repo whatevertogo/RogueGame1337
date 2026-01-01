@@ -272,4 +272,46 @@ namespace RogueGame.Events
         public int NewEnergy;
     }
 
+    /// <summary>
+    /// 技能进化请求事件：当重复获得主动卡时发布，触发进化选择UI
+    /// </summary>
+    public class SkillEvolutionRequestedEvent
+    {
+        public string CardId;
+        public string InstanceId;
+        public int CurrentLevel;
+        public int NextLevel;
+        public Character.Player.Skill.Evolution.SkillNode EvolutionNode;
+
+        public SkillEvolutionRequestedEvent(string cardId, string instanceId, int currentLevel, int nextLevel, Character.Player.Skill.Evolution.SkillNode evolutionNode)
+        {
+            CardId = cardId;
+            InstanceId = instanceId;
+            CurrentLevel = currentLevel;
+            NextLevel = nextLevel;
+            EvolutionNode = evolutionNode;
+        }
+    }
+
+    /// <summary>
+    /// 技能进化完成事件：分支选择后发布，确认进化生效
+    /// </summary>
+    public class SkillEvolvedEvent
+    {
+        public string CardId;
+        public string InstanceId;
+        public int NewLevel;
+        public Character.Player.Skill.Evolution.SkillBranch SelectedBranch;
+        public string BranchPath; // 例如 "A-A-B-A"
+
+        public SkillEvolvedEvent(string cardId, string instanceId, int newLevel, Character.Player.Skill.Evolution.SkillBranch selectedBranch, string branchPath)
+        {
+            CardId = cardId;
+            InstanceId = instanceId;
+            NewLevel = newLevel;
+            SelectedBranch = selectedBranch;
+            BranchPath = branchPath;
+        }
+    }
+
 }

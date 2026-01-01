@@ -147,17 +147,6 @@ namespace Character.Player.Skill.Runtime
             _activeModifiers.Clear();
         }
 
-        /// <summary>
-        /// 应用所有修改器到上下文（旧版 API，已废弃）
-        /// </summary>
-        [Obsolete("请使用具体的阶段方法（ApplyEnergyCostModifiers, ApplyTargetingModifiers 等）")]
-        public void ApplyAllModifiers(ref SkillTargetContext ctx)
-        {
-            ApplyEnergyCostModifiers(ref ctx.EnergyCost);
-            ApplyTargetingModifiers(ref ctx.Targeting);
-            ApplyDamageModifiers(ref ctx.DamageResult);
-        }
-
         #endregion
 
         #region 阶段化修改器应用
@@ -248,7 +237,7 @@ namespace Character.Player.Skill.Runtime
         /// 阶段6：应用跨阶段修改器
         /// 在所有阶段完成后调用（用于处理跨阶段逻辑）
         /// </summary>
-        public void ApplyCrossPhaseModifiers(ref SkillTargetContext ctx)
+        public void ApplyCrossPhaseModifiers(ref SkillContext ctx)
         {
             foreach (var modifier in _activeModifiers)
             {

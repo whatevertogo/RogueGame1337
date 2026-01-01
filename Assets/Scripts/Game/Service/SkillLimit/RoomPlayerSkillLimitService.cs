@@ -134,11 +134,12 @@ namespace RogueGame.Game.Service.SkillLimit
             if (skillComponent == null) return;
 
             // 重置所有技能槽的充能
-            foreach (var slot in skillComponent.PlayerSkillSlots)
+            for (int i = 0; i < skillComponent.SlotCount; i++)
             {
-                if (slot?.Runtime != null && !string.IsNullOrEmpty(slot.Runtime.InstanceId))
+                var rt = skillComponent.GetRuntime(i);
+                if (rt != null && !string.IsNullOrEmpty(rt.InstanceId))
                 {
-                    inventory.ResetEnergyToMax(slot.Runtime.InstanceId);
+                    inventory.ResetEnergyToMax(rt.InstanceId);
                 }
             }
         }

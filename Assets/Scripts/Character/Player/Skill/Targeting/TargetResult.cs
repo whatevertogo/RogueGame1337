@@ -15,4 +15,10 @@ public struct TargetResult
     /// 目标点位置
     /// </summary>
     public Vector3 Point;
+
+    public static readonly TargetResult Default = new TargetResult
+    {
+        Targets = null,
+        Point = Vector3.zero
+    };
 }

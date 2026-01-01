@@ -12,7 +12,7 @@ using UnityEngine;
 public class AreaTargetStrategy : TargetAcquireSO
 {
     [SerializeField] private LayerMask targetMask;
-    public override List<CharacterBase> Acquire(SkillTargetContext ctx)
+    public override List<CharacterBase> Acquire(SkillContext ctx)
     {
         // 保护性检查：优先确保 ctx.Caster 或 AimPoint 合理（ctx 为 struct）
         Vector3 aimPoint = ctx.AimPoint;

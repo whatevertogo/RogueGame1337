@@ -57,8 +57,8 @@ public class GameRoot : Singleton<GameRoot>
     public InventoryServiceManager InventoryManager => inventoryManager;
     [SerializeField] private LootDropper lootDropper;
     public LootDropper LootDropper => lootDropper;
-    [SerializeField] private SaveManager saveManager;
-    public SaveManager SaveManager => saveManager;
+    // [SerializeField] private SaveManager saveManager;
+    // public SaveManager SaveManager => saveManager;
 
     [SerializeField] private ShopManager shopManager;
     public ShopManager ShopManager => shopManager;
@@ -107,7 +107,7 @@ public class GameRoot : Singleton<GameRoot>
         ok &= AssertNotNull(playerManager, nameof(playerManager));
         ok &= AssertNotNull(inventoryManager, nameof(inventoryManager));
         ok &= AssertNotNull(lootDropper, nameof(lootDropper));
-        ok &= AssertNotNull(saveManager, nameof(saveManager));
+        // ok &= AssertNotNull(saveManager, nameof(saveManager));
         ok &= AssertNotNull(shopManager, nameof(shopManager));
         ok &= AssertNotNull(gameWinLayerRewardConfig, nameof(gameWinLayerRewardConfig));
         ok &= AssertNotNull(activeCardDeduplicationConfig, nameof(activeCardDeduplicationConfig));
@@ -184,8 +184,8 @@ public class GameRoot : Singleton<GameRoot>
         RoomPlayerSkillLimitService.Subscribe();
         SlotService.Subscribe();
 
-        // 启动时加载元游戏存档
-        SaveManager.LoadMeta();
+        // // 启动时加载元游戏存档
+        // SaveManager.LoadMeta();
     }
 
     private bool AssertNotNull(Object obj, string name)

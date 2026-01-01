@@ -20,7 +20,7 @@ public class SelfTargetAcquireSO : TargetAcquireSO
     /// </summary>
     /// <param name="ctx">技能目标上下文</param>
     /// <returns>包含施法者的目标列表（如果通过过滤）</returns>
-    public override List<CharacterBase> Acquire(SkillTargetContext ctx)
+    public override List<CharacterBase> Acquire(SkillContext ctx)
     {
         List<CharacterBase> resultTargets = new List<CharacterBase>();
         

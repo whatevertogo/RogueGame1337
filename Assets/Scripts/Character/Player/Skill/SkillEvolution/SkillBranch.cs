@@ -15,6 +15,10 @@ namespace Character.Player.Skill.Evolution
         public string branchName;
         [TextArea] public string description;
 
+        [Header("标签")]
+        [Tooltip("用于UI显示的标签，帮助玩家理解分支特性")]
+        public List<SkillTag> tags;
+
         [Header("修改器")]
         public List<ISkillModifier> modifiers;
 

@@ -233,15 +233,23 @@ public class PlayerManager : Singleton<PlayerManager>
     private void AttachSkillListeners(PlayerRuntimeState state)
     {
         if (state == null || state.Controller == null) return;
-        // instruct the controller to start forwarding skill events with its playerId
-        state.Controller.StartSkillForwarding(this, state.PlayerId);
+
+        // 获取 SkillComponent 并设置 playerId
+        var skillComponent = state.Controller.GetComponent<PlayerSkillComponent>();
+        if (skillComponent != null)
+        {
+            skillComponent.SetPlayerId(state.PlayerId);
+            skillComponent.EnableEventForwarding();
+        }
     }
 
     private void DetachSkillListeners(PlayerRuntimeState state)
     {
         if (state == null || state.Controller == null) return;
-        // instruct the controller to stop forwarding skill events
-        state.Controller.StopSkillForwarding();
+
+        // 禁用 SkillComponent 事件转发
+        var skillComponent = state.Controller.GetComponent<PlayerSkillComponent>();
+        skillComponent?.DisableEventForwarding();
     }
 
     #endregion

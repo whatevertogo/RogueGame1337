@@ -12,7 +12,7 @@ public class TargetFilterGroupSO : ScriptableObject
 {
     public List<TargetFilterSO> filters;
 
-    public bool IsValid(SkillTargetContext ctx, CharacterBase target)
+    public bool IsValid(SkillContext ctx, CharacterBase target)
     {
         // 空列表检查：如果没有过滤器，默认通过
         if (filters == null || !filters.Any()) 

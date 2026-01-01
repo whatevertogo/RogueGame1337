@@ -1,4 +1,6 @@
 using Character;
+using Character.Player.Skill.Runtime;
+using Game;
 using UnityEngine;
 
 namespace Character.Player.Skill.Targeting
@@ -6,26 +8,43 @@ namespace Character.Player.Skill.Targeting
     /// <summary>
     /// 技能施法上下文：用于技能释放过程中的数据传递
     /// 设计原则：单一入口点，通过嵌套结构组织职责，支持 ref 传递零拷贝
+    ///
+    /// Context 是「执行快照」，Runtime 是「技能实例」（非所有权）
     /// </summary>
-    public struct SkillTargetContext
+    public struct SkillContext
     {
-        // ========== 阶段1：施法输入（初始化时设置，不应被修改器修改）==========
-        public CharacterBase Caster;
-        public Vector3 AimPoint;
+        // ========== 阶段1：施法输入（初始化后不应修改）==========
+        /// <summary>
+        /// 施法者（只读引用）
+        /// </summary>
+        public readonly CharacterBase Caster;
 
         /// <summary>
-        /// 瞄准方向（归一化向量）
+        /// 瞄准点（只读）
+        /// </summary>
+        public readonly Vector3 AimPoint;
+
+        /// <summary>
+        /// 瞄准方向（归一化向量，只读）
         /// 对于射线、锥形等方向性技能很重要
         /// </summary>
-        public Vector3 AimDirection;
+        public readonly Vector3 AimDirection;
 
         /// <summary>
-        /// 技能槽位索引（用于回溯 ActiveSkillRuntime）
+        /// 技能槽位索引（只读）
         /// </summary>
-        /// <remarks>
-        /// 取值范围：通常为从 0 开始的非负整数，对应技能栏/快捷栏中的槽位索引
-        /// </remarks>
-        public int SlotIndex;
+        public readonly int SlotIndex;
+
+        // ========== 阶段1.5：运行时依赖（只读引用，非所有权）==========
+        /// <summary>
+        /// 技能运行时状态（只读引用，由 Phase 使用）
+        /// </summary>
+        public readonly ActiveSkillRuntime Runtime;
+
+        /// <summary>
+        /// 库存服务管理器（只读引用，由 Phase 使用）
+        /// </summary>
+        public readonly InventoryServiceManager Inventory;
 
         // ========== 阶段2：目标获取配置（由 TargetingModifier 修改）==========
         /// <summary>
@@ -69,6 +88,33 @@ namespace Character.Player.Skill.Targeting
         /// 施法者阵营
         /// </summary>
         public TeamType CasterTeam => Caster != null ? Caster.Team : TeamType.Neutral;
+
+
+        public SkillContext(CharacterBase caster, 
+        Vector3 aimPoint, 
+        Vector3 aimDirection,
+         int slotIndex, 
+        ActiveSkillRuntime runtime, 
+        InventoryServiceManager inventory,
+         TargetingConfig targeting,
+        EnergyCostConfig energyCost,
+        DamageResult damageResult)
+        {
+            Caster = caster;
+            AimPoint = aimPoint;
+            AimDirection = aimDirection;
+            SlotIndex = slotIndex;
+            Runtime = runtime;
+            Inventory = inventory;
+
+            Targeting = targeting;
+            EnergyCost = energyCost;
+            DamageResult = damageResult;
+
+            TargetResult = TargetResult.Default; // 初始化为默认值，避免未赋值的结构体字段在目标计算与伤害结算流程中被误用
+        }
+
+
     }
 
     /// <summary>

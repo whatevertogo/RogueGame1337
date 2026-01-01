@@ -16,6 +16,6 @@ namespace Card.SkillSystem.TargetingSystem
         /// </summary>
         /// <param name="ctx">技能目标上下文</param>
         /// <returns>符合条件的目标列表</returns>
-        public abstract List<CharacterBase> Acquire(SkillTargetContext ctx);
+        public abstract List<CharacterBase> Acquire(SkillContext ctx);
     }
 }

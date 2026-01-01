@@ -18,41 +18,7 @@ public class PlayerController : CharacterBase
 	private AutoPickupComponent autoPickup;
 	private PlayerSkillComponent skillComponent;
 	private Camera _mainCamera;
-	// 转发器实现：在控制器内部维护一个小型转发器类以避免使用 lambda
-	private class PlayerSkillEventForwarder
-	{
-		private PlayerManager playerManager;
-		private readonly string _playerId;
 
-		public PlayerSkillEventForwarder(PlayerManager owner, string playerId)
-		{
-			_playerId = playerId;
-			this.playerManager = owner;
-		}
-
-		public void OnEnergyChanged(int slotIndex, float energy)
-		{
-			playerManager?.RaisePlayerSkillEnergyChanged(_playerId, slotIndex, energy);
-		}
-
-		public void OnSkillUsed(int slotIndex)
-		{
-			playerManager?.RaisePlayerSkillUsed(_playerId, slotIndex);
-		}
-
-		public void OnSkillEquipped(int slotIndex, string cardId)
-		{
-			playerManager?.RaisePlayerSkillEquipped(_playerId, slotIndex, cardId);
-		}
-
-		public void OnSkillUnequipped(int slotIndex)
-		{
-			playerManager?.RaisePlayerSkillUnequipped(_playerId, slotIndex);
-		}
-	}
-
-	private PlayerSkillEventForwarder _skillEventForwarder;
-	private bool _skillForwardingActive = false;
 	protected override void Awake()
 	{
 		base.Awake();
@@ -105,42 +71,6 @@ public class PlayerController : CharacterBase
 			pm.UnregisterPlayer(this);
 		}
 		base.OnDestroy();
-	}
-
-	/// <summary>
-	/// 将 PlayerSkillComponent 的事件转发到 PlayerManager，使用提供的 playerId。
-	/// 由 PlayerManager 在玩家注册时调用。
-	/// </summary>
-	public void StartSkillForwarding(PlayerManager owner, string playerId)
-	{
-		if (_skillForwardingActive) StopSkillForwarding();
-		if (skillComponent == null) skillComponent = GetComponent<PlayerSkillComponent>();
-		if (skillComponent == null) return;
-
-		// create nested forwarder and subscribe its instance methods (no lambdas)
-		_skillEventForwarder = new PlayerSkillEventForwarder(owner, playerId);
-		skillComponent.OnEnergyChanged += _skillEventForwarder.OnEnergyChanged;
-		skillComponent.OnSkillUsed += _skillEventForwarder.OnSkillUsed;
-		skillComponent.OnSkillEquipped += _skillEventForwarder.OnSkillEquipped;
-		skillComponent.OnSkillUnequipped += _skillEventForwarder.OnSkillUnequipped;
-		_skillForwardingActive = true;
-	}
-
-	/// <summary>
-	/// Stop forwarding skill events and unsubscribe handlers.
-	/// </summary>
-	public void StopSkillForwarding()
-	{
-		if (!_skillForwardingActive) return;
-		if (skillComponent != null && _skillEventForwarder != null)
-		{
-			skillComponent.OnEnergyChanged -= _skillEventForwarder.OnEnergyChanged;
-			skillComponent.OnSkillUsed -= _skillEventForwarder.OnSkillUsed;
-			skillComponent.OnSkillEquipped -= _skillEventForwarder.OnSkillEquipped;
-			skillComponent.OnSkillUnequipped -= _skillEventForwarder.OnSkillUnequipped;
-		}
-		_skillEventForwarder = null;
-		_skillForwardingActive = false;
 	}
 
 	private void Update()
@@ -245,11 +175,6 @@ public class PlayerController : CharacterBase
 
 	protected override void OnDeath()
 	{
-		// 先取消任何正在进行的技能协程，避免死亡/复活冲突
-		if (skillComponent != null)
-		{
-			skillComponent.CancelAllSkillCoroutines();
-		}
 
 		base.OnDeath();
 		//无法移动
@@ -265,12 +190,6 @@ public class PlayerController : CharacterBase
 
 	private void OnDisable()
 	{
-		// 当控制器被禁用时也取消技能协程并停止转发
-		if (skillComponent != null)
-		{
-			skillComponent.CancelAllSkillCoroutines();
-		}
-		StopSkillForwarding();
 	}
 
 	protected override void OnDamaged(float damage)

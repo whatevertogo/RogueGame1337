@@ -27,9 +27,9 @@ public sealed class SkillChargeSyncService
             var comp = pr.Controller.GetComponent<PlayerSkillComponent>();
             if (comp == null) continue;
 
-            for (int i = 0; i < comp.PlayerSkillSlots.Length; i++)
+            for (int i = 0; i < comp.SlotCount; i++)
             {
-                var rt = comp.PlayerSkillSlots[i]?.Runtime;
+                var rt = comp.GetRuntime(i);
                 if (rt?.InstanceId != instanceId) continue;
 
                 var def = db.Resolve(rt.CardId);

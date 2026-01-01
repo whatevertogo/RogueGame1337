@@ -100,7 +100,7 @@ namespace Character.Player.Skill.Modifiers
         /// </summary>
         /// <param name="runtime">技能运行时状态</param>
         /// <param name="ctx">完整的技能目标上下文（ref 引用，可直接修改）</param>
-        void ApplyCrossPhase(ActiveSkillRuntime runtime, ref Targeting.SkillTargetContext ctx);
+        void ApplyCrossPhase(ActiveSkillRuntime runtime, ref Targeting.SkillContext ctx);
     }
 
     #endregion
@@ -124,7 +124,7 @@ namespace Character.Player.Skill.Modifiers
         /// </summary>
         /// <param name="runtime">技能运行时状态</param>
         /// <param name="ctx">技能目标上下文（ref 引用，可直接修改）</param>
-        void Apply(ActiveSkillRuntime runtime, ref Targeting.SkillTargetContext ctx);
+        void Apply(ActiveSkillRuntime runtime, ref Targeting.SkillContext ctx);
     }
 
     #endregion

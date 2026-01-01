@@ -28,7 +28,7 @@ public class AreaDamageTargetAcquireSO : TargetAcquireSO
     /// </summary>
     /// <param name="ctx">技能目标上下文</param>
     /// <returns>符合条件的目标列表</returns>
-    public override List<CharacterBase> Acquire(SkillTargetContext ctx)
+    public override List<CharacterBase> Acquire(SkillContext ctx)
     {
         List<CharacterBase> resultTargets = new List<CharacterBase>();
         

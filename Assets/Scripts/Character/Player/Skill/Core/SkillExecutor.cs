@@ -1,0 +1,209 @@
+using Character;
+using Character.Player.Skill.Pipeline;
+using Character.Player.Skill.Pipeline.Phases;
+using Character.Player.Skill.Slots;
+using Character.Player.Skill.Targeting;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+namespace Character.Player.Skill.Core
+{
+
+    /// <summary>
+    /// 技能执行器：管理技能执行的完整生命周期
+    /// 职责：
+    /// 1. 协程包装（处理 detectionDelay）
+    /// 2. Token 管理
+    /// 3. 能量退还
+    /// 4. 技能使用事件回调
+    /// </summary>
+    public sealed class SkillExecutor
+    {
+        private readonly InventoryServiceManager _inventory;
+        private readonly EffectFactory _effectFactory;
+        private readonly SkillPhasePipeline _pipeline;
+        private readonly Dictionary<int, SkillExecutionToken> _activeTokens;
+
+        /// <summary>
+        /// 技能使用完成回调
+        /// </summary>
+        public event Action<int> OnSkillUsed;
+
+        public SkillExecutor(InventoryServiceManager inventory, EffectFactory effectFactory)
+        {
+            _inventory = inventory;
+            _effectFactory = effectFactory;
+            _pipeline = BuildPipeline();
+            _activeTokens = new Dictionary<int, SkillExecutionToken>();
+        }
+
+        /// <summary>
+        /// 检查技能是否可执行
+        /// </summary>
+        public bool CanExecute(SkillSlot slot)
+        {
+            if (slot?.Runtime == null) return false;
+            var rt = slot.Runtime;
+
+            // 冷却检查
+            if (Time.time - rt.LastUseTime < rt.EffectiveCooldown)
+                return false;
+
+            // 能量检查
+            var config = rt.CachedActiveConfig;
+            if (config?.requiresCharge == true)
+            {
+                if (string.IsNullOrEmpty(rt.InstanceId)) return false;
+                var state = _inventory.GetActiveCardState(rt.InstanceId);
+                if (state == null || state.CurrentEnergy < config.energyThreshold)
+                    return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// 执行技能（异步）
+        /// </summary>
+        public void ExecuteSkill(SkillSlot slot, CharacterBase caster, Vector3 aimPoint)
+        {
+            if (!CanExecute(slot)) return;
+
+            var rt = slot.Runtime;
+            var def = rt.Skill;
+
+            // 创建 Token
+            var token = new SkillExecutionToken();
+            _activeTokens[slot.Index] = token;
+
+            // 创建 Context（使用构造函数以赋值只读字段）
+            var ctx = new SkillContext(
+                caster,
+                aimPoint,
+                (aimPoint - caster.transform.position).normalized,
+                slot.Index,
+                rt,
+                _inventory,
+                TargetingConfig.Default,
+                EnergyCostConfig.Default,
+                DamageResult.Default
+            );
+
+            // 启动协程
+            var owner = caster.GetComponent<MonoBehaviour>();
+            if (owner != null)
+            {
+                owner.StartCoroutine(ExecuteAsync(def, ctx, token));
+            }
+        }
+
+        /// <summary>
+        /// 异步执行（处理 detectionDelay）
+        /// </summary>
+        private IEnumerator ExecuteAsync(SkillDefinition def, SkillContext ctx, SkillExecutionToken token)
+        {
+            var rt = ctx.Runtime;
+
+            // 等待 detectionDelay
+            if (def.detectionDelay > 0f)
+                yield return new UnityEngine.WaitForSeconds(def.detectionDelay);
+
+            // 检查是否被取消
+            if (token.IsCancelled)
+            {
+                HandleCancellation(rt);
+                yield break;
+            }
+
+            // 执行 Pipeline（同步）
+            var result = _pipeline.Execute(ctx, token);
+
+            // 处理结果
+            if (result == SkillPhaseResult.Cancel && rt.EnergyConsumed)
+            {
+                _inventory.AddEnergy(rt.InstanceId, rt.ActualEnergyConsumed);
+                rt.ActualEnergyConsumed = 0;
+            }
+
+            // 触发技能使用事件
+            // 注意：
+            // 1. 这里的事件语义是“技能尝试结束”（Attempt Finished），而不是“技能必然成功释放”
+            // 2. 因此无论 Pipeline 最终结果是 Continue（正常完成）还是 Cancel（执行中被中断 / 判定失败），都会触发该事件
+            // 3. 如果业务侧需要区分“成功释放”与“被取消/失败”，应在事件订阅方结合运行时状态或结果枚举自行判断
+            if (result == SkillPhaseResult.Continue || result == SkillPhaseResult.Cancel)
+            {
+                OnSkillUsed?.Invoke(ctx.SlotIndex);
+            }
+
+            // 清理
+            _activeTokens.Remove(ctx.SlotIndex);
+            rt.EnergyConsumed = false;
+        }
+
+        /// <summary>
+        /// 打断技能
+        /// </summary>
+        public void Interrupt(int slotIndex, bool refundCharges)
+        {
+            if (slotIndex < 0)
+            {
+                // 打断所有技能
+                foreach (var kvp in _activeTokens)
+                {
+                    CancelToken(kvp.Key, refundCharges);
+                }
+            }
+            else
+            {
+                CancelToken(slotIndex, refundCharges);
+            }
+        }
+
+        /// <summary>
+        /// 打断所有技能
+        /// </summary>
+        public void InterruptAll(bool refundCharges)
+        {
+            Interrupt(-1, refundCharges);
+        }
+
+        private void CancelToken(int slotIndex, bool refundCharges)
+        {
+            // 当前实现中，是否退还能量由 ExecuteAsync / HandleCancellation 基于 rt.EnergyConsumed 统一处理，
+            // 这里的 refundCharges 仅作为对外 API 语义标记（调用方可以表达“期望退还能量”），暂不改变具体行为。
+            _ = refundCharges; // 防止静态分析误报未使用参数
+
+            if (!_activeTokens.TryGetValue(slotIndex, out var token)) return;
+
+            token.Cancel(InterruptReason.ManualInterrupt);
+        }
+
+        private void HandleCancellation(Runtime.ActiveSkillRuntime rt)
+        {
+            if (rt.EnergyConsumed)
+            {
+                _inventory.AddEnergy(rt.InstanceId, rt.ActualEnergyConsumed);
+                rt.ActualEnergyConsumed = 0;
+            }
+        }
+
+        private SkillPhasePipeline BuildPipeline()
+        {
+            return new SkillPhasePipeline()
+                .Add(new EnergyConsumptionPhase(_inventory))
+                .Add(new TargetingPhase())
+                .Add(new DamageCalculationPhase())
+                .Add(new EffectApplicationPhase(_effectFactory))
+                .Add(new CooldownPhase());
+        }
+
+        /// <summary>
+        /// 释放资源
+        /// </summary>
+        public void Dispose()
+        {
+            _activeTokens.Clear();
+        }
+    }
+}

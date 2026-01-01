@@ -1,95 +1,146 @@
-using System;
 using UnityEngine;
-using Character.Components;
 using Character.Components.Interface;
-using RogueGame.Events;
+using Character.Player.Skill.Runtime;
+using Character.Player.Skill.Slots;
+using Character.Player.Skill.Core;
 
 namespace Character.Player
 {
     /// <summary>
-    /// 玩家技能组件：管理技能槽位、冷却与触发
+    /// 玩家技能组件：重写版，职责最小化
     ///
-    /// 重构说明：
-    /// - 本文件为主组件文件，包含字段声明和生命周期方法
-    /// - 具体实现按职责拆分到以下 partial class 文件：
-    ///   - PlayerSkillComponent.Slots.cs    - 槽位管理
-    ///   - PlayerSkillComponent.Casting.cs  - 技能释放
-    ///   - PlayerSkillComponent.Energy.cs   - 能量验证
-    ///   - PlayerSkillComponent.Interrupt.cs - 打断控制
-    ///   - PlayerSkillComponent.Events.cs   - 事件处理
-    ///
-    /// 修改器系统支持：
-    /// - ActiveSkillRuntime 支持修改器添加/移除/应用
-    /// - 修改器通过 ISkillModifier 接口定义
-    /// - 技能释放时自动应用所有活动修改器
+    /// 架构说明：
+    /// - 本组件只作为 MonoBehaviour 入口，协调各服务
+    /// - 具体逻辑委托给 SkillExecutor 和 SkillSlotCollection
+    /// - 技能执行使用 Phase Pipeline 模式
     /// </summary>
-    public partial class PlayerSkillComponent : MonoBehaviour, ISkillComponent
+    public sealed partial class PlayerSkillComponent : MonoBehaviour, ISkillComponent
     {
-        #region 字段
+        // ============ 私有字段（封装） ============
+        private SkillSlotCollection _slots;
+        private SkillExecutor _executor;
 
-        [SerializeField, ReadOnly]
-        private SkillSlot[] _playerSkillSlots = new SkillSlot[2];
-
+        // ============ 对外 API - 明确语义，不暴露内部集合 ============
         /// <summary>
-        /// 技能槽位数组（对外只读）
+        /// 获取槽位数量
         /// </summary>
-        public SkillSlot[] PlayerSkillSlots => _playerSkillSlots;
+        public int SlotCount => _slots?.Count ?? 0;
 
-        /// <summary>
-        /// 缓存的服务引用（避免重复获取单例）
-        /// </summary>
-        private InventoryServiceManager _inventory;
-
-        /// <summary>
-        /// 无冷却模式开关。
-        /// 使用说明：
-        /// - 默认值：false（关闭），即按照技能自身冷却时间正常结算。
-        /// - 典型用途：用于开发期 / QA 调试（例如快速验证技能数值、连招手感等），不建议在正式玩法中长期开启。
-        /// - 推荐控制方式：通过外部调试面板、配置服务或关卡脚本，在合适的时机调用 <see cref="SetNoCooldownMode(bool)"/> 进行显式开启 / 关闭。
-        /// </summary>
-        private bool _noCooldownMode = false;
-
-        /// <summary>
-        /// 设置无冷却模式开关。
-        /// 注意：
-        /// - 此方法只修改当前玩家技能组件实例上的状态，不会影响其他玩家或全局逻辑。
-        /// - 建议仅在开发环境、测试环境或受控的调试场景中使用；正式线上环境应谨慎开启。
-        /// </summary>
-        /// <param name="enabled">true 表示启用无冷却模式，false 表示恢复正常冷却。</param>
-        public void SetNoCooldownMode(bool enabled)
-        {
-            _noCooldownMode = enabled;
-        }
-        #endregion
-
-        #region 生命周期
-
+        // ============ Unity 生命周期 ============
         private void Awake()
         {
-            _inventory = InventoryServiceManager.Instance;
-            if (_inventory == null)
-                CDTU.Utils.CDLogger.LogError("[PlayerSkillComponent] InventoryServiceManager.Instance is null");
-
-            // 确保数组内的 SkillSlot 实例已初始化，避免 Inspector VS 运行期不一致
-            if (_playerSkillSlots != null)
+            var inventory = GameRoot.Instance.InventoryManager;
+            if (inventory == null)
             {
-                for (int i = 0; i < _playerSkillSlots.Length; i++)
-                {
-                    if (_playerSkillSlots[i] == null)
-                        _playerSkillSlots[i] = new SkillSlot();
-                }
+                Debug.LogError("[PlayerSkillComponent] InventoryServiceManager.Instance is null");
+                return;
             }
 
-            // 订阅事件
-            SubscribeEvents();
+            //TODO-修改slot大小
+            _slots = new SkillSlotCollection(2, inventory);
+            _executor = new SkillExecutor(inventory, new EffectFactory());
+
+            // 订阅技能使用事件
+            _executor.OnSkillUsed += OnSkillUsedInternally;
+        }
+
+        private void OnEnable()
+        {
+            EnableEventForwarding();
+        }
+
+        private void OnDisable()
+        {
+            DisableEventForwarding();
         }
 
         private void OnDestroy()
         {
-            // 取消订阅事件
-            UnsubscribeEvents();
+            DisableEventForwarding();
+            _executor?.Dispose();
         }
 
-        #endregion
+        // ============ ISkillComponent 实现 ============
+        /// <summary>
+        /// 使用技能
+        /// </summary>
+        public void UseSkill(int slotIndex, Vector3? aimPoint = null)
+        {
+            if (!_slots.IsValidIndex(slotIndex)) return;
+
+            var slot = _slots[slotIndex];
+            if (slot == null || slot.IsEmpty) return;
+
+            var caster = GetComponent<CharacterBase>();
+            if (caster == null) return;
+
+            var aim = aimPoint ?? transform.position;
+            _executor.ExecuteSkill(slot, caster, aim);
+        }
+
+        /// <summary>
+        /// 检查技能是否可用
+        /// </summary>
+        public bool CanUseSkill(int slotIndex)
+        {
+            if (!_slots.IsValidIndex(slotIndex)) return false;
+            var slot = _slots[slotIndex];
+            return slot != null && _executor.CanExecute(slot);
+        }
+
+        // ============ 公共 API ============
+        /// <summary>
+        /// 打断技能
+        /// </summary>
+        /// <param name="slotIndex">槽位索引，-1 表示打断所有技能</param>
+        /// <param name="refundCharges">是否退还能量</param>
+        public void InterruptSkill(int slotIndex = -1, bool refundCharges = false)
+        {
+            _executor.Interrupt(slotIndex, refundCharges);
+        }
+
+        /// <summary>
+        /// 装备主动卡到指定槽位
+        /// </summary>
+        public void EquipActiveCardToSlotIndex(int slotIndex, string cardId)
+        {
+            _slots.Equip(slotIndex, cardId);
+            OnSkillEquippedInternally(slotIndex, cardId);
+        }
+
+        /// <summary>
+        /// 卸载指定槽位的主动卡
+        /// </summary>
+        public void UnequipActiveCardBySlotIndex(int slotIndex)
+        {
+            var rt = GetRuntime(slotIndex);
+            string cardId = rt?.CardId;
+            _slots.Unequip(slotIndex);
+            OnSkillUnequippedInternally(slotIndex, cardId);
+        }
+
+        /// <summary>
+        /// 清空所有槽位
+        /// </summary>
+        public void ClearAllSlots()
+        {
+            _slots.ClearAll();
+        }
+
+        /// <summary>
+        /// 获取槽位
+        /// </summary>
+        public Skill.Slots.SkillSlot GetSlot(int slotIndex)
+        {
+            return _slots[slotIndex];
+        }
+
+        /// <summary>
+        /// 获取运行时状态
+        /// </summary>
+        public ActiveSkillRuntime GetRuntime(int slotIndex)
+        {
+            return _slots[slotIndex]?.Runtime;
+        }
     }
 }

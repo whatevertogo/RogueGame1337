@@ -9,7 +9,7 @@ using UnityEngine;
 /// </summary>
 public class AliveFilter : TargetFilterSO
 {
-    public override bool IsValid(SkillTargetContext ctx, CharacterBase target)
+    public override bool IsValid(SkillContext ctx, CharacterBase target)
     {
         // 添加空值检查以避免空引用
         if (target == null) return false;

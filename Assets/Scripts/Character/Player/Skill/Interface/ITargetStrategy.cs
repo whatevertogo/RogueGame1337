@@ -6,5 +6,5 @@ using UnityEngine;
 
     public interface ITargetAcquireStrategy
     {
-        List<CharacterBase> Acquire(SkillTargetContext ctx);
+        List<CharacterBase> Acquire(SkillContext ctx);
     }
