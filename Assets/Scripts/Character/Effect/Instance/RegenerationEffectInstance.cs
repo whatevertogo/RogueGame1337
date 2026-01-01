@@ -14,6 +14,13 @@ public class RegenerationEffectInstance : StatusEffectInstanceBase
         : base(def.duration, def.isStackable)
     {
         _def = def;
+        
+        // 验证配置
+        if (_def.tickInterval <= 0f)
+        {
+            CDTU.Utils.CDLogger.LogWarning($"[RegenerationEffectInstance] tickInterval <= 0 ({_def.tickInterval}), 将使用默认值 1f");
+            _def.tickInterval = 1f;
+        }
     }
 
     public override void OnApply(CharacterStats stats, StatusEffectComponent comp)
@@ -21,11 +28,6 @@ public class RegenerationEffectInstance : StatusEffectInstanceBase
         base.OnApply(stats, comp);
         _elapsedTime = 0f;
 
-        // tickInterval <= 0 表示立即生效一次
-        if (_def.tickInterval <= 0f)
-        {
-            Heal();
-        }
     }
 
     public override void OnTick(float deltaTime)
@@ -33,9 +35,6 @@ public class RegenerationEffectInstance : StatusEffectInstanceBase
         base.OnTick(deltaTime);
 
         if (IsExpired)
-            return;
-
-        if (_def.tickInterval <= 0f)
             return;
 
         _elapsedTime += deltaTime;
@@ -52,6 +51,7 @@ public class RegenerationEffectInstance : StatusEffectInstanceBase
         if (stats == null || stats.IsDead)
             return;
 
-        stats.CurrentHP += _def.healPerTick;
+        // 使用 Heal() 方法以触发 OnHealed 和 OnHealthChanged 事件
+        stats.Heal(_def.healPerTick);
     }
 }

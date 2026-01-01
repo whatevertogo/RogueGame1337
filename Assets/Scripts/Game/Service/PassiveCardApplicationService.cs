@@ -294,7 +294,8 @@ public sealed class PassiveCardApplicationService
         if (localPlayer == null || evt.Attacker != localPlayer.gameObject) return;
 
         // 检查是否有"吸血体质"卡牌（P08）
-        var cardCount = inventoryManager.GetPassiveCardCount("P08");
+        //TODO-吸血体质
+        var cardCount = inventoryManager.GetPassiveCardCount("吸血体质");
         if (cardCount <= 0) return;
 
         // 获取玩家 Stats 组件

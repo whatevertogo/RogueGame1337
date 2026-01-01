@@ -24,6 +24,9 @@ namespace Character.Components
         // 初始化期间抑制 HP 相关事件（避免 Awake/Initialize 触发订阅前的回调）
         private bool _suppressHPEvents = false;
 
+        // HP 自动恢复累积器
+        private float _regenAccumulator;
+
         [Header("移动")]
         [ReadOnly][SerializeField] private Stat _moveSpeed = new(4f);
         [ReadOnly][SerializeField] private Stat _acceleration = new(10f);
@@ -273,6 +276,29 @@ namespace Character.Components
         public void FullHeal()
         {
             CurrentHP = _maxHP.Value;
+        }
+
+        // ========== HP 自动恢复 ==========
+
+        /// <summary>
+        /// HP 自动恢复（每帧调用）
+        /// </summary>
+        private void Update()
+        {
+            if (IsDead) return;
+
+            float regen = _hpRegen.Value;
+            if (regen <= 0) return;
+
+            _regenAccumulator += regen * Time.deltaTime;
+
+            // 累积到 1 点或更多时恢复
+            if (_regenAccumulator >= 1f)
+            {
+                int healAmount = Mathf.FloorToInt(_regenAccumulator);
+                _regenAccumulator -= healAmount;
+                Heal(healAmount);
+            }
         }
 
         // ========== 攻击计算 ==========
