@@ -18,26 +18,15 @@ public class CooldownModifier : SkillModifierBase, ICooldownModifier
     // ========== ISkillModifier 实现 ==========
     public override string ModifierId => $"Cooldown({CooldownMultiplier}x)";
 
-    // ========== 构造函数 ==========
-
-    /// <summary>
-    /// 创建冷却修改器
-    /// </summary>
-    /// <param name="cooldownMultiplier">冷却倍率（0.5 表示冷却减半，2.0 表示冷却翻倍）</param>
-    public CooldownModifier(float cooldownMultiplier)
-    {
-        CooldownMultiplier = Mathf.Clamp(cooldownMultiplier, 0.1f, 10f);
-    }
-
-    // ========== 工厂方法 ==========
-
+    // ========== 工厂方法（使用 ScriptableObject.CreateInstance） ==========
     /// <summary>
     /// 创建冷却缩减修改器
     /// </summary>
-    /// <param name="reductionPercent">缩减百分比（0.2 表示缩减20%，即冷却变为原来的80%）</param>
     public static CooldownModifier Reduction(float reductionPercent)
     {
-        return new CooldownModifier(1f - reductionPercent);
+        var inst = CreateInstance<CooldownModifier>();
+        inst.CooldownMultiplier = Mathf.Clamp(1f - reductionPercent, 0.1f, 10f);
+        return inst;
     }
 
     // ========== ICooldownModifier 实现 ==========

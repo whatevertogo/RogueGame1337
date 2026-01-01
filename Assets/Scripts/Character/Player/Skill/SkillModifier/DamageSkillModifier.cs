@@ -37,27 +37,28 @@ public class DamageSkillModifier : SkillModifierBase, IDamageModifier
 
     /// <summary>
     /// 创建标准伤害修改器（倍率 + 加值）
+    /// 注意：DamageSkillModifier 继承自 ScriptableObject，应通过 CreateInstance 创建实例以保留 Unity 生命周期管理。
     /// </summary>
-    /// <param name="damageMultiplier">伤害倍率</param>
-    /// <param name="damageAddend">伤害加值</param>
-    /// <param name="setTrueDamage">是否设置为真伤（默认 false）</param>
-    public DamageSkillModifier(float damageMultiplier, float damageAddend = 0f, bool setTrueDamage = false)
+    public static DamageSkillModifier Create(float damageMultiplier, float damageAddend = 0f, bool setTrueDamage = false)
     {
-        DamageMultiplier = damageMultiplier;
-        DamageAddend = damageAddend;
-        SetTrueDamage = setTrueDamage;
+        var inst = CreateInstance<DamageSkillModifier>();
+        inst.DamageMultiplier = damageMultiplier;
+        inst.DamageAddend = damageAddend;
+        inst.SetTrueDamage = setTrueDamage;
+        return inst;
     }
 
     /// <summary>
     /// 创建覆盖式伤害修改器（强制设置伤害值，且为真伤）
     /// </summary>
-    /// <param name="damageOverride">覆盖的伤害值</param>
     public static DamageSkillModifier Override(float damageOverride)
     {
-        return new DamageSkillModifier(1f, 0f, true)
-        {
-            DamageOverride = damageOverride
-        };
+        var inst = CreateInstance<DamageSkillModifier>();
+        inst.DamageMultiplier = 1f;
+        inst.DamageAddend = 0f;
+        inst.SetTrueDamage = true;
+        inst.DamageOverride = damageOverride;
+        return inst;
     }
 
     // ========== IDamageModifier 实现 ==========

@@ -1,9 +1,11 @@
 using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 using UI;
-using System.Threading.Tasks;
 using Core.Events;
 using RogueGame.Events;
+using Character.Player;
 
 namespace Game.UI
 {
@@ -15,7 +17,14 @@ namespace Game.UI
         protected PlayingStateUIView _view;
 
         private PlayerRuntimeState _myPlayerState;
-        private bool _skillEventsSubscribed = false;
+        private bool _skillEventsSubscribed;
+
+        // 槽位映射：SlotIndex → (InstanceId, MaxEnergy)
+        // 以及反向映射 InstanceId -> SlotIndex，保证能量变化时 O(1) 查找槽位
+        private readonly Dictionary<int, (string InstanceId, int MaxEnergy)> _slotMapping = new();
+        private readonly Dictionary<string, int> _instanceToSlot = new();
+
+        private const int DefaultMaxEnergy = 100;
 
         public virtual void Bind(UIViewBase view)
         {
@@ -28,7 +37,7 @@ namespace Game.UI
         private void OnLayerTransition(LayerTransitionEvent evt)
         {
             CDTU.Utils.CDLogger.Log($"层过渡事件：从层 {evt.FromLayer} 到层 {evt.ToLayer}");
-            _view.SetLevelText($"第{evt.ToLayer}层");
+            _view?.SetLevelText($"第{evt.ToLayer}层");
         }
 
         //TODO-后面联机可能改
@@ -77,33 +86,34 @@ namespace Game.UI
         }
         private void SubscribeToSkillEvents()
         {
-            var pm = PlayerManager.Instance;
-            if (pm == null) return;
+            if (_myPlayerState == null) return;
+            if (_skillEventsSubscribed) return;
+
+            // 订阅能量变化事件
+            EventBus.Subscribe<ActiveCardEnergyChangedEvent>(OnActiveCardEnergyChanged);
+
+            // 订阅装备事件（建立映射）
+            EventBus.Subscribe<SkillSlotEquippedEvent>(OnSkillSlotEquipped);
+
+            // 订阅技能使用事件
+            EventBus.Subscribe<PlayerSkillCastEvent>(OnPlayerSkillCast);
+
+            _skillEventsSubscribed = true;
         }
 
         private void UnsubscribeFromSkillEvents()
         {
-            var pm = PlayerManager.Instance;
-            if (pm == null) return;
             if (!_skillEventsSubscribed) return;
+
+            EventBus.Unsubscribe<ActiveCardEnergyChangedEvent>(OnActiveCardEnergyChanged);
+            EventBus.Unsubscribe<SkillSlotEquippedEvent>(OnSkillSlotEquipped);
+            EventBus.Unsubscribe<PlayerSkillCastEvent>(OnPlayerSkillCast);
+
             _skillEventsSubscribed = false;
+            _slotMapping.Clear();
+            _instanceToSlot.Clear();
         }
 
-        private void OnPlayerSkillEquipped(string playerId, int slotIndex, string cardId)
-        {
-            if (_myPlayerState == null || playerId != _myPlayerState.PlayerId) return;
-            var def = GameRoot.Instance?.CardDatabase?.Resolve(cardId);
-            if (def != null)
-            {
-                _view?.SetSkillSlotIcon(slotIndex, def.GetSprite());
-            }
-        }
-
-        private void OnPlayerSkillUnequipped(string playerId, int slotIndex)
-        {
-            if (_myPlayerState == null || playerId != _myPlayerState.PlayerId) return;
-            _view?.SetSkillSlotIcon(slotIndex, null);
-        }
 
         private void PlayerRegistered(PlayerRuntimeState state)
         {
@@ -115,11 +125,11 @@ namespace Game.UI
             CDTU.Utils.CDLogger.Log("玩家注册：" + state.PlayerId);
             SubscribeToPlayerHealthEvents();
             SubscribeToSkillEvents();
-            // TODO-刷新技能槽初始显示
-            if (_myPlayerState != null && _view != null)
-            {
 
-            }
+            // 初始化时清空映射并刷新所有技能槽
+            _slotMapping.Clear();
+            _instanceToSlot.Clear();
+            RefreshAllSkillSlots();
         }
 
         private void SubscribeToPlayerHealthEvents()
@@ -151,19 +161,108 @@ namespace Game.UI
         }
 
 
-        private void OnPlayerSkillEnergyChanged(string playerId, int slotIndex, float energy)
+        // 以下方法用于界面根据事件刷新技能槽显示
+
+        /// <summary>
+        /// 处理技能槽装备事件：建立映射并更新UI
+        /// </summary>
+        private void OnSkillSlotEquipped(SkillSlotEquippedEvent evt)
         {
-            if (_myPlayerState == null) return;
-            if (playerId != _myPlayerState.PlayerId) return;
-            // energy is normalized 0..1 from PlayerSkillComponent
-            _view?.SetSkillSlotEnergy(slotIndex, energy);
+            if (evt.PlayerId != _myPlayerState?.PlayerId) return;
+
+            // 如果该 instance 已存在旧映射，先清理旧槽位映射
+            if (_instanceToSlot.TryGetValue(evt.InstanceId, out var oldSlot) && oldSlot != evt.SlotIndex)
+            {
+                _slotMapping.Remove(oldSlot);
+            }
+
+            // 建立双向映射
+            _slotMapping[evt.SlotIndex] = (evt.InstanceId, evt.MaxEnergy);
+            _instanceToSlot[evt.InstanceId] = evt.SlotIndex;
+
+            // 设置图标（通过实例查到定义）
+            var cardState = GameRoot.Instance?.InventoryManager?.ActiveCardService?.GetCard(evt.InstanceId);
+            var cardDef = cardState != null ? GameRoot.Instance?.CardDatabase?.Resolve(cardState.CardId) : null;
+            _view?.SetSkillSlotIcon(evt.SlotIndex, cardDef?.GetSprite());
+
+            // 设置初始能量
+            if (cardState != null)
+            {
+                float normalized = Mathf.Clamp01((float)cardState.CurrentEnergy / Mathf.Max(1, evt.MaxEnergy));
+                _view?.SetSkillSlotEnergy(evt.SlotIndex, normalized);
+            }
         }
 
-        private void OnPlayerSkillUsed(string playerId, int slotIndex)
+        /// <summary>
+        /// 处理能量变化事件：O(1) 字典查找对应槽位
+        /// </summary>
+        private void OnActiveCardEnergyChanged(ActiveCardEnergyChangedEvent evt)
         {
-            if (_myPlayerState == null) return;
-            if (playerId != _myPlayerState.PlayerId) return;
-            _view?.SetSkillSlotUsed(slotIndex);
+            if (evt.PlayerId != _myPlayerState?.PlayerId) return;
+
+            // 使用反向映射实现 O(1) 查找对应槽位
+            if (!_instanceToSlot.TryGetValue(evt.InstanceId, out var slotIndex)) return;
+            if (!_slotMapping.TryGetValue(slotIndex, out var info)) return;
+
+            int maxEnergy = info.MaxEnergy > 0 ? info.MaxEnergy : evt.MaxEnergy > 0 ? evt.MaxEnergy : DefaultMaxEnergy;
+            float normalized = Mathf.Clamp01((float)evt.NewEnergy / Mathf.Max(1, maxEnergy));
+            _view?.SetSkillSlotEnergy(slotIndex, normalized);
+        }
+
+        /// <summary>
+        /// 处理技能使用事件：触发技能视觉效果
+        /// </summary>
+        private void OnPlayerSkillCast(PlayerSkillCastEvent evt)
+        {
+            if (_myPlayerState == null || evt.PlayerId != _myPlayerState.PlayerId) return;
+            _view?.SetSkillSlotUsed(evt.SlotIndex);
+        }
+
+        /// <summary>
+        /// 刷新所有技能槽的显示（用于玩家注册时初始化）
+        /// </summary>
+        private void RefreshAllSkillSlots()
+        {
+            if (_myPlayerState == null || _view == null) return;
+
+            var skillComponent = _myPlayerState.Controller?.GetComponent<PlayerSkillComponent>();
+            if (skillComponent == null) return;
+
+            for (int i = 0; i < skillComponent.SlotCount; i++)
+            {
+                var runtime = skillComponent.GetRuntime(i);
+                if (runtime != null)
+                {
+                    // 获取当前状态
+                    var cardDef = GameRoot.Instance?.CardDatabase?.Resolve(runtime.CardId);
+                    var cardState = GameRoot.Instance?.InventoryManager?.ActiveCardService?.GetCard(runtime.InstanceId);
+                    // 建立双向映射
+                    int maxEnergy = cardDef?.activeCardConfig?.maxEnergy ?? DefaultMaxEnergy;
+                    _slotMapping[i] = (runtime.InstanceId, maxEnergy);
+                    _instanceToSlot[runtime.InstanceId] = i;
+
+                    // 设置图标
+                    _view?.SetSkillSlotIcon(i, cardDef?.GetSprite());
+
+                    // 设置能量
+                    if (cardState != null)
+                    {
+                        float normalized = Mathf.Clamp01((float)cardState.CurrentEnergy / Mathf.Max(1, maxEnergy));
+                        _view?.SetSkillSlotEnergy(i, normalized);
+                    }
+                }
+                else
+                {
+                    // 空槽位：清理双向映射与 UI
+                    if (_slotMapping.TryGetValue(i, out var existing))
+                    {
+                        _instanceToSlot.Remove(existing.InstanceId);
+                        _slotMapping.Remove(i);
+                    }
+                    _view?.SetSkillSlotIcon(i, null);
+                    _view?.SetSkillSlotEnergy(i, 0f);
+                }
+            }
         }
 
         private void PlayerUnregistered(PlayerRuntimeState state)

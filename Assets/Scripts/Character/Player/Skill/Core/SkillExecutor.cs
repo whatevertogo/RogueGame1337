@@ -101,7 +101,9 @@ namespace Character.Player.Skill.Core
         /// </summary>
         private IEnumerator ExecuteAsync(SkillDefinition def, SkillContext ctx, SkillExecutionToken token)
         {
-            var rt = ctx.Runtime;
+            // 使用局部可变副本以便传 ref 给 Pipeline（iterator 方法参数不能是 ref）
+            var localCtx = ctx;
+            var rt = localCtx.Runtime;
 
             // 等待 detectionDelay
             if (def.detectionDelay > 0f)
@@ -114,28 +116,24 @@ namespace Character.Player.Skill.Core
                 yield break;
             }
 
-            // 执行 Pipeline（同步）
-            var result = _pipeline.Execute(ctx, token);
+            // 执行 Pipeline（同步，传入 ref）
+            var result = _pipeline.Execute(ref localCtx, token);
 
-            // 处理结果
+            // 处理结果（基于 Runtime 状态）
             if (result == SkillPhaseResult.Cancel && rt.EnergyConsumed)
             {
                 _inventory.AddEnergy(rt.InstanceId, rt.ActualEnergyConsumed);
                 rt.ActualEnergyConsumed = 0;
             }
 
-            // 触发技能使用事件
-            // 注意：
-            // 1. 这里的事件语义是“技能尝试结束”（Attempt Finished），而不是“技能必然成功释放”
-            // 2. 因此无论 Pipeline 最终结果是 Continue（正常完成）还是 Cancel（执行中被中断 / 判定失败），都会触发该事件
-            // 3. 如果业务侧需要区分“成功释放”与“被取消/失败”，应在事件订阅方结合运行时状态或结果枚举自行判断
+            // 触发技能使用事件（注意语义见注释）
             if (result == SkillPhaseResult.Continue || result == SkillPhaseResult.Cancel)
             {
-                OnSkillUsed?.Invoke(ctx.SlotIndex);
+                OnSkillUsed?.Invoke(localCtx.SlotIndex);
             }
 
             // 清理
-            _activeTokens.Remove(ctx.SlotIndex);
+            _activeTokens.Remove(localCtx.SlotIndex);
             rt.EnergyConsumed = false;
         }
 

@@ -12,7 +12,7 @@ namespace Character.Player.Skill.Pipeline.Phases
     {
         public string PhaseName => "Targeting";
 
-        public SkillPhaseResult Execute(SkillContext ctx, SkillExecutionToken token)
+        public SkillPhaseResult Execute(ref SkillContext ctx, SkillExecutionToken token)
         {
             if (token.IsCancelled) return SkillPhaseResult.Cancel;
 
@@ -36,14 +36,21 @@ namespace Character.Player.Skill.Pipeline.Phases
             // 4. 过滤目标
             if (def.TargetFilters != null && def.TargetFilters.filters != null && def.TargetFilters.filters.Count > 0)
             {
-                targets = targets.FindAll(t => def.TargetFilters.IsValid(ctx, t));
+                // 倒序遍历是原地删除的标准做法
+                for (int i = targets.Count - 1; i >= 0; i--)
+                {
+                    if (!def.TargetFilters.IsValid(ctx, targets[i]))
+                    {
+                        targets.RemoveAt(i);
+                    }
+                }
             }
 
             // 5. 检查是否有有效目标
             if (targets == null || targets.Count == 0)
                 return SkillPhaseResult.Fail;
 
-            // 6. 保存结果
+            // 6. 保存结果（通过 ref 修改，后续 Phase 可看到）
             ctx.TargetResult = new TargetResult
             {
                 Targets = targets,

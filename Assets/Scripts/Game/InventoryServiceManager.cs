@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using CDTU.Utils;
+using Core.Events;
 using RogueGame.Events;
 using RogueGame.Game.Service.Inventory;
 using RogueGame.Items;
@@ -297,6 +298,15 @@ public sealed class InventoryServiceManager : MonoBehaviour
 
             // 增加该卡的击杀奖励能量
             ActiveCardService.AddEnergy(st.InstanceId, def.activeCardConfig.energyPerKill);
+
+            // 发布增强能量变化事件（此时 st.CurrentEnergy 已更新）
+            EventBus.Publish(new ActiveCardEnergyChangedEvent
+            {
+                InstanceId = st.InstanceId,
+                PlayerId = playerId,
+                NewEnergy = st.CurrentEnergy,
+                MaxEnergy = def.activeCardConfig.maxEnergy
+            });
         }
     }
 
@@ -306,6 +316,20 @@ public sealed class InventoryServiceManager : MonoBehaviour
     public void AddEnergy(string instanceId, int energy)
     {
         ActiveCardService.AddEnergy(instanceId, energy);
+
+        // 需要发布事件，从 ActiveCardState 获取所需信息
+        var card = ActiveCardService.GetCard(instanceId);
+        if (card != null && card.IsEquipped)
+        {
+            var def = GameRoot.Instance?.CardDatabase?.Resolve(card.CardId);
+            EventBus.Publish(new ActiveCardEnergyChangedEvent
+            {
+                InstanceId = instanceId,
+                PlayerId = card.EquippedPlayerId,
+                NewEnergy = card.CurrentEnergy,
+                MaxEnergy = def?.activeCardConfig?.maxEnergy ?? 100
+            });
+        }
     }
 
     /// <summary>
@@ -314,7 +338,23 @@ public sealed class InventoryServiceManager : MonoBehaviour
     /// <returns>是否成功消耗（能量不足时返回 false）</returns>
     public bool ConsumeSkillEnergy(string instanceId, int energy)
     {
-        return ActiveCardService.ConsumeSkillEnergy(instanceId, energy);
+        bool success = ActiveCardService.ConsumeSkillEnergy(instanceId, energy);
+        if (success)
+        {
+            var card = ActiveCardService.GetCard(instanceId);
+            if (card != null && card.IsEquipped)
+            {
+                var def = GameRoot.Instance?.CardDatabase?.Resolve(card.CardId);
+                EventBus.Publish(new ActiveCardEnergyChangedEvent
+                {
+                    InstanceId = instanceId,
+                    PlayerId = card.EquippedPlayerId,
+                    NewEnergy = card.CurrentEnergy,
+                    MaxEnergy = def?.activeCardConfig?.maxEnergy ?? 100
+                });
+            }
+        }
+        return success;
     }
 
     #endregion

@@ -20,7 +20,7 @@ public class TargetFilterGroupSO : ScriptableObject
         
         foreach (var filter in filters)
         {
-            if (filter != null && !filter.IsValid(ctx, target))
+            if (filter != null && !filter.IsValid( ctx, target))
                 return false;
         }
         return true;

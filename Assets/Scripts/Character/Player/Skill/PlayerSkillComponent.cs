@@ -1,8 +1,9 @@
-using UnityEngine;
+using Character;
 using Character.Components.Interface;
+using Character.Player.Skill.Core;
 using Character.Player.Skill.Runtime;
 using Character.Player.Skill.Slots;
-using Character.Player.Skill.Core;
+using UnityEngine;
 
 namespace Character.Player
 {
@@ -91,7 +92,16 @@ namespace Character.Player
         /// </summary>
         public void EquipActiveCardToSlotIndex(int slotIndex, string cardId)
         {
-            _slots.Equip(slotIndex, cardId);
+            // 获取 PlayerId 以便发布装备事件
+            string playerId = null;
+            var controller = GetComponent<PlayerController>();
+            if (controller != null)
+            {
+                var playerState = PlayerManager.Instance?.GetPlayerRuntimeStateByController(controller);
+                playerId = playerState?.PlayerId;
+            }
+
+            _slots.Equip(slotIndex, cardId, playerId);
         }
 
         /// <summary>

@@ -1,9 +1,11 @@
+using Card;
+using Character.Player.Skill.Runtime;
+using Core.Events;
+using Game;
+using RogueGame.Events;
+using System;
 namespace Character.Player.Skill.Slots
 {
-    using Card;
-    using Character.Player.Skill.Runtime;
-    using Game;
-    using System;
 
     /// <summary>
     /// 槽位集合：管理多个槽位
@@ -49,7 +51,7 @@ namespace Character.Player.Skill.Slots
         /// <summary>
         /// 装备主动卡到指定槽位
         /// </summary>
-        public void Equip(int index, string cardId)
+        public void Equip(int index, string cardId, string playerId = null)
         {
             if (!IsValidIndex(index)) return;
             if (string.IsNullOrEmpty(cardId)) return;
@@ -69,6 +71,26 @@ namespace Character.Player.Skill.Slots
             );
 
             _slots[index].Equip(cardId, runtime);
+
+            // 更新 ActiveCardState 的装备状态
+            if (cardState != null && !string.IsNullOrEmpty(playerId))
+            {
+                cardState.IsEquipped = true;
+                cardState.EquippedPlayerId = playerId;
+            }
+
+            // 发布装备事件（供 UI 层建立 InstanceId → SlotIndex 映射）
+            if (!string.IsNullOrEmpty(playerId) && cardState != null)
+            {
+                int maxEnergy = cardDef.activeCardConfig?.maxEnergy ?? 100;
+                EventBus.Publish(new SkillSlotEquippedEvent
+                {
+                    PlayerId = playerId,
+                    SlotIndex = index,
+                    InstanceId = cardState.InstanceId,
+                    MaxEnergy = maxEnergy
+                });
+            }
         }
 
         /// <summary>
@@ -77,6 +99,23 @@ namespace Character.Player.Skill.Slots
         public void Unequip(int index)
         {
             if (!IsValidIndex(index)) return;
+
+            var slot = _slots[index];
+            if (slot?.Runtime != null)
+            {
+                // 清除 ActiveCardState 的装备状态
+                var instanceId = slot.Runtime.InstanceId;
+                if (!string.IsNullOrEmpty(instanceId))
+                {
+                    var cardState = _inventory.GetActiveCard(instanceId);
+                    if (cardState != null)
+                    {
+                        cardState.IsEquipped = false;
+                        cardState.EquippedPlayerId = null;
+                    }
+                }
+            }
+
             _slots[index].Unequip();
         }
 

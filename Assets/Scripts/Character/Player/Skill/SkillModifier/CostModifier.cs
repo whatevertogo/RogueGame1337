@@ -24,37 +24,27 @@ public class CostModifier : SkillModifierBase, IEnergyCostModifier
     // ========== ISkillModifier 实现 ==========
     public override string ModifierId => $"EnergyCost({CostMultiplier}x+{CostFlat})";
 
-    // ========== 构造函数 ==========
-
-    /// <summary>
-    /// 创建能量消耗修改器
-    /// </summary>
-    /// <param name="costMultiplier">能量消耗倍率（0.5表示减半，2.0表示翻倍）</param>
-    /// <param name="costFlat">能量消耗固定加值</param>
-    public CostModifier(float costMultiplier = 1f, int costFlat = 0)
-    {
-        CostMultiplier = Mathf.Clamp(costMultiplier, 0f, 10f);
-        CostFlat = costFlat;
-    }
-
-    // ========== 工厂方法 ==========
-
+    // ========== 工厂方法（使用 ScriptableObject.CreateInstance） ==========
     /// <summary>
     /// 创建能量折扣修改器
     /// </summary>
-    /// <param name="discountPercent">折扣百分比（0.2 表示缩减20%，即消耗变为原来的80%）</param>
     public static CostModifier Discount(float discountPercent)
     {
-        return new CostModifier(1f - Mathf.Clamp01(discountPercent), 0);
+        var inst = CreateInstance<CostModifier>();
+        inst.CostMultiplier = 1f - Mathf.Clamp01(discountPercent);
+        inst.CostFlat = 0;
+        return inst;
     }
 
     /// <summary>
     /// 创建能量返还修改器（击杀后返还能量）
     /// </summary>
-    /// <param name="refundAmount">返还的能量值</param>
     public static CostModifier Refund(int refundAmount)
     {
-        return new CostModifier(1f, -Mathf.Abs(refundAmount));
+        var inst = CreateInstance<CostModifier>();
+        inst.CostMultiplier = 1f;
+        inst.CostFlat = -Mathf.Abs(refundAmount);
+        return inst;
     }
 
     /// <summary>
@@ -62,7 +52,10 @@ public class CostModifier : SkillModifierBase, IEnergyCostModifier
     /// </summary>
     public static CostModifier Multiplier(float multiplier)
     {
-        return new CostModifier(Mathf.Clamp(multiplier, 0f, 10f), 0);
+        var inst = CreateInstance<CostModifier>();
+        inst.CostMultiplier = Mathf.Clamp(multiplier, 0f, 10f);
+        inst.CostFlat = 0;
+        return inst;
     }
 
     /// <summary>
@@ -70,7 +63,10 @@ public class CostModifier : SkillModifierBase, IEnergyCostModifier
     /// </summary>
     public static CostModifier Flat(int flat)
     {
-        return new CostModifier(1f, flat);
+        var inst = CreateInstance<CostModifier>();
+        inst.CostMultiplier = 1f;
+        inst.CostFlat = flat;
+        return inst;
     }
 
     // ========== IEnergyCostModifier 实现 ==========

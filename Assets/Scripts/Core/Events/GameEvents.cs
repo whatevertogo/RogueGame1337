@@ -264,12 +264,26 @@ namespace RogueGame.Events
 
     /// <summary>
     /// 主动卡能量变化事件：ActiveCardService 在能量增减时发布此事件
-    /// PlayerSkillComponent 订阅此事件以自动更新 UI
+    /// UI 层订阅此事件以自动更新能量条
     /// </summary>
     public class ActiveCardEnergyChangedEvent
     {
         public string InstanceId;
+        public string PlayerId;   // 所属玩家ID
         public int NewEnergy;
+        public int MaxEnergy;     // 最大能量（UI层可直接计算归一化值）
+    }
+
+    /// <summary>
+    /// 技能槽装备事件：卡牌装备到槽位时发布此事件
+    /// UI 层订阅此事件以建立 InstanceId → SlotIndex 的映射
+    /// </summary>
+    public class SkillSlotEquippedEvent
+    {
+        public string PlayerId;
+        public int SlotIndex;
+        public string InstanceId;
+        public int MaxEnergy;     // 预先携带最大能量，避免后续查询
     }
 
     /// <summary>

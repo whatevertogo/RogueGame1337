@@ -4,5 +4,5 @@ using UnityEngine;
 
 public abstract class TargetFilterSO : ScriptableObject
 {
-    public abstract bool IsValid(SkillContext ctx, CharacterBase target);
+    public abstract bool IsValid (SkillContext ctx, CharacterBase target);
 }
