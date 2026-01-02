@@ -15,7 +15,7 @@ namespace Character.Player
     /// - 具体逻辑委托给 SkillExecutor 和 SkillSlotCollection
     /// - 技能执行使用 Phase Pipeline 模式
     /// </summary>
-    public sealed partial class PlayerSkillComponent : MonoBehaviour, ISkillComponent
+    public sealed class PlayerSkillComponent : MonoBehaviour, ISkillComponent
     {
         // ============ 私有字段（封装） ============
         private SkillSlotCollection _slots;
