@@ -66,15 +66,6 @@ namespace RogueGame.GameConfig
 
         #endregion
 
-        #region 技能属性上限
-
-        [Header("技能属性上限")]
-        [Tooltip("技能冷却缩减上限（0-1之间，例如0.5表示50%）")]
-        [Range(0f, 1f)]
-        public float maxSkillCooldownReduction = 0.5f;
-
-        #endregion
-
         #region 卡牌上限
 
         [Header("卡牌数量上限")]
@@ -108,7 +99,6 @@ namespace RogueGame.GameConfig
                 StatType.AttackRange => maxAttackRange,
                 StatType.Armor => maxArmor,
                 StatType.Dodge => maxDodge,
-                StatType.SkillCooldownReductionRate => maxSkillCooldownReduction,
                 _ => null
             };
         }

@@ -52,7 +52,6 @@ namespace RogueGame.SaveSystem
                 IsEquipped = saveData.IsEquipped,
                 EquippedPlayerId = saveData.EquippedPlayerId,
                 Level = saveData.Level,  // 恢复技能等级
-                CooldownRemaining = 0f // 运行时状态重置
             };
         }
 

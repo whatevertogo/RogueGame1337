@@ -60,7 +60,6 @@ namespace RogueGame.SaveSystem
         public float MoveSpeed;
         public float Armor;
         public float Dodge;
-        public float SkillCooldownReductionRate;
     }
     
     /// <summary>

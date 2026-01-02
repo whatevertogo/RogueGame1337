@@ -48,10 +48,7 @@ namespace Character.Player.Skill.Pipeline.Phases
                 rt.EnergyConsumed = true;
             }
 
-            // 3. 记录 LastUseTime
-            rt.LastUseTime = Time.time;
-
-            // 4. 发布事件
+            // 3. 发布事件
             PublishSkillCastEvent(ctx);
 
             return SkillPhaseResult.Continue;

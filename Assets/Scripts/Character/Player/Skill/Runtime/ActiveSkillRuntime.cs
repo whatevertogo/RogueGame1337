@@ -8,7 +8,7 @@ using UnityEngine;
 namespace Character.Player.Skill.Runtime
 {
     /// <summary>
-    /// 主动技能运行时状态：支持修改器和进化树
+    /// 主动技能运行时状态：支持修改器和进化树（纯充能系统，无CD）
     /// </summary>
     [Serializable]
     public class ActiveSkillRuntime
@@ -19,7 +19,6 @@ namespace Character.Player.Skill.Runtime
 
         // 链接到 InventoryServiceManager 中的 ActiveCardState.instanceId
         public string InstanceId;
-        public float LastUseTime;
 
         // 运行时协程引用（非序列化）用于取消延迟/选择流程
         [NonSerialized]
@@ -61,11 +60,6 @@ namespace Character.Player.Skill.Runtime
         public List<SkillBranch> BranchHistory = new List<SkillBranch>();
 
         // ========== 动态属性（由修改器影响） ==========
-        /// <summary>
-        /// 有效冷却时间（基础冷却 × 修改器倍率）
-        /// </summary>
-        [NonSerialized]
-        public float EffectiveCooldown;
 
         // /// <summary>
         // /// 弹射次数
@@ -112,11 +106,6 @@ namespace Character.Player.Skill.Runtime
             CardId = cardId;
             Skill = skill;
             InstanceId = instanceId;
-            LastUseTime = -999f;
-
-            // 初始化动态属性
-            EffectiveCooldown = skill?.cooldown ?? 1f;
-            // BounceCount = 0;
         }
 
         #region 修改器管理
@@ -219,21 +208,6 @@ namespace Character.Player.Skill.Runtime
         }
 
         /// <summary>
-        /// 阶段5：应用冷却修改器
-        /// 在技能使用后调用
-        /// </summary>
-        public void ApplyCooldownModifiers()
-        {
-            foreach (var modifier in _activeModifiers)
-            {
-                if (modifier is ICooldownModifier cooldownModifier)
-                {
-                    cooldownModifier.ApplyCooldown(this);
-                }
-            }
-        }
-
-        /// <summary>
         /// 阶段6：应用跨阶段修改器
         /// 在所有阶段完成后调用（用于处理跨阶段逻辑）
         /// </summary>
@@ -269,9 +243,6 @@ namespace Character.Player.Skill.Runtime
                     }
                 }
             }
-
-            // 重置有效冷却
-            EffectiveCooldown = Skill?.cooldown ?? 1f;
         }
 
         /// <summary>

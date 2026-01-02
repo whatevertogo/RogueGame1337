@@ -18,8 +18,11 @@ namespace Game.UI
         [SerializeField] private TMP_Text nowLevel;
         [SerializeField] private Image skillSlote1Image;
         [SerializeField] private Image skillSlote2Image;
+        [SerializeField] private Image skillSlote3Image;
         [SerializeField] private Image skillSlot1Energy;
         [SerializeField] private Image skillSlot2Energy;
+        [SerializeField] private Image skillSlot3Energy;
+
         [SerializeField] private Button BagButton;
 
         public override bool Exclusive => false;
@@ -89,6 +92,11 @@ namespace Game.UI
                 skillSlote2Image.sprite = icon;
                 skillSlote2Image.enabled = icon != null;
             }
+            else if (slotIndex == 2 && skillSlote3Image != null)
+            {
+                skillSlote3Image.sprite = icon;
+                skillSlote3Image.enabled = icon != null;
+            }
         }
 
         public void SetSkillSlotEnergy(int slotIndex, float normalized)
@@ -104,6 +112,11 @@ namespace Game.UI
                 //TODO-或许有更好duration的值,现在默认0.05f
                 skillSlot2Energy.DOFillAmount(Mathf.Clamp01(normalized), 0.05f).SetEase(Ease.OutCirc).SetUpdate(true);
             }
+            else if (slotIndex == 2 && skillSlot3Energy != null)
+            {
+                //TODO-或许有更好duration的值,现在默认0.05f
+                skillSlot3Energy.DOFillAmount(Mathf.Clamp01(normalized), 0.05f).SetEase(Ease.OutCirc).SetUpdate(true);
+            }
         }
 
         public void SetSkillSlotUsed(int slotIndex)
@@ -117,6 +130,11 @@ namespace Game.UI
             {
                 //TODO-或许有更好duration的值,现在默认0.04f
                 skillSlot2Energy.DOFillAmount(0f, 0.04f).SetEase(Ease.OutCirc).SetUpdate(true);
+            }
+            else if (slotIndex == 2 && skillSlot3Energy != null)
+            {
+                //TODO-或许有更好duration的值,现在默认0.04f
+                skillSlot3Energy.DOFillAmount(0f, 0.04f).SetEase(Ease.OutCirc).SetUpdate(true);
             }
 
         }

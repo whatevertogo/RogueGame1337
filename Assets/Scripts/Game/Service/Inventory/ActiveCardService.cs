@@ -38,7 +38,6 @@ namespace RogueGame.Game.Service.Inventory
                 CurrentEnergy = Mathf.Max(0, initialEnergy),
                 IsEquipped = false,
                 EquippedPlayerId = null,
-                CooldownRemaining = 0f
             };
 
             _activeCards.Add(state);

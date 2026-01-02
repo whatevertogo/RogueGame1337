@@ -40,9 +40,6 @@ namespace Character.Components
         [ReadOnly][SerializeField] private Stat _armor = new(0f);
         [ReadOnly][SerializeField][Range(0f, 1f)] private Stat _dodge = new(0f);//闪避
 
-        [Header("技能冷却速率")]
-        [ReadOnly][SerializeField][Range(0f, 1f)] private Stat _skillCooldownReductionRate = new(0f);
-
         // ========== 属性访问器 ==========
         public Stat MaxHP => _maxHP;
         public Stat HPRegen => _hpRegen;
@@ -56,7 +53,6 @@ namespace Character.Components
         public Stat Armor => _armor;
         //闪避
         public Stat Dodge => _dodge;
-        public Stat SkillCooldownReductionRate => _skillCooldownReductionRate;
 
         /// <summary>
         /// 当前生命值
@@ -164,7 +160,6 @@ namespace Character.Components
             _attackRange.SetMaxValue(config.maxAttackRange);
             _armor.SetMaxValue(config.maxArmor);
             _dodge.SetMaxValue(config.maxDodge);
-            _skillCooldownReductionRate.SetMaxValue(config.maxSkillCooldownReduction);
 
             CDTU.Utils.CDLogger.Log($"[CharacterStats] {gameObject.name} 属性上限已应用");
         }
@@ -182,7 +177,6 @@ namespace Character.Components
             // _critDamage.BaseValue = so.critDamage;
             _armor.BaseValue = so.armor;
             _dodge.BaseValue = so.dodge;
-            _skillCooldownReductionRate.BaseValue = so.skillCooldownReductionRate;
         }
 
         private void SubscribeToStatChanges()
@@ -198,7 +192,6 @@ namespace Character.Components
             // _critDamage.OnValueChanged += HandleStatChanged;
             _armor.OnValueChanged += HandleStatChanged;
             _dodge.OnValueChanged += HandleStatChanged;
-            _skillCooldownReductionRate.OnValueChanged += HandleStatChanged;
         }
 
         private void HandleStatChanged()
@@ -381,7 +374,6 @@ namespace Character.Components
             // _critDamage.RemoveAllModifiersFromSource(source);
             _armor.RemoveAllModifiersFromSource(source);
             _dodge.RemoveAllModifiersFromSource(source);
-            _skillCooldownReductionRate.RemoveAllModifiersFromSource(source);
         }
 
         /// <summary>
@@ -400,7 +392,6 @@ namespace Character.Components
             // _critDamage.ClearAllModifiers();
             _armor.ClearAllModifiers();
             _dodge.ClearAllModifiers();
-            _skillCooldownReductionRate.ClearAllModifiers();
         }
     }
 }

@@ -17,6 +17,7 @@ namespace Character.Components
 
         [Header("调试"),ReadOnly]
         [SerializeField] private float currentSpeed;
+        [ReadOnly,Tooltip("是否允许移动只能在代码里面改")]
         [SerializeField] private bool canMove = true;
 
         public float CurrentSpeed => currentSpeed;

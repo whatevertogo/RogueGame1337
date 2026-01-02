@@ -20,12 +20,7 @@ namespace RogueGame.Game.Service.SkillLimit
         /// <summary>
         /// 进入房间时重置充能：进入房间时将技能充能重置为满
         /// </summary>
-        ResetOnEnter,
-
-        /// <summary>
-        /// 技能无冷却：技能不受冷却限制（测试用）
-        /// </summary>
-        NoCooldown
+        ResetOnEnter
     }
 
     /// <summary>

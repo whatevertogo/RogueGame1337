@@ -1,4 +1,3 @@
-using Character;
 using Character.Components.Interface;
 using Character.Player.Skill.Core;
 using Character.Player.Skill.Runtime;
@@ -38,7 +37,7 @@ namespace Character.Player
             }
 
             //TODO-修改slot大小
-            _slots = new SkillSlotCollection(2, inventory);
+            _slots = new SkillSlotCollection(3, inventory);
             _executor = new SkillExecutor(inventory, new EffectFactory());
 
         }

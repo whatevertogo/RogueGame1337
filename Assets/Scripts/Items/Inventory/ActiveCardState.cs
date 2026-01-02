@@ -4,7 +4,7 @@ using UnityEngine;
 namespace RogueGame.Items
 {
     /// <summary>
-    /// 主动卡运行时状态
+    /// 主动卡运行时状态（纯充能系统，无CD）
     /// </summary>
     [Serializable]
     public class ActiveCardState
@@ -13,8 +13,6 @@ namespace RogueGame.Items
         public string InstanceId;        // 可选：若卡牌不是全局唯一
         public bool IsEquipped;
         public int CurrentEnergy;
-
-        public float CooldownRemaining;
         public int Level = 1;            // 技能等级（Lv1-Lv5），用于主动技能升级系统
         public string EquippedPlayerId;  // null 表示在池中
     }

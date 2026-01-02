@@ -42,7 +42,6 @@ namespace Game.UI
         [SerializeField] private TMP_Text attackRange;
         [SerializeField] private TMP_Text armor;
         [SerializeField] private TMP_Text dodge;
-        [SerializeField] private TMP_Text skillCooldownReductionRate;
         [SerializeField] private GameObject BagViewALL;
         [SerializeField] private GameObject PlayerStatViewALL;
         [SerializeField] private GameObject cardUIPrefab;
@@ -94,10 +93,6 @@ namespace Game.UI
         public void SetDodge(string content)
         {
             if (dodge) dodge.text = content;
-        }
-        public void SetSkillCooldownReductionRate(string content)
-        {
-            if (skillCooldownReductionRate) skillCooldownReductionRate.text = content;
         }
 
         /// <summary>设置玩家头像图片</summary>

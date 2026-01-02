@@ -14,8 +14,6 @@ public class SkillDefinition : ScriptableObject
     public Sprite icon;
 
     [Header("技能配置")]
-    [Tooltip("冷却时间（秒）")]
-    public float cooldown = 1f;
     [Tooltip("若大于0，技能触发后延迟检测目标并在延迟结束时应用效果（秒）")]
     public float detectionDelay = 0f;
     public GameObject vfxPrefab;  // 可选

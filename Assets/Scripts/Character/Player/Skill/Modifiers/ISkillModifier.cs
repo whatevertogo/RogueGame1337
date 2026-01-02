@@ -58,19 +58,6 @@ namespace Character.Player.Skill.Modifiers
         void ApplyDamage(ActiveSkillRuntime runtime, ref DamageResult result);
     }
 
-    /// <summary>
-    /// 冷却阶段修改器：在技能使用后应用
-    /// 优先级：第四执行
-    /// </summary>
-    public interface ICooldownModifier : ISkillModifier
-    {
-        /// <summary>
-        /// 应用冷却修改（直接修改 runtime.EffectiveCooldown）
-        /// </summary>
-        /// <param name="runtime">技能运行时状态</param>
-        void ApplyCooldown(ActiveSkillRuntime runtime);
-    }
-
     // /// <summary>
     // /// 投射物/弹道阶段修改器：在创建投射物时应用
     // /// 优先级：在伤害之后执行

@@ -26,8 +26,7 @@ namespace Character
         // CritChance,
         // CritDamage,
         Armor,
-        Dodge,
-        SkillCooldownReductionRate
+        Dodge
     }
 
     /// <summary>

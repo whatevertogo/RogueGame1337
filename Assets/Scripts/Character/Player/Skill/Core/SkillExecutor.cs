@@ -39,16 +39,12 @@ namespace Character.Player.Skill.Core
         }
 
         /// <summary>
-        /// 检查技能是否可执行
+        /// 检查技能是否可执行（纯充能系统，无CD限制）
         /// </summary>
         public bool CanExecute(SkillSlot slot)
         {
             if (slot?.Runtime == null) return false;
             var rt = slot.Runtime;
-
-            // 冷却检查
-            if (Time.time - rt.LastUseTime < rt.EffectiveCooldown)
-                return false;
 
             // 能量检查
             var config = rt.CachedActiveConfig;
@@ -190,8 +186,7 @@ namespace Character.Player.Skill.Core
                 .Add(new EnergyConsumptionPhase(_inventory))
                 .Add(new TargetingPhase())
                 .Add(new DamageCalculationPhase())
-                .Add(new EffectApplicationPhase(_effectFactory))
-                .Add(new CooldownPhase());
+                .Add(new EffectApplicationPhase(_effectFactory));
         }
 
         /// <summary>

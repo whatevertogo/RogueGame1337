@@ -9,7 +9,8 @@ namespace RogueGame.Game.Service.SkillLimit
 {
     /// <summary>
     /// 房间技能限制服务：监听房间事件，根据房间技能规则调整玩家技能状态
-    /// 当前实现：当进入房间时重置玩家技能能量；DisableAllSkills / NoCooldown 等规则仅保留处理框架，尚未启用
+    /// 当前实现：当进入房间时重置玩家技能能量；DisableAllSkills 等规则仅保留处理框架，尚未启用
+    /// 注：系统已改为纯充能模式，不再有技能冷却
     /// </summary>
     public sealed class RoomPlayerSkillLimitService
     {
