@@ -123,7 +123,7 @@ public class ProjectileBase : MonoBehaviour
         // 设置初始速度
         if (rb != null)
         {
-            rb.linearVelocity = currentDirection * data.Speed;
+            rb.velocity = currentDirection * data.Speed;
         }
 
         // 设置旋转
@@ -164,7 +164,7 @@ public class ProjectileBase : MonoBehaviour
 
         if (rb != null)
         {
-            rb.linearVelocity = Vector2.zero;
+            rb.velocity = Vector2.zero;
             rb.angularVelocity = 0f;
         }
     }
@@ -196,7 +196,7 @@ public class ProjectileBase : MonoBehaviour
     {
         if (!isInitialized || rb == null) return;
 
-        rb.linearVelocity = currentDirection * data.Speed;
+        rb.velocity = currentDirection * data.Speed;
     }
 
     protected void UpdateRotation()

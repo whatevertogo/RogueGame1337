@@ -64,7 +64,6 @@ public sealed class InventoryServiceManager : MonoBehaviour
     /// </summary>
     private void WireUpEvents()
     {
-        CoinService.OnCoinsChanged += coins => OnCoinsChanged?.Invoke(coins);
         ActiveCardUpgradeService.OnCardLevelUp += (id, level) => OnActiveCardLevelUp?.Invoke(id, level);
     }
 

@@ -1,4 +1,6 @@
 using System;
+using Core.Events;
+using RogueGame.Events;
 using RogueGame.Items;
 
 namespace RogueGame.Game.Service.Inventory
@@ -10,14 +12,13 @@ namespace RogueGame.Game.Service.Inventory
     {
         private int _coins = 0;
 
-        public event Action<int> OnCoinsChanged;
         public int Coins => _coins;
 
         public void AddCoins(int amount)
         {
             if (amount <= 0) return;
             _coins += amount;
-            OnCoinsChanged?.Invoke(_coins);
+            EventBus.Publish(new CoinTextUpdateEvent(_coins.ToString()));
         }
 
         public bool SpendCoins(int amount)
@@ -25,7 +26,7 @@ namespace RogueGame.Game.Service.Inventory
             if (amount <= 0) return true;
             if (_coins < amount) return false;
             _coins -= amount;
-            OnCoinsChanged?.Invoke(_coins);
+            EventBus.Publish(new CoinTextUpdateEvent(_coins.ToString()));
             return true;
         }
 
@@ -33,13 +34,13 @@ namespace RogueGame.Game.Service.Inventory
         {
             if (amount <= 0) return;
             _coins = UnityEngine.Mathf.Max(0, _coins - amount);
-            OnCoinsChanged?.Invoke(_coins);
+            EventBus.Publish(new CoinTextUpdateEvent(_coins.ToString()));
         }
 
         public void SetCoins(int coins)
         {
             _coins = UnityEngine.Mathf.Max(0, coins);
-            OnCoinsChanged?.Invoke(_coins);
+            EventBus.Publish(new CoinTextUpdateEvent(_coins.ToString()));
         }
 
         /// <summary>

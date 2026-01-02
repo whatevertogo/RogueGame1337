@@ -113,6 +113,16 @@ namespace RogueGame.Events
         public bool Show;
     }
 
+    public class CoinTextUpdateEvent
+    {
+        public string NewText;
+
+        public CoinTextUpdateEvent(string newText)
+        {
+            NewText = newText;
+        }
+    }
+
     /// <summary>
     /// 卡牌获取事件：UI 层可订阅以显示卡牌获取提示
     /// </summary>

@@ -29,9 +29,16 @@ namespace Game.UI
             _view = view as PlayingStateUIView;
             // 绑定 BagButton 点击事件
             _view?.BindBagButton(OnBagButtonClicked);
+            // 订阅层过渡事件以更新层数显示
             EventBus.Subscribe<LayerTransitionEvent>(OnLayerTransition);
+            // 订阅金币文本更新事件以更新金币显示
+            EventBus.Subscribe<CoinTextUpdateEvent>(OnCoinTextUpdate);
         }
-
+        private void OnCoinTextUpdate(CoinTextUpdateEvent evt)
+        {
+            CDTU.Utils.CDLogger.Log($"金币文本更新事件：{evt.NewText}");
+            _view?.SetCoinText($"第{evt.NewText}层");
+        }
         private void OnLayerTransition(LayerTransitionEvent evt)
         {
             CDTU.Utils.CDLogger.Log($"层过渡事件：从层 {evt.FromLayer} 到层 {evt.ToLayer}");
@@ -342,9 +349,5 @@ namespace Game.UI
             _core.OnResume();
         }
 
-        private void TryUseSkillSlot(int slotIndex)
-        {
-
-        }
     }
 }

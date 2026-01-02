@@ -22,8 +22,8 @@ namespace Game.UI
         [SerializeField] private Image skillSlot1Energy;
         [SerializeField] private Image skillSlot2Energy;
         [SerializeField] private Image skillSlot3Energy;
-
         [SerializeField] private Button BagButton;
+        [SerializeField] private TMP_Text coinText;
 
         public override bool Exclusive => false;
         public override bool CanBack => false;
@@ -137,6 +137,11 @@ namespace Game.UI
                 skillSlot3Energy.DOFillAmount(0f, 0.04f).SetEase(Ease.OutCirc).SetUpdate(true);
             }
 
+        }
+
+        public void SetCoinText(string content)
+        {
+            if (coinText != null) coinText.text = content;
         }
 
         public void Close()
