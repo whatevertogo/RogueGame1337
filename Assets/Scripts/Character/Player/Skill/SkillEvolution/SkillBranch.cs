@@ -19,6 +19,9 @@ namespace Character.Player.Skill.Evolution
         [Tooltip("用于UI显示的标签，帮助玩家理解分支特性")]
         public List<SkillTag> tags;
 
+        [Tooltip("分支图标")]
+        public Sprite icon;
+
         [Header("修改器")]
         public List<SkillModifierBase> modifiers;
 

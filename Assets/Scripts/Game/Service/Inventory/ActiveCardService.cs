@@ -44,7 +44,7 @@ namespace RogueGame.Game.Service.Inventory
             return state.InstanceId;
         }
 
-        public ActiveCardState GetCard(string instanceId)
+        public ActiveCardState GetCardByInstanceId(string instanceId)
             => _activeCards.Find(c => c.InstanceId == instanceId);
 
         public ActiveCardState GetFirstByCardId(string cardId)
@@ -52,7 +52,7 @@ namespace RogueGame.Game.Service.Inventory
         
         public void RemoveInstance(string instanceId)
         {
-            var st = GetCard(instanceId);
+            var st = GetCardByInstanceId(instanceId);
             if (st != null) _activeCards.Remove(st);
         }
 
@@ -80,7 +80,7 @@ namespace RogueGame.Game.Service.Inventory
 
         public void AddEnergy(string instanceId, int energy)
         {
-            var card = GetCard(instanceId);
+            var card = GetCardByInstanceId(instanceId);
             if (card != null)
             {
                 card.CurrentEnergy += energy;
@@ -91,7 +91,7 @@ namespace RogueGame.Game.Service.Inventory
 
         public bool ConsumeSkillEnergy(string instanceId, int energy)
         {
-            var card = GetCard(instanceId);
+            var card = GetCardByInstanceId(instanceId);
             if (card != null && card.CurrentEnergy >= energy)
             {
                 card.CurrentEnergy -= energy;

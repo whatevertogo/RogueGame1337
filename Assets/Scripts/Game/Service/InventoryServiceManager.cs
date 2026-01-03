@@ -38,8 +38,6 @@ public sealed class InventoryServiceManager : MonoBehaviour
         // 初始化服务
         InitializeServices();
 
-        // 转发事件（保持外部订阅兼容）
-        WireUpEvents();
     }
 
     private void OnDestroy()
@@ -59,14 +57,6 @@ public sealed class InventoryServiceManager : MonoBehaviour
         ActiveCardUpgradeService = new ActiveCardUpgradeService(ActiveCardService);
     }
 
-    /// <summary>
-    /// 连接服务事件到 Facade 层事件
-    /// </summary>
-    private void WireUpEvents()
-    {
-        ActiveCardUpgradeService.OnCardLevelUp += (id, level) => OnActiveCardLevelUp?.Invoke(id, level);
-    }
-
     #region 对外只读访问（兼容旧 API）
 
     public int Coins => CoinService.Coins;
@@ -76,11 +66,6 @@ public sealed class InventoryServiceManager : MonoBehaviour
 
     #endregion
 
-    #region 事件（兼容旧 API）
-
-    public event Action<string, int> OnActiveCardLevelUp;
-
-    #endregion
 
     #region 金币 API（委托给 CoinService）
 
@@ -97,8 +82,8 @@ public sealed class InventoryServiceManager : MonoBehaviour
     public string CreateActiveCardInstanceInternal(string cardId, int initialEnergy)
         => ActiveCardService.CreateInstance(cardId, initialEnergy);
 
-    public ActiveCardState GetActiveCard(string instanceId) => ActiveCardService.GetCard(instanceId);
-    public ActiveCardState GetActiveCardState(string instanceId) => ActiveCardService.GetCard(instanceId);
+    public ActiveCardState GetActiveCard(string instanceId) => ActiveCardService.GetCardByInstanceId(instanceId);
+    public ActiveCardState GetActiveCardState(string instanceId) => ActiveCardService.GetCardByInstanceId(instanceId);
     public ActiveCardState GetFirstInstanceByCardId(string cardId) => ActiveCardService.GetFirstByCardId(cardId);
 
 
@@ -270,7 +255,7 @@ public sealed class InventoryServiceManager : MonoBehaviour
 
     public void ResetEnergyToMax(string instanceId)
     {
-        var card = ActiveCardService.GetCard(instanceId);
+        var card = ActiveCardService.GetCardByInstanceId(instanceId);
         if (card != null)
         {
             var def = GameRoot.Instance?.CardDatabase?.Resolve(card.CardId);
@@ -316,7 +301,7 @@ public sealed class InventoryServiceManager : MonoBehaviour
         ActiveCardService.AddEnergy(instanceId, energy);
 
         // 需要发布事件，从 ActiveCardState 获取所需信息
-        var card = ActiveCardService.GetCard(instanceId);
+        var card = ActiveCardService.GetCardByInstanceId(instanceId);
         if (card != null && card.IsEquipped)
         {
             var def = GameRoot.Instance?.CardDatabase?.Resolve(card.CardId);
@@ -339,7 +324,7 @@ public sealed class InventoryServiceManager : MonoBehaviour
         bool success = ActiveCardService.ConsumeSkillEnergy(instanceId, energy);
         if (success)
         {
-            var card = ActiveCardService.GetCard(instanceId);
+            var card = ActiveCardService.GetCardByInstanceId(instanceId);
             if (card != null && card.IsEquipped)
             {
                 var def = GameRoot.Instance?.CardDatabase?.Resolve(card.CardId);

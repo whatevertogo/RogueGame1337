@@ -10,7 +10,6 @@ public class SkillDefinition : ScriptableObject
 {
     [Header("基础信息")]
     public string skillId;
-    public string skillName;
     public Sprite icon;
 
     [Header("技能配置")]

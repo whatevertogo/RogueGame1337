@@ -191,7 +191,7 @@ namespace Game.UI
             _instanceToSlot[evt.InstanceId] = evt.SlotIndex;
 
             // 设置图标（通过实例查到定义）
-            var cardState = GameRoot.Instance?.InventoryManager?.ActiveCardService?.GetCard(evt.InstanceId);
+            var cardState = GameRoot.Instance?.InventoryManager?.ActiveCardService?.GetCardByInstanceId(evt.InstanceId);
             var cardDef = cardState != null ? GameRoot.Instance?.CardDatabase?.Resolve(cardState.CardId) : null;
             _view?.SetSkillSlotIcon(evt.SlotIndex, cardDef?.GetSprite());
 
@@ -248,7 +248,7 @@ namespace Game.UI
                 {
                     // 获取当前状态
                     var cardDef = GameRoot.Instance?.CardDatabase?.Resolve(runtime.CardId);
-                    var cardState = GameRoot.Instance?.InventoryManager?.ActiveCardService?.GetCard(runtime.InstanceId);
+                    var cardState = GameRoot.Instance?.InventoryManager?.ActiveCardService?.GetCardByInstanceId(runtime.InstanceId);
                     // 建立双向映射
                     int maxEnergy = cardDef?.activeCardConfig?.maxEnergy ?? 100;
                     _slotMapping[i] = (runtime.InstanceId, maxEnergy);
