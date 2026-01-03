@@ -1,6 +1,7 @@
 ﻿using System;
 using UnityEngine;
 using UI;
+using RogueGame.Game.Service;
 
 namespace Game.UI
 {
@@ -69,7 +70,7 @@ namespace Game.UI
         {
             if (_view != null)
             {
-                int coinNumber = InventoryServiceManager.Instance != null ? InventoryServiceManager.Instance.Coins : 0;
+                int coinNumber = GameRoot.Instance.InventoryManager.Coins;
                 _view.SetCoinText($"Coins: {coinNumber}");
             }
         }

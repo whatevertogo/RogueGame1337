@@ -3,6 +3,7 @@ using Character.Player.Skill.Pipeline;
 using Character.Player.Skill.Pipeline.Phases;
 using Character.Player.Skill.Slots;
 using Character.Player.Skill.Targeting;
+using RogueGame.Game.Service;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -51,7 +52,7 @@ namespace Character.Player.Skill.Core
             if (config?.requiresCharge == true)
             {
                 if (string.IsNullOrEmpty(rt.InstanceId)) return false;
-                var state = _inventory.GetActiveCardState(rt.InstanceId);
+                var state = _inventory.ActiveCardService.GetCardByInstanceId(rt.InstanceId);
                 if (state == null || state.CurrentEnergy < config.energyThreshold)
                     return false;
             }

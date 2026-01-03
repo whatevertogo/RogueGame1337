@@ -1,7 +1,7 @@
 
 using Character;
 
-public  class EffectFactory : IEffectFactory
+public class EffectFactory : IEffectFactory
 {
     public StatusEffectInstanceBase CreateInstance(StatusEffectDefinitionSO definition, CharacterBase caster = null)
     {

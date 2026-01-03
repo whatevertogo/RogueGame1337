@@ -3,6 +3,7 @@ using Character.Player.Skill.Runtime;
 using Core.Events;
 using Game;
 using RogueGame.Events;
+using RogueGame.Game.Service;
 using System;
 namespace Character.Player.Skill.Slots
 {
@@ -60,10 +61,8 @@ namespace Character.Player.Skill.Slots
             var cardDef = GameRoot.Instance?.CardDatabase?.Resolve(cardId);
             if (cardDef == null) return;
 
-            // 注意：
-            // 这里有意仅获取玩家背包中「该卡牌的首个实例」，
             // 用于将技能运行时与库存中的某个具体实例（InstanceId）建立关联。
-            var cardState = _inventory.GetFirstInstanceByCardId(cardId);
+            var cardState = _inventory.ActiveCardService.GetCardByInstanceId(cardId);
             var runtime = new ActiveSkillRuntime(
                 cardId,
                 cardDef.activeCardConfig?.skill,

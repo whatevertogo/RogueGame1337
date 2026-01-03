@@ -1,6 +1,7 @@
 using Character;
 using Character.Player.Skill.Runtime;
 using Game;
+using RogueGame.Game.Service;
 using UnityEngine;
 
 namespace Character.Player.Skill.Targeting

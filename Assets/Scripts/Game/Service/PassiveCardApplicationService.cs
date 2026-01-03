@@ -6,6 +6,7 @@ using Character.Effects;
 using Character.Player;
 using Core.Events;
 using RogueGame.Events;
+using RogueGame.Game.Service;
 using UnityEngine;
 
 /// <summary>

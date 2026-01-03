@@ -2,6 +2,7 @@ using System;
 using Character.Components;
 using Core.Events;
 using RogueGame.Events;
+using RogueGame.Game.Service;
 using UnityEngine;
 
 /// <summary>
@@ -78,16 +79,12 @@ public sealed class FloorRewardSystemService
 
         // 3. 给予随机主动卡（带去重检测）
         // TODO-UI选择有空再说
-        var result = inventoryManager.AddRandomActiveCardSmart();
 
-        if (result.ConvertedToCoins)
-        {
-            CDTU.Utils.CDLogger.Log($"[FloorRewardSystemService] 层间奖励卡牌重复，已转换为 {result.CoinsAmount} 金币");
-        }
-        else if (result.Added)
-        {
-            CDTU.Utils.CDLogger.Log($"[FloorRewardSystemService] 层间奖励：获得主动卡 '{result.CardId}'");
-        }
+
+
+
+
+        
     }
 
     /// <summary>

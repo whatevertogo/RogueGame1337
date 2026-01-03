@@ -4,6 +4,7 @@ using Character.Player.Skill.Runtime;
 using Character.Player.Skill.Targeting;
 using Core.Events;
 using RogueGame.Events;
+using RogueGame.Game.Service;
 using UnityEngine;
 
 namespace Character.Player.Skill.Pipeline.Phases

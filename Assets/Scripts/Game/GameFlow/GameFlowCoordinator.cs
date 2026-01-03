@@ -4,7 +4,6 @@ using Core.Events;
 using RogueGame.Events;
 using System.Collections;
 using UI;
-using RogueGame.SaveSystem;
 using UnityEngine.SceneManagement;
 
 /// <summary>
@@ -131,23 +130,6 @@ public sealed class GameFlowCoordinator : MonoBehaviour, IGameFlowCoordinator
         }
         return latest;
     }
-
-    private void HandleRunSaveLoaded(RunSaveData data)
-    {
-        if (data == null || _restoredRunHandled) return;
-        _restoredRunHandled = true;
-
-        // 应用最小恢复行为：设置层级并启动该层（详尽的房间恢复留给 SaveRestoreUtility.RestoreGameState）
-        CurrentLayer = Mathf.Max(1, data.CurrentLayer);
-        _roomsClearedThisLayer = 0;
-        _bossUnlockedThisLayer = false;
-
-        var startMeta = new RoomMeta { RoomType = RoomType.Start, Index = 0, BundleName = "Room_Start_0" };
-        RoomManager?.StartFloor(CurrentLayer, startMeta);
-
-        CDTU.Utils.CDLogger.Log($"GameFlowCoordinator: Restored Run to Layer {CurrentLayer} from save.");
-    }
-
     public void ChangeState(GameFlowState newState)
     {
         if (newState == CurrentState) return;

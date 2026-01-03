@@ -26,6 +26,6 @@ namespace Character.Player.Skill.Evolution
         public List<SkillModifierBase> modifiers;
 
         [Header("该分支特有效果")]
-        public List<StatusEffectComponent> effects;
+        public List<StatusEffectDefinitionSO> effects;
     }
 }

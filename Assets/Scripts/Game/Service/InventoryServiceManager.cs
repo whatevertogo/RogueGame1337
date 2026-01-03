@@ -1,355 +1,284 @@
-using System;
 using System.Collections.Generic;
 using CDTU.Utils;
 using Core.Events;
 using RogueGame.Events;
 using RogueGame.Game.Service.Inventory;
 using RogueGame.Items;
-using UnityEngine;
 
-/// <summary>
-/// InventoryManager - 协调层
-/// 负责协调各服务，提供统一 API
-/// </summary>
-public sealed class InventoryServiceManager : MonoBehaviour
+namespace RogueGame.Game.Service
 {
     /// <summary>
-    /// 向后兼容的静态访问点
-    /// 注意：不再继承 Singleton<T>，改为手动维护
+    /// InventoryServiceManager
+    /// 纯服务 / 领域协调层（无 MonoBehaviour）
+    /// 负责协调背包、卡牌、金币、升级等子系统
     /// </summary>
-    public static InventoryServiceManager Instance { get; private set; }
-
-    // 服务层
-    public CoinService CoinService { get; private set; }
-    public ActiveCardService ActiveCardService { get; private set; }
-    public PassiveCardService PassiveCardService { get; private set; }
-    public ActiveCardUpgradeService ActiveCardUpgradeService { get; private set; }
-
-    private void Awake()
+    public sealed class InventoryServiceManager
     {
-        // 防止重复实例
-        if (Instance != null && Instance != this)
+        #region 子服务
+
+        public CoinService CoinService { get; }
+        public ActiveCardService ActiveCardService { get; }
+        public PassiveCardService PassiveCardService { get; }
+        public ActiveCardUpgradeService ActiveCardUpgradeService { get; }
+
+        #endregion
+
+        #region 构造与初始化
+
+        public InventoryServiceManager()
         {
-            Destroy(gameObject);
-            return;
+            CoinService = new CoinService();
+            ActiveCardService = new ActiveCardService();
+            PassiveCardService = new PassiveCardService();
+            ActiveCardUpgradeService = new ActiveCardUpgradeService(ActiveCardService);
         }
-        Instance = this;
 
-        // 初始化服务
-        InitializeServices();
-    }
+        #endregion
 
-    /// <summary>
-    /// 公开初始化方法，供 GameRoot 显式调用以确保初始化顺序
-    /// </summary>
-    public void InitializeIfNeeded()
-    {
-        if (ActiveCardUpgradeService == null)
+        #region 对外只读访问
+
+        public int Coins => CoinService.Coins;
+        public IReadOnlyList<ActiveCardState> ActiveCardStates => ActiveCardService.ActiveCardStates;
+        public IEnumerable<ActiveCardView> ActiveCardViews => ActiveCardService.ActiveCardViews;
+        public IReadOnlyList<PassiveCardInfo> PassiveCards => PassiveCardService.Cards;
+
+        #endregion
+
+        #region 金币 API
+
+        public void AddCoins(int amount) => CoinService.AddCoins(amount);
+        public bool SpendCoins(int amount) => CoinService.SpendCoins(amount);
+        public void RemoveCoins(int amount) => CoinService.RemoveCoins(amount);
+        public void SetCoins(int coins) => CoinService.SetCoins(coins);
+
+        #endregion
+
+        #region 主动卡 API
+
+        public ActiveCardState GetActiveCard(string instanceId)
+            => ActiveCardService.GetCardByInstanceId(instanceId);
+
+        public ActiveCardState GetFirstActiveCard(string cardId)
+            => ActiveCardService.GetFirstByCardId(cardId);
+
+        public bool HasActiveCard(string cardId)
+            => ActiveCardService.HasCard(cardId);
+
+        public int GetActiveCardCount(string cardId)
+            => ActiveCardService.GetCount(cardId);
+
+        public void RemoveActiveCardInstance(string instanceId)
+            => ActiveCardService.RemoveInstance(instanceId);
+
+        public bool RemoveActiveCardByCardId(string cardId)
+            => ActiveCardService.RemoveByCardId(cardId);
+
+        #endregion
+
+        #region 被动卡 API
+
+        public void AddPassiveCard(
+            string cardId,
+            int count = 1,
+            CardAcquisitionSource source = CardAcquisitionSource.Other)
         {
-            InitializeServices();
+            PassiveCardService.AddCard(cardId, count, source);
         }
-    }
 
-    private void OnDestroy()
-    {
-        if (Instance == this)
-            Instance = null;
-    }
-
-    /// <summary>
-    /// 显式初始化所有子服务
-    /// </summary>
-    private void InitializeServices()
-    {
-        CoinService = new CoinService();
-        ActiveCardService = new ActiveCardService();
-        PassiveCardService = new PassiveCardService();
-        ActiveCardUpgradeService = new ActiveCardUpgradeService(ActiveCardService);
-    }
-
-    #region 对外只读访问（兼容旧 API）
-
-    public int Coins => CoinService.Coins;
-    public IReadOnlyList<ActiveCardState> ActiveCardStates => ActiveCardService.ActiveCardStates;
-    public IEnumerable<ActiveCardView> ActiveCardViews => ActiveCardService.ActiveCardViews;
-    public IReadOnlyList<PassiveCardInfo> PassiveCards => PassiveCardService.Cards;
-
-    #endregion
-
-
-    #region 金币 API（委托给 CoinService）
-
-    public void AddCoins(int amount) => CoinService.AddCoins(amount);
-    public bool SpendCoins(int amount) => CoinService.SpendCoins(amount);
-    public void RemoveCoins(int amount) => CoinService.RemoveCoins(amount);
-    public void SetCoins(int coins) => CoinService.SetCoins(coins);
-    public int CoinsNumber => CoinService.CoinsNumber;
-
-    #endregion
-
-    #region 主动卡 API（委托给 ActiveCardService）
-
-    public string CreateActiveCardInstanceInternal(string cardId, int initialEnergy)
-        => ActiveCardService.CreateInstance(cardId, initialEnergy);
-
-    public ActiveCardState GetActiveCard(string instanceId) => ActiveCardService.GetCardByInstanceId(instanceId);
-    public ActiveCardState GetActiveCardState(string instanceId) => ActiveCardService.GetCardByInstanceId(instanceId);
-    public ActiveCardState GetFirstInstanceByCardId(string cardId) => ActiveCardService.GetFirstByCardId(cardId);
-
-
-    public void RemoveActiveCardInstance(string instanceId) => ActiveCardService.RemoveInstance(instanceId);
-    public bool RemoveActiveCardByCardId(string cardId) => ActiveCardService.RemoveByCardId(cardId);
-
-    public bool HasActiveCard(string cardId) => ActiveCardService.HasCard(cardId);
-    public int GetActiveCardCount(string cardId) => ActiveCardService.GetCount(cardId);
-
-    #endregion
-
-    #region 被动卡 API（委托给 PassiveCardService）
-
-    public void AddPassiveCard(string cardId, int count = 1, CardAcquisitionSource source = CardAcquisitionSource.Other)
-        => PassiveCardService.AddCard(cardId, count, source);
-
-    public void RemovePassiveCard(string cardId, int count = 1) => PassiveCardService.RemoveCard(cardId, count);
-    public int GetPassiveCardCount(string cardId) => PassiveCardService.GetCount(cardId);
-
-    #endregion
-
-    #region 升级 API（委托给 ActiveCardUpgradeService）
-
-    public int GetActiveCardLevel(string cardId) => ActiveCardUpgradeService.GetLevel(cardId);
-    public int UpgradeActiveCard(string cardId, int? maxLevel = null) => ActiveCardUpgradeService.UpgradeCard(cardId, maxLevel);
-
-    #endregion
-
-    #region 通用 API
-
-    public void ClearAllCards()
-    {
-        ActiveCardService.Clear();
-        PassiveCardService.Clear();
-    }
-
-    public void AddCardById(string cardId)
-    {
-        var db = GameRoot.Instance?.CardDatabase;
-        if (db == null) return;
-
-        var def = db.Resolve(cardId);
-        if (def == null) return;
-
-        if (def.CardType == CardType.Active)
+        public void RemovePassiveCard(string cardId, int count = 1)
         {
-            AddActiveCardSmart(cardId, def.activeCardConfig.energyPerKill);
+            PassiveCardService.RemoveCard(cardId, count);
         }
-        else
+
+        public int GetPassiveCardCount(string cardId)
         {
-            AddPassiveCard(cardId, 1, CardAcquisitionSource.EnemyDrop);
+            return PassiveCardService.GetCount(cardId);
         }
-    }
 
-    public void RemoveCardById(string cardId)
-    {
-        var db = GameRoot.Instance?.CardDatabase;
-        if (db == null) return;
+        #endregion
 
-        var def = db.Resolve(cardId);
-        if (def == null) return;
+        #region 升级 API
 
-        if (def.CardType == CardType.Active)
+        public int GetActiveCardLevel(string cardId)
+            => ActiveCardUpgradeService.GetLevel(cardId);
+
+        /// <summary>
+        /// 请求升级（是否成功发起进化请求）
+        /// </summary>
+        public bool UpgradeActiveCard(string cardId)
+            => ActiveCardUpgradeService.UpgradeCard(cardId);
+
+        #endregion
+
+        #region 通用卡牌 API
+
+        public void ClearAllCards()
         {
-            RemoveActiveCardByCardId(cardId);
+            ActiveCardService.Clear();
+            PassiveCardService.Clear();
         }
-        else
+
+        public void AddCardById(string cardId)
         {
-            RemovePassiveCard(cardId, 1);
-        }
-    }
+            var db = GameRoot.Instance?.CardDatabase;
+            if (db == null) return;
 
-    #endregion
+            var def = db.Resolve(cardId);
+            if (def == null) return;
 
-    #region 智能添加（保留在 InventoryManager）
-
-    public ActiveCardAddResult AddActiveCardSmart(string cardId, int initialCharges)
-    {
-        var result = new ActiveCardAddResult
-        {
-            CardId = cardId,
-            Success = false,
-            Added = false,
-            Upgraded = false,
-            ConvertedToCoins = false,
-            CoinsAmount = 0,
-            NewLevel = 0
-        };
-
-        var existingCard = ActiveCardService.GetFirstByCardId(cardId);
-        if (existingCard != null)
-        {
-            int oldLevel = existingCard.Level;
-            // 尝试升级，但从GameRoot的StatLimitConfig获取最大等级限制
-            int newLevel = UpgradeActiveCard(cardId, GameRoot.Instance?.StatLimitConfig?.maxActiveSkillLevel);
-
-            // 如果升级成功
-            if (newLevel > oldLevel)
+            if (def.CardType == CardType.Active)
             {
-                result.Success = true;
-                result.Upgraded = true;
-                result.NewLevel = newLevel;
-                result.InstanceId = existingCard.InstanceId;
-                CDLogger.Log($"[InventoryManager] '{cardId}' 升级：Lv{oldLevel} → Lv{newLevel}");
-                return result;
+                AddActiveCardSmart(cardId, def.activeCardConfig.energyPerKill);
             }
             else
             {
-                var config = GameRoot.Instance?.ActiveCardDeduplicationConfig;
-                if (config != null && config.enableDeduplication)
-                {
-                    int coins = config.duplicateToCoins;
-                    AddCoins(coins);
-                    result.Success = true;
-                    result.ConvertedToCoins = true;
-                    result.CoinsAmount = coins;
-                    if (config.showDeduplicationLog)
-                    {
-                        CDLogger.Log($"[InventoryManager] '{cardId}' 已达最大等级，转换为 {coins} 金币");
-                    }
-                    return result;
-                }
-                else
-                {
-                    result.Success = false;
-                    CDLogger.LogWarning($"[InventoryManager] '{cardId}' 已达最大等级且未启用去重");
-                    return result;
-                }
+                AddPassiveCard(cardId, 1, CardAcquisitionSource.EnemyDrop);
             }
         }
 
-        string instanceId = ActiveCardService.CreateInstance(cardId, initialCharges);
-        result.Success = !string.IsNullOrEmpty(instanceId);
-        result.Added = result.Success;
-        result.InstanceId = instanceId;
-        result.NewLevel = 1;
-
-        if (result.Success)
+        public void RemoveCardById(string cardId)
         {
-            CDLogger.Log($"[InventoryManager] 添加新技能 '{cardId}' (Lv1)");
+            var db = GameRoot.Instance?.CardDatabase;
+            if (db == null) return;
+
+            var def = db.Resolve(cardId);
+            if (def == null) return;
+
+            if (def.CardType == CardType.Active)
+            {
+                RemoveActiveCardByCardId(cardId);
+            }
+            else
+            {
+                RemovePassiveCard(cardId, 1);
+            }
         }
 
-        return result;
-    }
+        #endregion
 
-    public void AddRandomActiveCard()
-    {
-        var db = GameRoot.Instance?.CardDatabase;
-        if (db == null) return;
+        #region 智能添加主动卡（核心业务）
 
-        var cardId = db.GetRandomCardId();
-        AddActiveCardSmart(cardId, db.Resolve(cardId).activeCardConfig.energyPerKill);
-    }
-
-    public ActiveCardAddResult AddRandomActiveCardSmart()
-    {
-        var db = GameRoot.Instance?.CardDatabase;
-        if (db == null) return new ActiveCardAddResult { Success = false };
-
-        var cardId = db.GetRandomCardId();
-        var cardDef = db.Resolve(cardId);
-        if (cardDef?.activeCardConfig == null) return new ActiveCardAddResult { Success = false };
-
-        return AddActiveCardSmart(cardId, cardDef.activeCardConfig.energyPerKill);
-    }
-
-    #endregion
-
-    #region 补充方法（供其他服务调用）
-
-    public void ResetEnergyToMax(string instanceId)
-    {
-        var card = ActiveCardService.GetCardByInstanceId(instanceId);
-        if (card != null)
+        public ActiveCardAddResult AddActiveCardSmart(string cardId, int initialCharges)
         {
+            var result = new ActiveCardAddResult
+            {
+                CardId = cardId
+            };
+
+            var existing = ActiveCardService.GetFirstByCardId(cardId);
+            if (existing != null)
+            {
+                return HandleDuplicateActiveCard(existing, result);
+            }
+
+            string instanceId = ActiveCardService.CreateInstance(cardId, initialCharges);
+            if (string.IsNullOrEmpty(instanceId))
+                return result;
+
+            result.Success = true;
+            result.Added = true;
+            result.InstanceId = instanceId;
+            result.NewLevel = 1;
+
+            CDLogger.Log($"[Inventory] 添加新主动卡 '{cardId}' (Lv1)");
+            return result;
+        }
+
+        private ActiveCardAddResult HandleDuplicateActiveCard(
+            ActiveCardState state,
+            ActiveCardAddResult result)
+        {
+            result.InstanceId = state.InstanceId;
+
+            bool requested = UpgradeActiveCard(state.CardId);
+            if (requested)
+            {
+                result.Success = true;
+                result.Upgraded = true;
+                result.NewLevel = state.Level + 1;
+
+                CDLogger.Log($"[Inventory] '{state.CardId}' 请求升级 Lv{state.Level} → Lv{state.Level + 1}");
+                return result;
+            }
+
+            return ConvertDuplicateToCoins(result);
+        }
+
+        private ActiveCardAddResult ConvertDuplicateToCoins(ActiveCardAddResult result)
+        {
+            var config = GameRoot.Instance?.ActiveCardDeduplicationConfig;
+            if (config == null || !config.enableDeduplication)
+                return result;
+
+            AddCoins(config.duplicateToCoins);
+
+            result.Success = true;
+            result.ConvertedToCoins = true;
+            result.CoinsAmount = config.duplicateToCoins;
+
+            if (config.showDeduplicationLog)
+            {
+                CDLogger.Log($"[Inventory] 重复卡转换为 {result.CoinsAmount} 金币");
+            }
+
+            return result;
+        }
+
+        #endregion
+
+        #region 能量相关（统一事件）
+
+        public void AddEnergy(string instanceId, int energy)
+        {
+            ActiveCardService.AddEnergy(instanceId, energy);
+            PublishEnergyChanged(GetActiveCard(instanceId));
+        }
+
+        public bool ConsumeSkillEnergy(string instanceId, int energy)
+        {
+            bool success = ActiveCardService.ConsumeSkillEnergy(instanceId, energy);
+            if (success)
+            {
+                PublishEnergyChanged(GetActiveCard(instanceId));
+            }
+            return success;
+        }
+
+        public void AddChargesForKill(string playerId)
+        {
+            if (string.IsNullOrEmpty(playerId)) return;
+
+            var db = GameRoot.Instance?.CardDatabase;
+            if (db == null) return;
+
+            foreach (var st in ActiveCardService.ActiveCardStates)
+            {
+                if (st == null || !st.IsEquipped || st.EquippedPlayerId != playerId)
+                    continue;
+
+                var def = db.Resolve(st.CardId);
+                if (def?.activeCardConfig == null)
+                    continue;
+
+                ActiveCardService.AddEnergy(st.InstanceId, def.activeCardConfig.energyPerKill);
+                PublishEnergyChanged(st);
+            }
+        }
+
+        private void PublishEnergyChanged(ActiveCardState card)
+        {
+            if (card == null || !card.IsEquipped) return;
+
             var def = GameRoot.Instance?.CardDatabase?.Resolve(card.CardId);
-            card.CurrentEnergy = def?.activeCardConfig?.maxEnergy ?? 100;
-        }
-    }
-
-    /// <summary>
-    /// 为玩家装备的所有主动卡发放击杀奖励能量（门面方法）
-    /// 原 ActiveCardEnergyService.AddChargesForKill 的功能
-    /// </summary>
-    public void AddChargesForKill(string playerId)
-    {
-        if (string.IsNullOrEmpty(playerId)) return;
-        var db = GameRoot.Instance?.CardDatabase;
-        if (db == null) return;
-
-        foreach (var st in ActiveCardService.ActiveCardStates)
-        {
-            if (st == null || !st.IsEquipped || st.EquippedPlayerId != playerId) continue;
-            var def = db.Resolve(st.CardId);
-            if (def?.activeCardConfig == null) continue;
-
-            // 增加该卡的击杀奖励能量
-            ActiveCardService.AddEnergy(st.InstanceId, def.activeCardConfig.energyPerKill);
-
-            // 发布增强能量变化事件（此时 st.CurrentEnergy 已更新）
             EventBus.Publish(new ActiveCardEnergyChangedEvent
             {
-                InstanceId = st.InstanceId,
-                PlayerId = playerId,
-                NewEnergy = st.CurrentEnergy,
-                MaxEnergy = def.activeCardConfig.maxEnergy
-            });
-        }
-    }
-
-    /// <summary>
-    /// 为指定卡牌实例增加能量（委托给 ActiveCardService）
-    /// </summary>
-    public void AddEnergy(string instanceId, int energy)
-    {
-        ActiveCardService.AddEnergy(instanceId, energy);
-
-        // 需要发布事件，从 ActiveCardState 获取所需信息
-        var card = ActiveCardService.GetCardByInstanceId(instanceId);
-        if (card != null && card.IsEquipped)
-        {
-            var def = GameRoot.Instance?.CardDatabase?.Resolve(card.CardId);
-            EventBus.Publish(new ActiveCardEnergyChangedEvent
-            {
-                InstanceId = instanceId,
+                InstanceId = card.InstanceId,
                 PlayerId = card.EquippedPlayerId,
                 NewEnergy = card.CurrentEnergy,
                 MaxEnergy = def?.activeCardConfig?.maxEnergy ?? 100
             });
         }
-    }
 
-    /// <summary>
-    /// 消耗指定卡牌实例的能量（委托给 ActiveCardService）
-    /// </summary>
-    /// <returns>是否成功消耗（能量不足时返回 false）</returns>
-    public bool ConsumeSkillEnergy(string instanceId, int energy)
-    {
-        bool success = ActiveCardService.ConsumeSkillEnergy(instanceId, energy);
-        if (success)
-        {
-            var card = ActiveCardService.GetCardByInstanceId(instanceId);
-            if (card != null && card.IsEquipped)
-            {
-                var def = GameRoot.Instance?.CardDatabase?.Resolve(card.CardId);
-                EventBus.Publish(new ActiveCardEnergyChangedEvent
-                {
-                    InstanceId = instanceId,
-                    PlayerId = card.EquippedPlayerId,
-                    NewEnergy = card.CurrentEnergy,
-                    MaxEnergy = def?.activeCardConfig?.maxEnergy ?? 100
-                });
-            }
-        }
-        return success;
+        #endregion
     }
-
-    #endregion
 }

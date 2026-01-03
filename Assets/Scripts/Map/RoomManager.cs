@@ -21,7 +21,7 @@ namespace RogueGame.Map
         [SerializeField] private List<RoomVariantSet> variantSets;
         [SerializeField] private int seed = 12345;
 
-        [Header("预制体")]
+        [Header("房间根节点")]
         [SerializeField] private Transform roomsRoot;
 
         [Header("房间布局")]

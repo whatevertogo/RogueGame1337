@@ -69,7 +69,7 @@ namespace Game.UI
 
         public void RefreshActiveCardViews()
         {
-            var inv = InventoryServiceManager.Instance;
+            var inv = GameRoot.Instance.InventoryManager;
             if (inv == null)
             {
                 CDTU.Utils.CDLogger.LogWarning("[BagView] InventoryManager.Instance is null");

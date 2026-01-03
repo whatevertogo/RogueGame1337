@@ -10,8 +10,7 @@ using UnityEngine.InputSystem;
  */
 public static class MouseHelper2D
 {
-    private static Camera _cam;
-    private static Camera Cam => _cam ??= Camera.main;
+    private static Camera Cam => Camera.main;
 
     private static Vector2 _lastWorldPos;
     private static bool _hasLast;

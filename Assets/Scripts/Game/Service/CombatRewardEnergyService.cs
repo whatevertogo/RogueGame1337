@@ -1,3 +1,5 @@
+using RogueGame.Game.Service;
+
 public sealed class CombatRewardEnergyService
 {
     public InventoryServiceManager InventoryManager;
