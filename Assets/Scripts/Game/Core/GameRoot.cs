@@ -151,14 +151,11 @@ public class GameRoot : Singleton<GameRoot>
 
         shopManager.Initialize(inventoryManager);
 
-        // ========== 创建并初始化服务 ==========
+        // ========== 确保 InventoryServiceManager 已初始化 ==========
+        // 显式初始化以避免 Unity Awake() 执行顺序问题
+        inventoryManager.InitializeIfNeeded();
 
-        // SkillChargeSyncService - 已禁用（原为死代码）
-        // SkillChargeSyncService = new SkillChargeSyncService(
-        //     inventoryManager,
-        //     playerManager,
-        //     cardDatabase
-        // );
+        // ========== 创建并初始化服务 ==========
 
         FloorRewardSystemService = new FloorRewardSystemService(
             playerManager,
@@ -185,9 +182,6 @@ public class GameRoot : Singleton<GameRoot>
         SlotService = new SlotClearService();
 
         // ========== 注册所有服务到 ServiceLocator ==========
-
-        // 确保 InventoryManager 的子服务已初始化
-        inventoryManager.InitializeIfNeeded();
 
         RegisterToServiceLocator();
 
@@ -243,9 +237,6 @@ public class GameRoot : Singleton<GameRoot>
 
         // ========== 核心服务 ==========
         // 纯 C# 服务，主要通过 ServiceLocator 访问
-
-        // SkillChargeSyncService - 已禁用（原为死代码）
-        // ServiceLocator.Register(SkillChargeSyncService);
 
         ServiceLocator.Register(FloorRewardSystemService);
         ServiceLocator.Register(DifficultyService);
