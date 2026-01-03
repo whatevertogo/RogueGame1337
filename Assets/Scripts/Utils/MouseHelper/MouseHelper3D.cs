@@ -8,8 +8,7 @@ using UnityEngine;
 
 public static class MouseHelper3D
 {
-    private static Camera _cam;
-    private static Camera Cam => _cam ??= Camera.main;
+    private static Camera Cam =>  Camera.main;
 
     /// <summary>
     /// 获取鼠标射线
