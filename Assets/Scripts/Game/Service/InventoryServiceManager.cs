@@ -78,7 +78,6 @@ public sealed class InventoryServiceManager : MonoBehaviour
 
     #region 事件（兼容旧 API）
 
-    public event Action<int> OnCoinsChanged;
     public event Action<string, int> OnActiveCardLevelUp;
 
     #endregion
