@@ -108,6 +108,48 @@ namespace RogueGame.Game.Service
         public bool UpgradeActiveCard(string cardId)
             => ActiveCardUpgradeService.UpgradeCard(cardId);
 
+        /// <summary>
+        /// 确认进化选择（UI 层调用）
+        /// </summary>
+        public bool ConfirmEvolution(
+            string instanceId,
+            string cardId,
+            int currentLevel,
+            int nextLevel,
+            bool chooseBranchA,
+            Character.Player.Skill.Evolution.SkillBranch selectedBranch)
+        {
+            var cardState = ActiveCardService.GetCardByInstanceId(instanceId);
+            if (cardState == null)
+            {
+                CDLogger.LogError($"[Inventory] 找不到卡牌实例: {instanceId}");
+                return false;
+            }
+
+            // 更新等级
+            cardState.Level = nextLevel;
+
+            // 记录进化历史
+            cardState.EvolutionHistory.AddChoice(
+                nextLevel,
+                chooseBranchA,
+                selectedBranch.branchName);
+
+            string branchPath = cardState.EvolutionHistory.GetPathString();
+
+            // 发布进化完成事件
+            EventBus.Publish(new SkillEvolvedEvent(
+                cardId,
+                instanceId,
+                nextLevel,
+                selectedBranch,
+                branchPath
+            ));
+
+            CDLogger.Log($"[Inventory] '{cardId}' 进化完成 Lv{nextLevel}, 选择分支: {selectedBranch.branchName}");
+            return true;
+        }
+
         #endregion
 
         #region 通用卡牌 API

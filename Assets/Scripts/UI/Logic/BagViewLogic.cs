@@ -21,9 +21,6 @@ namespace Game.UI
         public virtual void Bind(UIViewBase view)
         {
             _view = view as BagViewView;
-            _view.BindPlayerStats1Button(OnPlayerStats1Clicked);
-            _view.BindPlayerStats12Button(OnPlayerStats12Clicked);
-            _view.BindClearCardButton1(OnClearCardButtonClicked);
         }
 
         public virtual void OnOpen(UIArgs args)
@@ -186,15 +183,15 @@ namespace Game.UI
                 {
                     if (localCharacterStats != null)
                     {
-                        _view.SetMaxHP("MaxHP: " + localCharacterStats.MaxHP.BaseValue.ToString() + "(" + (localCharacterStats.MaxHP.Value - localCharacterStats.MaxHP.BaseValue).ToString() + ")");
-                        _view.SetHPRegen("HPRegen: " + localCharacterStats.HPRegen.BaseValue.ToString() + "(" + (localCharacterStats.HPRegen.Value - localCharacterStats.HPRegen.BaseValue).ToString() + ")");
-                        _view.SetMoveSpeed("MoveSpeed: " + localCharacterStats.MoveSpeed.BaseValue.ToString() + "(" + (localCharacterStats.MoveSpeed.Value - localCharacterStats.MoveSpeed.BaseValue).ToString() + ")");
-                        _view.SetAcceleration("Acceleration: " + localCharacterStats.Acceleration.BaseValue.ToString() + "(" + (localCharacterStats.Acceleration.Value - localCharacterStats.Acceleration.BaseValue).ToString() + ")");
-                        _view.SetAttackPower("AttackPower: " + localCharacterStats.AttackPower.BaseValue.ToString() + "(" + (localCharacterStats.AttackPower.Value - localCharacterStats.AttackPower.BaseValue).ToString() + ")");
-                        _view.SetAttackSpeed("AttackSpeed: " + localCharacterStats.AttackSpeed.BaseValue.ToString() + "(" + (localCharacterStats.AttackSpeed.Value - localCharacterStats.AttackSpeed.BaseValue).ToString() + ")");
-                        _view.SetAttackRange("AttackRange: " + localCharacterStats.AttackRange.BaseValue.ToString() + "(" + (localCharacterStats.AttackRange.Value - localCharacterStats.AttackRange.BaseValue).ToString() + ")");
-                        _view.SetArmor("Armor: " + localCharacterStats.Armor.BaseValue.ToString() + "(" + (localCharacterStats.Armor.Value - localCharacterStats.Armor.BaseValue).ToString() + ")");
-                        _view.SetDodge("Dodge: " + localCharacterStats.Dodge.BaseValue.ToString() + "(" + (localCharacterStats.Dodge.Value - localCharacterStats.Dodge.BaseValue).ToString() + ")");
+                        _view.SetMaxHP($"MaxHP: {localCharacterStats.MaxHP.BaseValue}({localCharacterStats.MaxHP.Value - localCharacterStats.MaxHP.BaseValue})");
+                        _view.SetHPRegen($"HPRegen: {localCharacterStats.HPRegen.BaseValue}({localCharacterStats.HPRegen.Value - localCharacterStats.HPRegen.BaseValue})");
+                        _view.SetMoveSpeed($"MoveSpeed: {localCharacterStats.MoveSpeed.BaseValue}({localCharacterStats.MoveSpeed.Value - localCharacterStats.MoveSpeed.BaseValue})");
+                        _view.SetAcceleration($"Acceleration: {localCharacterStats.Acceleration.BaseValue}({localCharacterStats.Acceleration.Value - localCharacterStats.Acceleration.BaseValue})");
+                        _view.SetAttackPower($"AttackPower: {localCharacterStats.AttackPower.BaseValue}({localCharacterStats.AttackPower.Value - localCharacterStats.AttackPower.BaseValue})");
+                        _view.SetAttackSpeed($"AttackSpeed: {localCharacterStats.AttackSpeed.BaseValue}({localCharacterStats.AttackSpeed.Value - localCharacterStats.AttackSpeed.BaseValue})");
+                        _view.SetAttackRange($"AttackRange: {localCharacterStats.AttackRange.BaseValue}({localCharacterStats.AttackRange.Value - localCharacterStats.AttackRange.BaseValue})");
+                        _view.SetArmor($"Armor: {localCharacterStats.Armor.BaseValue}({localCharacterStats.Armor.Value - localCharacterStats.Armor.BaseValue})");
+                        _view.SetDodge($"Dodge: {localCharacterStats.Dodge.BaseValue}({localCharacterStats.Dodge.Value - localCharacterStats.Dodge.BaseValue})");
                     }
                 }
             }
@@ -209,11 +206,39 @@ namespace Game.UI
     public class BagViewLogic : UILogicBase
     {
         private BagViewLogicCore _core = new BagViewLogicCore();
+        private BagViewView _view;
 
         public override void Bind(UIViewBase view)
         {
             base.Bind(view);
+            _view = view as BagViewView;
+            if (_view == null)
+            {
+                CDTU.Utils.CDLogger.LogError($"[UI] BagViewLogic: Bind failed! View is not {typeof(BagViewView)}");
+                return;
+            }
+
             _core.Bind(view);
+            
+            // 绑定按钮事件
+            _view.BindPlayerStats1Button(OnPlayerStats1Clicked);
+            _view.BindPlayerStats12Button(OnPlayerStats12Clicked);
+            _view.BindClearCardButton1(OnClearCardButtonClicked);
+        }
+
+        private void OnPlayerStats1Clicked()
+        {
+            _core.OnPlayerStats1Clicked();
+        }
+
+        private void OnPlayerStats12Clicked()
+        {
+            _core.OnPlayerStats12Clicked();
+        }
+
+        private void OnClearCardButtonClicked()
+        {
+            _core.OnClearCardButtonClicked();
         }
 
         public override void OnOpen(UIArgs args)

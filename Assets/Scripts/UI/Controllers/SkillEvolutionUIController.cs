@@ -27,16 +27,6 @@ namespace UI
             EventBus.Subscribe<SkillEvolvedEvent>(OnEvolutionCompleted);
         }
 
-        /// <summary>
-        /// 提供给 UI 读取待处理事件
-        /// </summary>
-        public static SkillEvolutionRequestedEvent ConsumePending()
-        {
-            var evt = _pending;
-            _pending = null;
-            return evt;
-        }
-
         private static async void OnEvolutionRequested(SkillEvolutionRequestedEvent evt)
         {
             GameRoot.I?.GameFlowCoordinator?.PauseGame();

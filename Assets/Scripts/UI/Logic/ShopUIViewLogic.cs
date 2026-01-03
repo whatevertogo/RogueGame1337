@@ -19,7 +19,6 @@ namespace Game.UI
         public virtual void Bind(UIViewBase view)
         {
             _view = view as ShopUIView;
-            ShopManager.Instance.OnItemPurchased += OnItemPurchasedMethod;
         }
 
         private void OnItemPurchasedMethod(string arg1, int arg2)
@@ -32,6 +31,12 @@ namespace Game.UI
             var shopArg = args as ShopUIArgs;
 
             if (_view == null) return;
+
+            // 订阅事件（在 UI 打开时订阅）
+            if (ShopManager.Instance != null)
+            {
+                ShopManager.Instance.OnItemPurchased += OnItemPurchasedMethod;
+            }
 
             // 记录最近的 ShopType 并消费金额
             if (shopArg != null)
@@ -51,7 +56,10 @@ namespace Game.UI
         public virtual void OnClose()
         {
             // 关闭时清理
-            ShopManager.Instance.OnItemPurchased -= OnItemPurchasedMethod;
+            if (ShopManager.Instance != null)
+            {
+                ShopManager.Instance.OnItemPurchased -= OnItemPurchasedMethod;
+            }
             _view = null;
         }
 

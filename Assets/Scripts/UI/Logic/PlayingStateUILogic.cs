@@ -320,34 +320,40 @@ namespace Game.UI
 
     /// <summary>
     /// MonoBehaviour Wrapper：创建并持有 LogicCore，在运行时作为 IUILogic 注入到 View
+    /// 继承 UILogicBase 以获得自动事件订阅管理能力
     /// </summary>
-    public class PlayingStateUILogic : MonoBehaviour, IUILogic
+    public class PlayingStateUILogic : UILogicBase
     {
         private PlayingStateUILogicCore _core = new PlayingStateUILogicCore();
 
-        public void Bind(UIViewBase view)
+        public override void Bind(UIViewBase view)
         {
+            base.Bind(view);
             _core.Bind(view);
         }
 
-        public void OnOpen(UIArgs args)
+        public override void OnOpen(UIArgs args)
         {
+            base.OnOpen(args);
             _core.OnOpen(args);
         }
 
-        public void OnClose()
+        public override void OnClose()
         {
             _core.OnClose();
+            base.OnClose();
         }
-        public void OnCovered()
+
+        public override void OnCovered()
         {
+            base.OnCovered();
             _core.OnCovered();
         }
 
-        public void OnResume()
+        public override void OnResume()
         {
+            base.OnResume();
             _core.OnResume();
         }
-
     }
 }

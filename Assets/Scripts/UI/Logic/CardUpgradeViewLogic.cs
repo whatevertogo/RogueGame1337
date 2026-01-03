@@ -2,6 +2,7 @@
 using Character.Player.Skill.Evolution;
 using Core.Events;
 using RogueGame.Events;
+using RogueGame.Game.Service;
 using RogueGame.Items;
 using UnityEngine;
 using UI;
@@ -72,14 +73,12 @@ namespace Game.UI
         {
             if (_currentEvolution == null) return;
             ConfirmEvolution(true);
-            UIManager.Instance.Close<CardUpgradeView>();
         }
 
         public void OnOption2ImageClicked()
         {
             if (_currentEvolution == null) return;
             ConfirmEvolution(false);
-            UIManager.Instance.Close<CardUpgradeView>();
         }
 
         /// <summary>
@@ -99,7 +98,7 @@ namespace Game.UI
                 return;
             }
 
-            // 更新卡牌等级
+            // 通过 InventoryManager 确认进化（职责分离）
             var inventoryManager = GameRoot.Instance?.InventoryManager;
             if (inventoryManager == null)
             {
@@ -107,34 +106,19 @@ namespace Game.UI
                 return;
             }
 
-            var cardState = inventoryManager.GetActiveCard(_currentEvolution.InstanceId);
-            if (cardState == null)
-            {
-                Debug.LogError($"[CardUpgradeViewLogic] 找不到卡牌实例: {_currentEvolution.InstanceId}");
-                return;
-            }
-
-            // 更新等级
-            cardState.Level = _currentEvolution.NextLevel;
-
-            // 记录进化历史
-            cardState.EvolutionHistory.AddChoice(
-                _currentEvolution.NextLevel, 
-                chooseBranchA, 
-                selectedBranch.branchName);
-
-            string branchPath = cardState.EvolutionHistory.GetPathString();
-
-            // 发布进化完成事件
-            EventBus.Publish(new SkillEvolvedEvent(
-                _currentEvolution.CardId,
+            bool success = inventoryManager.ConfirmEvolution(
                 _currentEvolution.InstanceId,
+                _currentEvolution.CardId,
+                _currentEvolution.CurrentLevel,
                 _currentEvolution.NextLevel,
-                selectedBranch,
-                branchPath
-            ));
+                chooseBranchA,
+                selectedBranch
+            );
 
-            Debug.Log($"[CardUpgradeViewLogic] '{_currentEvolution.CardId}' 进化完成 Lv{_currentEvolution.NextLevel}, 选择分支: {selectedBranch.branchName}");
+            if (!success)
+            {
+                Debug.LogError($"[CardUpgradeViewLogic] 进化确认失败: {_currentEvolution.InstanceId}");
+            }
         }
     }
 
