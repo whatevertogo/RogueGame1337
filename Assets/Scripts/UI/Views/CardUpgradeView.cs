@@ -46,14 +46,14 @@ namespace Game.UI
             if (skillLevelText != null) skillLevelText.text = content;
         }
 
-        /// <summary>绑定 Button 事件</summary>
+        /// <summary>绑定 Button 事件（使用基类 BindButton，自动在 OnClose 时清理）</summary>
         public void BindOption1ImageButton(System.Action onClickAction)
         {
-            if (option1Image != null && onClickAction != null) { option1Image.onClick.AddListener(() => onClickAction()); }
+            if (option1Image != null && onClickAction != null) BindButton(option1Image, onClickAction);
         }
         public void BindOption2ImageButton(System.Action onClickAction)
         {
-            if (option2Image != null && onClickAction != null) { option2Image.onClick.AddListener(() => onClickAction()); }
+            if (option2Image != null && onClickAction != null) BindButton(option2Image, onClickAction);
         }
 
         /// <summary>设置分支 A 的显示信息</summary>

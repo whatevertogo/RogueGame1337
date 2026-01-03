@@ -40,10 +40,10 @@ namespace Game.UI
             if (coinText != null) coinText.text = content;
         }
 
-        /// <summary>绑定 Button 事件</summary>
+        /// <summary>绑定 Button 事件（使用基类 BindButton，自动在 OnClose 时清理）</summary>
         public void BindButton1Button(System.Action onClickAction)
         {
-            if (button1 != null) { button1.onClick.RemoveAllListeners(); if (onClickAction != null) { button1.onClick.AddListener(() => onClickAction()); } }
+            if (button1 != null && onClickAction != null) BindButton(button1, onClickAction);
         }
 
 

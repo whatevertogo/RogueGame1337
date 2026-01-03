@@ -199,10 +199,24 @@ public class GameRoot : Singleton<GameRoot>
             CDLogger.Log(ServiceLocator.GetDebugInfo());
         }
 
+        // ========== 初始化全局 UI 事件监听器 ==========
+        InitializeUIListeners();
+
         // // 启动时加载元游戏存档
         // SaveManager.LoadMeta();
 
         CDLogger.Log("[GameRoot] 初始化完成");
+    }
+
+    /// <summary>
+    /// 初始化全局 UI 事件监听器
+    /// 这些监听器在游戏启动时就开始工作，确保事件不会因 UI 未加载而丢失
+    /// </summary>
+    private void InitializeUIListeners()
+    {
+        // 技能进化 UI 控制器（纯 C#，避免事件丢失）
+        global::UI.SkillEvolutionUIController.Initialize(uiManager);
+        CDLogger.Log("[GameRoot] SkillEvolutionUIController 已初始化");
     }
 
     /// <summary>

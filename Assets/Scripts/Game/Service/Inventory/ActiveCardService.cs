@@ -56,14 +56,24 @@ namespace RogueGame.Game.Service.Inventory
             if (st != null) _activeCards.Remove(st);
         }
 
+        /// <summary>
+        /// 根据卡号移除活动卡
+        /// </summary>
+        /// <param name="cardId">要移除的卡号</param>
+        /// <returns>如果成功移除返回true，否则返回false</returns>
         public bool RemoveByCardId(string cardId)
         {
+            // 在活动卡列表中查找指定卡号的卡
             var st = _activeCards.Find(c => c.CardId == cardId);
+            // 如果找到匹配的卡
             if (st != null)
             {
+                // 从活动卡列表中移除该卡
                 _activeCards.Remove(st);
+                // 返回true表示移除成功
                 return true;
             }
+            // 如果未找到匹配的卡，返回false
             return false;
         }
 

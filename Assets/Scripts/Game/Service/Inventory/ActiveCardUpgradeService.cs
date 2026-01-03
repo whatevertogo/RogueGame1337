@@ -88,7 +88,8 @@ namespace RogueGame.Game.Service.Inventory
             var evolutionNode = skillDef.GetEvolutionNode(nextLevel);
             if (evolutionNode == null)
             {
-                CDLogger.LogWarning($"[ActiveCardUpgradeService] RequestEvolution failed: No evolution node for level {nextLevel}");
+                CDLogger.LogWarning($"[ActiveCardUpgradeService] RequestEvolution failed: No evolution node for level {nextLevel}. " +
+                    $"SkillId='{skillDef.skillId}', MaxLevel={skillDef.MaxLevel}, EvolutionTreeCount={skillDef.evolutionTree?.Count ?? 0}");
                 return false;
             }
 

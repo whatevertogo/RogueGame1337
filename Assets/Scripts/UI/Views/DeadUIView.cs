@@ -35,9 +35,10 @@ namespace Game.UI
             if (textTMPTMP_Text != null) textTMPTMP_Text.text = content;
         }
 
+        /// <summary>绑定 Retry 按钮点击事件（使用基类 BindButton，自动在 OnClose 时清理）</summary>
         public void BindRetryButton(System.Action onClickAction)
         {
-            if (retry != null) { retry.onClick.RemoveAllListeners(); if (onClickAction != null) { retry.onClick.AddListener(() => onClickAction()); } }
+            if (retry != null && onClickAction != null) BindButton(retry, onClickAction);
         }
 
 

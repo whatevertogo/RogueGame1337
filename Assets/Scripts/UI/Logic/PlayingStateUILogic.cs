@@ -76,6 +76,7 @@ namespace Game.UI
             UnsubscribeFromPlayerHealthEvents();
             UnsubscribeFromSkillEvents();
             EventBus.Unsubscribe<LayerTransitionEvent>(OnLayerTransition);
+            EventBus.Unsubscribe<CoinTextUpdateEvent>(OnCoinTextUpdate);
             _myPlayerState = null;
             _view = null;
         }

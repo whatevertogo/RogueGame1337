@@ -4,6 +4,7 @@ using Core.Events;
 using RogueGame.Events;
 using RogueGame.Game.Service.Inventory;
 using UI;
+using UI.Listeners;
 using UnityEngine;
 
 namespace Game.UI
@@ -182,80 +183,12 @@ namespace Game.UI
 
     /// <summary>
     /// MonoBehaviour Wrapper：创建并持有 LogicCore，在运行时作为 IUILogic 注入到 View
-    /// 同时负责订阅事件并打开 UI
+    /// 事件订阅由 SkillEvolutionUIListener 全局处理，此类只负责 UI 逻辑
     /// </summary>
     public class CardUpgradeViewLogic : MonoBehaviour, IUILogic
     {
         private CardUpgradeViewLogicCore _core = new CardUpgradeViewLogicCore();
         private CardUpgradeView _view;
-
-        /// <summary>
-        /// 当前待处理的进化请求（用于 UI 打开后传递给 Core）
-        /// </summary>
-        private static SkillEvolutionRequestedEvent _pendingEvent;
-        private bool _subscribed = false;
-
-        private void OnEnable()
-        {
-            // 在 OnEnable 中订阅事件，此时 GameRoot 已初始化完成
-            if (!_subscribed)
-            {
-                EventBus.Subscribe<SkillEvolutionRequestedEvent>(OnEvolutionRequested);
-                EventBus.Subscribe<SkillEvolvedEvent>(OnEvolutionCompleted);
-                _subscribed = true;
-                Debug.Log("[CardUpgradeViewLogic] 已订阅进化事件");
-            }
-        }
-
-        private void OnDisable()
-        {
-            if (_subscribed)
-            {
-                EventBus.Unsubscribe<SkillEvolutionRequestedEvent>(OnEvolutionRequested);
-                EventBus.Unsubscribe<SkillEvolvedEvent>(OnEvolutionCompleted);
-                _subscribed = false;
-                Debug.Log("[CardUpgradeViewLogic] 已取消订阅进化事件");
-            }
-        }
-
-        private void OnDestroy()
-        {
-            // 保险措施：确保取消订阅
-            OnDisable();
-        }
-
-        /// <summary>
-        /// 处理技能进化请求事件（全局订阅）
-        /// </summary>
-        private void OnEvolutionRequested(SkillEvolutionRequestedEvent evt)
-        {
-            // 保存事件，等 UI 打开后处理
-            _pendingEvent = evt;
-
-            // 打开 UI（如果还未打开）
-            if (_view == null || !_view.gameObject.activeInHierarchy)
-            {
-                UIManager.Instance?.Open<CardUpgradeView>();
-            }
-            else
-            {
-                // UI 已打开，直接处理
-                _core?.ProcessEvolutionRequest(evt);
-            }
-        }
-
-        /// <summary>
-        /// 处理技能进化完成事件
-        /// </summary>
-        private void OnEvolutionCompleted(SkillEvolvedEvent evt)
-        {
-            // 进化完成后关闭 UI
-            if (_pendingEvent != null && evt.InstanceId == _pendingEvent.InstanceId)
-            {
-                _core?.CloseUI();
-                _pendingEvent = null;
-            }
-        }
 
         public void Bind(UIViewBase view)
         {
@@ -268,10 +201,11 @@ namespace Game.UI
 
             _core.Bind(view);
 
-            // 如果有待处理的事件，现在处理它
-            if (_pendingEvent != null)
+            // 从全局监听器获取待处理的事件
+            var pendingEvent = SkillEvolutionUIListener.ConsumePendingEvent();
+            if (pendingEvent != null)
             {
-                _core.ProcessEvolutionRequest(_pendingEvent);
+                _core.ProcessEvolutionRequest(pendingEvent);
             }
 
             // Auto-bind event for option1Image
@@ -288,13 +222,8 @@ namespace Game.UI
         public void OnClose()
         {
             _core.OnClose();
-            if (_view != null)
-            {
-                _view.BindOption1ImageButton(null);
-                _view.BindOption2ImageButton(null);
-            }
+            // Button 事件由 UIViewBase.BindButton 自动清理，无需手动解绑
             _view = null;
-            _pendingEvent = null;
         }
 
         public void OnCovered()

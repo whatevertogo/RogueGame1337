@@ -37,16 +37,12 @@ namespace Game.UI
 
 
         /// <summary>
-        /// 绑定 BagButton 点击事件
+        /// 绑定 BagButton 点击事件（使用基类 BindButton，自动在 OnClose 时清理）
         /// </summary>
         /// <param name="onClickAction">点击时触发的回调函数</param>
         public void BindBagButton(Action onClickAction)
         {
-            if (BagButton != null)
-            {
-                BagButton.onClick.RemoveAllListeners();
-                BagButton.onClick.AddListener(() => onClickAction?.Invoke());
-            }
+            if (BagButton != null && onClickAction != null) BindButton(BagButton, onClickAction);
         }
 
 

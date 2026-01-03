@@ -101,19 +101,19 @@ namespace Game.UI
             if (playerImage != null) playerImage.sprite = sprite;
         }
 
-        /// <summary>绑定 Button 事件</summary>
+        /// <summary>绑定 Button 事件（使用基类 BindButton，自动在 OnClose 时清理）</summary>
         public void BindPlayerStats1Button(System.Action onClickAction)
         {
-            if (playerStats1) { playerStats1.onClick.RemoveAllListeners(); if (onClickAction != null) playerStats1.onClick.AddListener(() => onClickAction()); }
+            if (playerStats1 != null && onClickAction != null) BindButton(playerStats1, onClickAction);
         }
         public void BindPlayerStats12Button(System.Action onClickAction)
         {
-            if (playerStats12) { playerStats12.onClick.RemoveAllListeners(); if (onClickAction != null) playerStats12.onClick.AddListener(() => onClickAction()); }
+            if (playerStats12 != null && onClickAction != null) BindButton(playerStats12, onClickAction);
         }
 
         public void BindClearCardButton1(System.Action onClickAction)
         {
-            if (ClearCardButton1) { ClearCardButton1.onClick.RemoveAllListeners(); if (onClickAction != null) ClearCardButton1.onClick.AddListener(() => onClickAction()); }
+            if (ClearCardButton1 != null && onClickAction != null) BindButton(ClearCardButton1, onClickAction);
         }
 
         public void SetBagViewALLActive(bool isActive)

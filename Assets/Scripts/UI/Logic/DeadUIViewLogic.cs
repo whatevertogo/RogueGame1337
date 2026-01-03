@@ -46,14 +46,16 @@ namespace Game.UI
 
     /// <summary>
     /// MonoBehaviour Wrapper：创建并持有 LogicCore，在运行时作为 IUILogic 注入到 View
+    /// 继承 UILogicBase 以获得自动事件订阅管理能力
     /// </summary>
-    public class DeadUIViewLogic : MonoBehaviour, IUILogic
+    public class DeadUIViewLogic : UILogicBase
     {
         private DeadUIViewLogicCore _core = new DeadUIViewLogicCore();
         private DeadUIView _view;
 
-        public void Bind(UIViewBase view)
+        public override void Bind(UIViewBase view)
         {
+            base.Bind(view);
             _view = view as DeadUIView;
             if (_view == null)
             {
@@ -65,25 +67,29 @@ namespace Game.UI
             _view.BindRetryButton(OnRetryClicked);
         }
 
-        public void OnOpen(UIArgs args)
+        public override void OnOpen(UIArgs args)
         {
+            base.OnOpen(args);
             _core.OnOpen(args);
         }
 
-        public void OnClose()
+        public override void OnClose()
         {
             _core.OnClose();
-            if (_view != null) _view.BindRetryButton(null);
+            // Button 事件由 UIViewBase.BindButton 自动清理，无需手动解绑
             _view = null;
+            base.OnClose();
         }
 
-        public void OnCovered()
+        public override void OnCovered()
         {
+            base.OnCovered();
             _core.OnCovered();
         }
 
-        public void OnResume()
+        public override void OnResume()
         {
+            base.OnResume();
             _core.OnResume();
         }
 
