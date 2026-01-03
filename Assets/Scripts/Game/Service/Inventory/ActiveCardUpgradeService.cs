@@ -71,6 +71,10 @@ namespace RogueGame.Game.Service.Inventory
                 nextLevel,
                 evolutionNode));
 
+            //TODO-添加进化UI触发？
+            return false;
+
+
             CDLogger.Log($"[ActiveCardUpgradeService] Evolution requested Lv{state.Level} -> Lv{nextLevel}");
             return true;
         }

@@ -45,8 +45,6 @@ public sealed class GameFlowCoordinator : MonoBehaviour, IGameFlowCoordinator
     private int _roomsClearedThisLayer = 0;
     private bool _bossUnlockedThisLayer = false;
 
-    private bool _restoredRunHandled = false;
-
 
     private void OnEnable()
     {

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using TMPro;
 using UI;
 using UnityEngine;
@@ -15,18 +14,15 @@ namespace Game.UI
         // UI Components
         [SerializeField] private Image option1ImageButton;
         [SerializeField] private Button option1Image;
+        [SerializeField] private TMP_Text description1;
+        [SerializeField] private TMP_Text option1Name;
         [SerializeField] private Image option2ImageButton;
         [SerializeField] private Button option2Image;
+        [SerializeField] private TMP_Text description2;
+        [SerializeField] private TMP_Text option2Name;
         [SerializeField] private TMP_Text skillNameText;
         [SerializeField] private TMP_Text skillLevelText;
-
-        // 分支信息文本组件（如果需要在编辑器中绑定）
-        [SerializeField] private TMP_Text option1NameText;
-        [SerializeField] private TMP_Text option1DescText;
-        [SerializeField] private TMP_Text option2NameText;
-        [SerializeField] private TMP_Text option2DescText;
-
-        public override bool Exclusive => true;
+        public override bool Exclusive => false;
         public override bool CanBack => true;
 
         public override void OnCreate()
@@ -34,13 +30,27 @@ namespace Game.UI
             // 组件已在编辑器中手动绑定，无需运行时自动绑定
         }
 
-        /// <summary>更新技能名称</summary>
+        /// <summary>更新文本内容</summary>
+        public void SetDescription1(string content)
+        {
+            if (description1 != null) description1.text = content;
+        }
+        public void SetOption1Name(string content)
+        {
+            if (option1Name != null) option1Name.text = content;
+        }
+        public void SetDescription2(string content)
+        {
+            if (description2 != null) description2.text = content;
+        }
+        public void SetOption2Name(string content)
+        {
+            if (option2Name != null) option2Name.text = content;
+        }
         public void SetSkillNameText(string content)
         {
             if (skillNameText != null) skillNameText.text = content;
         }
-
-        /// <summary>更新技能等级</summary>
         public void SetSkillLevelText(string content)
         {
             if (skillLevelText != null) skillLevelText.text = content;
@@ -60,16 +70,16 @@ namespace Game.UI
         public void SetOption1(string name, string description, Sprite icon)
         {
             if (option1ImageButton != null && icon != null) option1ImageButton.sprite = icon;
-            if (option1NameText != null) option1NameText.text = name ?? "分支 A";
-            if (option1DescText != null) option1DescText.text = description ?? string.Empty;
+            if (option1Name != null) option1Name.text = name ?? "分支 A";
+            if (description1 != null) description1.text = description ?? string.Empty;
         }
 
         /// <summary>设置分支 B 的显示信息</summary>
         public void SetOption2(string name, string description, Sprite icon)
         {
             if (option2ImageButton != null && icon != null) option2ImageButton.sprite = icon;
-            if (option2NameText != null) option2NameText.text = name ?? "分支 B";
-            if (option2DescText != null) option2DescText.text = description ?? string.Empty;
+            if (option2Name != null) option2Name.text = name ?? "分支 B";
+            if (description2 != null) description2.text = description ?? string.Empty;
         }
 
         /// <summary>清空显示</summary>
@@ -81,7 +91,7 @@ namespace Game.UI
             SetOption2(string.Empty, string.Empty, null);
         }
 
-        /// <summary>关闭 UI</summary>
+
         public void Close()
         {
             gameObject.SetActive(false);
