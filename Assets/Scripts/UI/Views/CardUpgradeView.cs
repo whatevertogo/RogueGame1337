@@ -26,7 +26,7 @@ namespace Game.UI
         [SerializeField] private TMP_Text option2NameText;
         [SerializeField] private TMP_Text option2DescText;
 
-        public override bool Exclusive => false;
+        public override bool Exclusive => true;
         public override bool CanBack => true;
 
         public override void OnCreate()

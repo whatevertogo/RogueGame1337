@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 using Character.Player.Skill.Evolution;
 using Core.Events;
 using RogueGame.Events;
@@ -23,27 +22,21 @@ namespace Game.UI
         private int _nextLevel;
         private SkillBranch _branchA;
         private SkillBranch _branchB;
+        private Character.Player.Skill.Evolution.SkillNode _evolutionNode;
 
         public virtual void Bind(UIViewBase view)
         {
             _view = view as CardUpgradeView;
-            // 订阅进化请求事件
-            EventBus.Subscribe<SkillEvolutionRequestedEvent>(OnEvolutionRequested);
-            // 订阅进化完成事件（用于关闭UI）
-            EventBus.Subscribe<SkillEvolvedEvent>(OnEvolutionCompleted);
         }
 
         public virtual void OnOpen(UIArgs args)
         {
             // UI 打开时的初始化逻辑
-            // 实际显示内容由 OnEvolutionRequested 事件触发
+            // 显示内容由 ProcessEvolutionRequest 设置
         }
 
         public virtual void OnClose()
         {
-            // 关闭时清理
-            EventBus.Unsubscribe<SkillEvolutionRequestedEvent>(OnEvolutionRequested);
-            EventBus.Unsubscribe<SkillEvolvedEvent>(OnEvolutionCompleted);
             ClearCurrentContext();
             _view?.ClearDisplay();
         }
@@ -59,37 +52,30 @@ namespace Game.UI
         }
 
         /// <summary>
-        /// 处理技能进化请求事件
+        /// 处理进化请求（由 MonoBehaviour 层调用）
         /// </summary>
-        private void OnEvolutionRequested(SkillEvolutionRequestedEvent evt)
+        public void ProcessEvolutionRequest(SkillEvolutionRequestedEvent evt)
         {
             // 存储当前上下文
             _currentInstanceId = evt.InstanceId;
             _currentCardId = evt.CardId;
             _currentLevel = evt.CurrentLevel;
             _nextLevel = evt.NextLevel;
+            _evolutionNode = evt.EvolutionNode;
 
             // 获取分支信息
             var upgradeService = ServiceLocator.Get<ActiveCardUpgradeService>();
-            if (upgradeService != null)
+            if (upgradeService == null)
             {
-                (_branchA, _branchB) = upgradeService.GetEvolutionBranches(evt.InstanceId);
+                Debug.LogError("[CardUpgradeViewLogicCore] 无法获取 ActiveCardUpgradeService，请检查 GameRoot 初始化");
+                Debug.Log(ServiceLocator.GetDebugInfo());
+                return;
             }
+
+            (_branchA, _branchB) = upgradeService.GetEvolutionBranches(evt.InstanceId);
 
             // 更新 UI 显示
             UpdateDisplay();
-        }
-
-        /// <summary>
-        /// 处理技能进化完成事件
-        /// </summary>
-        private void OnEvolutionCompleted(SkillEvolvedEvent evt)
-        {
-            // 进化完成后关闭 UI
-            if (evt.InstanceId == _currentInstanceId)
-            {
-                CloseUI();
-            }
         }
 
         /// <summary>
@@ -100,7 +86,7 @@ namespace Game.UI
             if (_view == null) return;
 
             // 显示技能名称和等级
-            var skillDef = GameRoot.Instance?.CardDatabase?.Resolve(_currentCardId).activeCardConfig.skill;
+            var skillDef = GameRoot.Instance?.CardDatabase?.Resolve(_currentCardId)?.activeCardConfig?.skill;
             string skillName = skillDef?.skillId ?? _currentCardId;
             _view.SetSkillNameText(skillName);
             _view.SetSkillLevelText($"Lv{_currentLevel} → Lv{_nextLevel}");
@@ -126,19 +112,26 @@ namespace Game.UI
             }
         }
 
-
         /// <summary>
         /// 选择分支 A
         /// </summary>
         public void OnOption1ImageClicked()
         {
-            if (string.IsNullOrEmpty(_currentInstanceId)) return;
+            if (string.IsNullOrEmpty(_currentInstanceId))
+            {
+                Debug.LogWarning("[CardUpgradeViewLogicCore] OnOption1ImageClicked: _currentInstanceId 为空");
+                return;
+            }
 
             var upgradeService = ServiceLocator.Get<ActiveCardUpgradeService>();
-            if (upgradeService != null)
+            if (upgradeService == null)
             {
-                upgradeService.ConfirmEvolution(_currentInstanceId, chooseBranchA: true);
+                Debug.LogError("[CardUpgradeViewLogicCore] OnOption1ImageClicked: 无法获取 ActiveCardUpgradeService");
+                Debug.Log(ServiceLocator.GetDebugInfo());
+                return;
             }
+
+            upgradeService.ConfirmEvolution(_currentInstanceId, chooseBranchA: true);
         }
 
         /// <summary>
@@ -146,19 +139,27 @@ namespace Game.UI
         /// </summary>
         public void OnOption2ImageClicked()
         {
-            if (string.IsNullOrEmpty(_currentInstanceId)) return;
+            if (string.IsNullOrEmpty(_currentInstanceId))
+            {
+                Debug.LogWarning("[CardUpgradeViewLogicCore] OnOption2ImageClicked: _currentInstanceId 为空");
+                return;
+            }
 
             var upgradeService = ServiceLocator.Get<ActiveCardUpgradeService>();
-            if (upgradeService != null)
+            if (upgradeService == null)
             {
-                upgradeService.ConfirmEvolution(_currentInstanceId, chooseBranchA: false);
+                Debug.LogError("[CardUpgradeViewLogicCore] OnOption2ImageClicked: 无法获取 ActiveCardUpgradeService");
+                Debug.Log(ServiceLocator.GetDebugInfo());
+                return;
             }
+
+            upgradeService.ConfirmEvolution(_currentInstanceId, chooseBranchA: false);
         }
 
         /// <summary>
         /// 关闭 UI
         /// </summary>
-        private void CloseUI()
+        public void CloseUI()
         {
             _view?.Close();
             ClearCurrentContext();
@@ -175,25 +176,86 @@ namespace Game.UI
             _nextLevel = 0;
             _branchA = null;
             _branchB = null;
-        }
-
-        /// <summary>
-        /// 显示升级消息（保留原有的升级提示功能）
-        /// </summary>
-        public void ShowLevelUpMessage(ActiveCardLevelUpEvent evt)
-        {
-            _view?.SetSkillNameText(evt.CardId);
-            _view?.SetSkillLevelText($"已升级至 Lv{evt.NewLevel}");
+            _evolutionNode = null;
         }
     }
 
     /// <summary>
     /// MonoBehaviour Wrapper：创建并持有 LogicCore，在运行时作为 IUILogic 注入到 View
+    /// 同时负责订阅事件并打开 UI
     /// </summary>
     public class CardUpgradeViewLogic : MonoBehaviour, IUILogic
     {
         private CardUpgradeViewLogicCore _core = new CardUpgradeViewLogicCore();
         private CardUpgradeView _view;
+
+        /// <summary>
+        /// 当前待处理的进化请求（用于 UI 打开后传递给 Core）
+        /// </summary>
+        private static SkillEvolutionRequestedEvent _pendingEvent;
+        private bool _subscribed = false;
+
+        private void OnEnable()
+        {
+            // 在 OnEnable 中订阅事件，此时 GameRoot 已初始化完成
+            if (!_subscribed)
+            {
+                EventBus.Subscribe<SkillEvolutionRequestedEvent>(OnEvolutionRequested);
+                EventBus.Subscribe<SkillEvolvedEvent>(OnEvolutionCompleted);
+                _subscribed = true;
+                Debug.Log("[CardUpgradeViewLogic] 已订阅进化事件");
+            }
+        }
+
+        private void OnDisable()
+        {
+            if (_subscribed)
+            {
+                EventBus.Unsubscribe<SkillEvolutionRequestedEvent>(OnEvolutionRequested);
+                EventBus.Unsubscribe<SkillEvolvedEvent>(OnEvolutionCompleted);
+                _subscribed = false;
+                Debug.Log("[CardUpgradeViewLogic] 已取消订阅进化事件");
+            }
+        }
+
+        private void OnDestroy()
+        {
+            // 保险措施：确保取消订阅
+            OnDisable();
+        }
+
+        /// <summary>
+        /// 处理技能进化请求事件（全局订阅）
+        /// </summary>
+        private void OnEvolutionRequested(SkillEvolutionRequestedEvent evt)
+        {
+            // 保存事件，等 UI 打开后处理
+            _pendingEvent = evt;
+
+            // 打开 UI（如果还未打开）
+            if (_view == null || !_view.gameObject.activeInHierarchy)
+            {
+                UIManager.Instance?.Open<CardUpgradeView>();
+            }
+            else
+            {
+                // UI 已打开，直接处理
+                _core?.ProcessEvolutionRequest(evt);
+            }
+        }
+
+        /// <summary>
+        /// 处理技能进化完成事件
+        /// </summary>
+        private void OnEvolutionCompleted(SkillEvolvedEvent evt)
+        {
+            // 进化完成后关闭 UI
+            if (_pendingEvent != null && evt.InstanceId == _pendingEvent.InstanceId)
+            {
+                _core?.CloseUI();
+                _pendingEvent = null;
+            }
+        }
 
         public void Bind(UIViewBase view)
         {
@@ -205,6 +267,13 @@ namespace Game.UI
             }
 
             _core.Bind(view);
+
+            // 如果有待处理的事件，现在处理它
+            if (_pendingEvent != null)
+            {
+                _core.ProcessEvolutionRequest(_pendingEvent);
+            }
+
             // Auto-bind event for option1Image
             _view.BindOption1ImageButton(OnOption1ImageClicked);
             // Auto-bind event for option2Image
@@ -225,6 +294,7 @@ namespace Game.UI
                 _view.BindOption2ImageButton(null);
             }
             _view = null;
+            _pendingEvent = null;
         }
 
         public void OnCovered()

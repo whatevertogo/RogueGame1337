@@ -338,19 +338,5 @@ namespace RogueGame.Events
         }
     }
 
-    /// <summary>
-    /// 主动卡升级完成事件：ActiveCardUpgradeService 在卡牌升级后发布此事件
-    /// </summary>
-    public class ActiveCardLevelUpEvent
-    {
-        public string CardId;
-        public int NewLevel;
-
-        public ActiveCardLevelUpEvent(string cardId, int newLevel)
-        {
-            CardId = cardId;
-            NewLevel = newLevel;
-        }
-    }
 
 }

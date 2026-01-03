@@ -186,6 +186,9 @@ public class GameRoot : Singleton<GameRoot>
 
         // ========== 注册所有服务到 ServiceLocator ==========
 
+        // 确保 InventoryManager 的子服务已初始化
+        inventoryManager.InitializeIfNeeded();
+
         RegisterToServiceLocator();
 
         // ========== 订阅服务的事件 ==========

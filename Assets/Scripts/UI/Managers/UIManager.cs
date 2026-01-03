@@ -233,13 +233,17 @@ namespace UI
 
             // 1. 移除引用
             stack.Remove(view); // O(N) 但 N 很小
-            _openViews.Remove(view.GetType());
+            Type viewType = view.GetType();
+            _openViews.Remove(viewType);
 
             // 2. 销毁对象
             view.OnClose();
             Destroy(view.gameObject);
 
-            // 3. 焦点恢复：如果刚才关闭的是栈顶，且还有其他界面，则恢复新的栈顶
+            // 3. 释放资源引用（通知 UIAssetProvider 引用计数 -1）
+            UIAssetProvider.Release(viewType);
+
+            // 4. 焦点恢复：如果刚才关闭的是栈顶，且还有其他界面，则恢复新的栈顶
             if (isTop && stack.Any())
             {
                 var newTop = stack[stack.Count - 1];
@@ -260,11 +264,16 @@ namespace UI
                 var view = stack[i];
                 if (view == null) continue;
 
+                Type viewType = view.GetType();
+
                 view.OnClose();
                 Destroy(view.gameObject);
 
-                // 别忘了清理 _openViews
-                _openViews.Remove(view.GetType());
+                // 释放资源引用
+                UIAssetProvider.Release(viewType);
+
+                // 清理 _openViews
+                _openViews.Remove(viewType);
             }
 
             stack.Clear();

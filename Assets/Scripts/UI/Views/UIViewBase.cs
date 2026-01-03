@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace UI
 {
@@ -8,10 +10,16 @@ namespace UI
     /// - 统一生命周期
     /// - 管理 IUILogic
     /// - 提供覆盖 / 恢复 / 回退语义
+    /// - 自动管理 Button 事件清理
     /// </summary>
     public abstract class UIViewBase : MonoBehaviour
     {
         private readonly List<IUILogic> _logics = new();
+
+        /// <summary>
+        /// 注册的 Button 事件（用于自动清理）
+        /// </summary>
+        private readonly List<(Button button, UnityEngine.Events.UnityAction action)> _buttonBindings = new();
 
         private bool _opened;
         private bool _destroyed;
@@ -41,6 +49,37 @@ namespace UI
 
         #endregion
 
+        #region Button 事件管理（自动清理）
+
+        /// <summary>
+        /// 安全绑定 Button 点击事件（会在 OnClose 时自动清理）
+        /// </summary>
+        protected void BindButton(Button button, Action onClick)
+        {
+            if (button == null || onClick == null) return;
+
+            UnityEngine.Events.UnityAction action = () => onClick();
+            button.onClick.AddListener(action);
+            _buttonBindings.Add((button, action));
+        }
+
+        /// <summary>
+        /// 清理所有已绑定的 Button 事件
+        /// </summary>
+        private void ClearAllButtonBindings()
+        {
+            foreach (var (button, action) in _buttonBindings)
+            {
+                if (button != null)
+                {
+                    button.onClick.RemoveListener(action);
+                }
+            }
+            _buttonBindings.Clear();
+        }
+
+        #endregion
+
         #region 生命周期（由 UIManager 驱动）
 
         /// <summary>
@@ -60,7 +99,7 @@ namespace UI
             foreach (var logic in _logics)
             {
                 try { logic.OnOpen(args); }
-                catch (System.Exception e)
+                catch (Exception e)
                 {
                     Debug.LogException(e, this);
                 }
@@ -77,10 +116,13 @@ namespace UI
 
             _opened = false;
 
+            // 清理 Button 事件
+            ClearAllButtonBindings();
+
             foreach (var logic in _logics)
             {
                 try { logic.OnClose(); }
-                catch (System.Exception e)
+                catch (Exception e)
                 {
                     Debug.LogException(e, this);
                 }
@@ -99,7 +141,7 @@ namespace UI
             // 默认行为：通知逻辑层被覆盖（可重写以定制行为）
             foreach (var logic in _logics)
             {
-                try { logic.OnCovered(); } catch (System.Exception e) { Debug.LogException(e, this); }
+                try { logic.OnCovered(); } catch (Exception e) { Debug.LogException(e, this); }
             }
         }
 
@@ -111,7 +153,7 @@ namespace UI
             // 默认行为：通知逻辑层恢复（可重写以定制行为）
             foreach (var logic in _logics)
             {
-                try { logic.OnResume(); } catch (System.Exception e) { Debug.LogException(e, this); }
+                try { logic.OnResume(); } catch (Exception e) { Debug.LogException(e, this); }
             }
         }
 
@@ -129,6 +171,9 @@ namespace UI
 
             _destroyed = true;
 
+            // 清理 Button 事件
+            ClearAllButtonBindings();
+
             // 确保逻辑被正确关闭
             if (_opened)
             {
@@ -144,7 +189,7 @@ namespace UI
             {
                 OnDestroyView();
             }
-            catch (System.Exception e)
+            catch (Exception e)
             {
                 Debug.LogException(e, this);
             }

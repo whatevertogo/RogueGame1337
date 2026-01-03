@@ -37,7 +37,7 @@ namespace Game.UI
         private void OnCoinTextUpdate(CoinTextUpdateEvent evt)
         {
             CDTU.Utils.CDLogger.Log($"金币文本更新事件：{evt.NewText}");
-            _view?.SetCoinText($"第{evt.NewText}层");
+            _view?.SetCoinText($"Coin:{evt.NewText}");
         }
         private void OnLayerTransition(LayerTransitionEvent evt)
         {
@@ -166,7 +166,6 @@ namespace Game.UI
 
         private void OnPlayerHealthChanged(float currentHealth, float maxHealth)
         {
-            CDTU.Utils.CDLogger.Log($"玩家血量变化，当前血量：{currentHealth}");
             _view?.SetHealthNormalized(currentHealth / Math.Max(1f, maxHealth));
         }
 

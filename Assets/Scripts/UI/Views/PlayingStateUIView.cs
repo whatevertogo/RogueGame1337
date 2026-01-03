@@ -50,12 +50,6 @@ namespace Game.UI
         }
 
 
-        /// <summary>更新文本内容</summary>
-        public void SetNowLevel(string content)
-        {
-            if (nowLevel != null) nowLevel.text = content;
-        }
-
         /// <summary>
         /// 以归一化值（0-1）更新生命值显示（血条）。
         /// View 层负责具体的 UI 控制，Logic 层只传递数据。

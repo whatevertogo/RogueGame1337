@@ -37,7 +37,17 @@ public sealed class InventoryServiceManager : MonoBehaviour
 
         // 初始化服务
         InitializeServices();
+    }
 
+    /// <summary>
+    /// 公开初始化方法，供 GameRoot 显式调用以确保初始化顺序
+    /// </summary>
+    public void InitializeIfNeeded()
+    {
+        if (ActiveCardUpgradeService == null)
+        {
+            InitializeServices();
+        }
     }
 
     private void OnDestroy()
@@ -180,6 +190,7 @@ public sealed class InventoryServiceManager : MonoBehaviour
             // 尝试升级，但从GameRoot的StatLimitConfig获取最大等级限制
             int newLevel = UpgradeActiveCard(cardId, GameRoot.Instance?.StatLimitConfig?.maxActiveSkillLevel);
 
+            // 如果升级成功
             if (newLevel > oldLevel)
             {
                 result.Success = true;

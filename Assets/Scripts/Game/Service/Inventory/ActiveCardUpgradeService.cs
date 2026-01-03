@@ -25,21 +25,33 @@ namespace RogueGame.Game.Service.Inventory
             return st?.Level ?? 0;
         }
 
+        /// <summary>
+        /// 升级主动卡（发布进化请求事件，UI 层订阅并打开）
+        /// </summary>
+        /// <param name="cardId">卡牌ID</param>
+        /// <param name="maxLevel">可选的最大等级覆盖</param>
+        /// <returns>当前等级（升级前）/ -1 表示卡牌不存在</returns>
         public int UpgradeCard(string cardId, int? maxLevel = null)
         {
-            int actualMaxLevel = maxLevel ?? (GameRoot.Instance?.StatLimitConfig?.maxActiveSkillLevel ?? 5);
             var st = _cardService.GetFirstByCardId(cardId);
             if (st == null) return -1;
 
+            int actualMaxLevel = maxLevel ?? (GameRoot.Instance?.StatLimitConfig?.maxActiveSkillLevel ?? 5);
             if (st.Level >= actualMaxLevel)
             {
+                CDLogger.Log($"[ActiveCardUpgradeService] '{cardId}' 已达最大等级 Lv{st.Level}");
                 return st.Level;
             }
 
-            st.Level++;
-            EventBus.Publish(new ActiveCardLevelUpEvent(cardId, st.Level));
-            CDLogger.Log($"[ActiveCardUpgradeService] '{cardId}' 升级至 Lv{st.Level}/{actualMaxLevel}");
-            return st.Level;
+            // 发布进化请求事件，UI 层订阅事件后会自动打开并显示
+            bool requested = RequestEvolution(st.InstanceId);
+
+            if (requested)
+            {
+                CDLogger.Log($"[ActiveCardUpgradeService] '{cardId}' 发起进化请求 Lv{st.Level}→Lv{st.Level + 1}");
+            }
+
+            return st.Level; // 返回当前等级，ConfirmEvolution 会更新等级
         }
 
         /// <summary>
