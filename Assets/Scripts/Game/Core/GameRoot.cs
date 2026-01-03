@@ -188,6 +188,10 @@ public class GameRoot : Singleton<GameRoot>
         RoomPlayerSkillLimitService.Subscribe();
         SlotService.Subscribe();
 
+        // ========== 初始化 UI 控制器 ==========
+
+        InitializeUIControllers();
+
         // ========== 输出服务注册状态 ==========
 
         if (enableDebugLogs)
@@ -195,12 +199,21 @@ public class GameRoot : Singleton<GameRoot>
             CDLogger.Log(ServiceLocator.GetDebugInfo());
         }
 
-
-
         // // 启动时加载元游戏存档
         // SaveManager.LoadMeta();
 
         CDLogger.Log("[GameRoot] 初始化完成");
+    }
+
+    /// <summary>
+    /// 初始化全局 UI 控制器
+    /// 这些控制器在游戏启动时就开始工作，确保事件不会因 UI 未加载而丢失
+    /// </summary>
+    private void InitializeUIControllers()
+    {
+        // 技能进化 UI 控制器（纯 C#，避免事件丢失）
+        SkillEvolutionUIController.Initialize(uiManager);
+        CDLogger.Log("[GameRoot] SkillEvolutionUIController 已初始化");
     }
 
     /// <summary>

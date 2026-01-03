@@ -39,10 +39,12 @@ namespace UI
 
         private static async void OnEvolutionRequested(SkillEvolutionRequestedEvent evt)
         {
+            GameRoot.I?.GameFlowCoordinator?.PauseGame();
             _pending = evt;
             if (_uiManager == null)
             {
                 UnityEngine.Debug.LogError("[SkillEvolutionUIController] UIManager is null, cannot open UI.");
+                GameRoot.I?.GameFlowCoordinator?.ResumeGame();
                 return;
             }
 
@@ -53,6 +55,7 @@ namespace UI
             catch (Exception ex)
             {
                 UnityEngine.Debug.LogException(ex);
+                GameRoot.I?.GameFlowCoordinator?.ResumeGame();
             }
         }
 
@@ -65,6 +68,7 @@ namespace UI
 
             if (_uiManager == null) return;
             _uiManager.Close<CardUpgradeView>();
+            GameRoot.I?.GameFlowCoordinator?.ResumeGame();
         }
     }
 }

@@ -1,4 +1,8 @@
 ﻿using System;
+using Character.Player.Skill.Evolution;
+using Core.Events;
+using RogueGame.Events;
+using RogueGame.Items;
 using UnityEngine;
 using UI;
 
@@ -10,6 +14,8 @@ namespace Game.UI
     public class CardUpgradeViewLogicCore
     {
         protected CardUpgradeView _view;
+        private SkillEvolutionRequestedEvent _currentEvolution;
+
         public virtual void Bind(UIViewBase view)
         {
             _view = view as CardUpgradeView;
@@ -17,12 +23,38 @@ namespace Game.UI
 
         public virtual void OnOpen(UIArgs args)
         {
-            // 在此实现打开时的业务逻辑（纯 C#，易于单元测试）
+            var evolutionArgs = args as SkillEvolutionUIArgs;
+            if (evolutionArgs == null || evolutionArgs.Event == null) return;
+
+            // 保存进化请求信息
+            _currentEvolution = evolutionArgs.Event;
+
+            var evt = evolutionArgs.Event;
+            var evolutionNode = evt.EvolutionNode;
+            if (evolutionNode == null) return;
+
+            _view.SetSkillNameText(evt.CardId);
+            _view.SetSkillLevelText($"等级 {evt.NextLevel}");
+
+            if (evolutionNode.branchA != null)
+            {
+                _view.SetOption1(evolutionNode.branchA.branchName,
+                    evolutionNode.branchA.description,
+                    evolutionNode.branchA.icon);
+            }
+
+            if (evolutionNode.branchB != null)
+            {
+                _view.SetOption2(evolutionNode.branchB.branchName,
+                    evolutionNode.branchB.description,
+                    evolutionNode.branchB.icon);
+            }
         }
 
         public virtual void OnClose()
         {
             // 关闭时清理
+            _currentEvolution = null;
             _view = null;
         }
 
@@ -38,14 +70,71 @@ namespace Game.UI
 
         public void OnOption1ImageClicked()
         {
-            // TODO: 处理按钮点击后的业务逻辑（纯逻辑）
-            // 可在此调用 _view.SetXXX 方法更新文本内容
+            if (_currentEvolution == null) return;
+            ConfirmEvolution(true);
+            UIManager.Instance.Close<CardUpgradeView>();
         }
 
         public void OnOption2ImageClicked()
         {
-            // TODO: 处理按钮点击后的业务逻辑（纯逻辑）
-            // 可在此调用 _view.SetXXX 方法更新文本内容
+            if (_currentEvolution == null) return;
+            ConfirmEvolution(false);
+            UIManager.Instance.Close<CardUpgradeView>();
+        }
+
+        /// <summary>
+        /// 确认进化选择
+        /// </summary>
+        private void ConfirmEvolution(bool chooseBranchA)
+        {
+            if (_currentEvolution == null) return;
+
+            var selectedBranch = chooseBranchA 
+                ? _currentEvolution.EvolutionNode.branchA 
+                : _currentEvolution.EvolutionNode.branchB;
+
+            if (selectedBranch == null)
+            {
+                Debug.LogWarning("[CardUpgradeViewLogic] 选择的分支为空");
+                return;
+            }
+
+            // 更新卡牌等级
+            var inventoryManager = GameRoot.Instance?.InventoryManager;
+            if (inventoryManager == null)
+            {
+                Debug.LogError("[CardUpgradeViewLogic] InventoryManager 为空");
+                return;
+            }
+
+            var cardState = inventoryManager.GetActiveCard(_currentEvolution.InstanceId);
+            if (cardState == null)
+            {
+                Debug.LogError($"[CardUpgradeViewLogic] 找不到卡牌实例: {_currentEvolution.InstanceId}");
+                return;
+            }
+
+            // 更新等级
+            cardState.Level = _currentEvolution.NextLevel;
+
+            // 记录进化历史
+            cardState.EvolutionHistory.AddChoice(
+                _currentEvolution.NextLevel, 
+                chooseBranchA, 
+                selectedBranch.branchName);
+
+            string branchPath = cardState.EvolutionHistory.GetPathString();
+
+            // 发布进化完成事件
+            EventBus.Publish(new SkillEvolvedEvent(
+                _currentEvolution.CardId,
+                _currentEvolution.InstanceId,
+                _currentEvolution.NextLevel,
+                selectedBranch,
+                branchPath
+            ));
+
+            Debug.Log($"[CardUpgradeViewLogic] '{_currentEvolution.CardId}' 进化完成 Lv{_currentEvolution.NextLevel}, 选择分支: {selectedBranch.branchName}");
         }
     }
 

@@ -184,23 +184,28 @@ namespace RogueGame.Game.Service
             return result;
         }
 
+    
         private ActiveCardAddResult HandleDuplicateActiveCard(
             ActiveCardState state,
             ActiveCardAddResult result)
         {
             result.InstanceId = state.InstanceId;
+            result.NewLevel = state.Level; // 记录当前等级
 
-            bool requested = UpgradeActiveCard(state.CardId);
-            if (requested)
+            // 尝试升级
+            bool canUpgrade = UpgradeActiveCard(state.CardId);
+            if (canUpgrade)
             {
                 result.Success = true;
                 result.Upgraded = true;
                 result.NewLevel = state.Level + 1;
 
-                CDLogger.Log($"[Inventory] '{state.CardId}' 请求升级 Lv{state.Level} → Lv{state.Level + 1}");
+                CDLogger.Log($"[Inventory] '{state.CardId}' 升级请求已发起 Lv{state.Level} → Lv{state.Level + 1}");
                 return result;
             }
 
+            // 已达最大等级，转换为金币
+            CDLogger.Log($"[Inventory] '{state.CardId}' 已达最大等级 Lv{state.Level}，尝试转换为金币");
             return ConvertDuplicateToCoins(result);
         }
 
