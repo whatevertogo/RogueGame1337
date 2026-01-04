@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Character.Player.Skill.Evolution;
 using Character.Player.Skill.Modifiers;
 using Character.Player.Skill.Targeting;
@@ -142,31 +143,34 @@ namespace Character.Player.Skill.Runtime
 
         /// <summary>
         /// 阶段1：应用能量消耗修改器
-        /// 在能量消耗前调用
+        /// 在能量消耗前调用，按优先级递减排序
         /// </summary>
         public void ApplyEnergyCostModifiers(ref EnergyCostConfig config)
         {
-            foreach (var modifier in _activeModifiers)
+            // 按优先级递减排序（高优先级先执行）
+            var sortedModifiers = _activeModifiers
+                .OfType<IEnergyCostModifier>()
+                .OrderByDescending(m => m.Priority);
+
+            foreach (var modifier in sortedModifiers)
             {
-                if (modifier is IEnergyCostModifier energyModifier)
-                {
-                    energyModifier.ApplyEnergyCost(this, ref config);
-                }
+                modifier.ApplyEnergyCost(this, ref config);
             }
         }
 
         /// <summary>
         /// 阶段2：应用目标获取修改器
-        /// 在目标获取前调用
+        /// 在目标获取前调用，按优先级递减排序
         /// </summary>
         public void ApplyTargetingModifiers(ref TargetingConfig config)
         {
-            foreach (var modifier in _activeModifiers)
+            var sortedModifiers = _activeModifiers
+                .OfType<ITargetingModifier>()
+                .OrderByDescending(m => m.Priority);
+
+            foreach (var modifier in sortedModifiers)
             {
-                if (modifier is ITargetingModifier targetingModifier)
-                {
-                    targetingModifier.ApplyTargeting(this, ref config);
-                }
+                modifier.ApplyTargeting(this, ref config);
             }
         }
 
@@ -194,31 +198,33 @@ namespace Character.Player.Skill.Runtime
 
         /// <summary>
         /// 阶段4：应用伤害修改器
-        /// 在应用效果前调用
+        /// 在应用效果前调用，按优先级递减排序
         /// </summary>
         public void ApplyDamageModifiers(ref DamageResult result)
         {
-            foreach (var modifier in _activeModifiers)
+            var sortedModifiers = _activeModifiers
+                .OfType<IDamageModifier>()
+                .OrderByDescending(m => m.Priority);
+
+            foreach (var modifier in sortedModifiers)
             {
-                if (modifier is IDamageModifier damageModifier)
-                {
-                    damageModifier.ApplyDamage(this, ref result);
-                }
+                modifier.ApplyDamage(this, ref result);
             }
         }
 
         /// <summary>
         /// 阶段6：应用跨阶段修改器
-        /// 在所有阶段完成后调用（用于处理跨阶段逻辑）
+        /// 在所有阶段完成后调用（用于处理跨阶段逻辑），按优先级递减排序
         /// </summary>
         public void ApplyCrossPhaseModifiers(ref SkillContext ctx)
         {
-            foreach (var modifier in _activeModifiers)
+            var sortedModifiers = _activeModifiers
+                .OfType<ICrossPhaseModifier>()
+                .OrderByDescending(m => m.Priority);
+
+            foreach (var modifier in sortedModifiers)
             {
-                if (modifier is ICrossPhaseModifier crossPhaseModifier)
-                {
-                    crossPhaseModifier.ApplyCrossPhase(this, ref ctx);
-                }
+                modifier.ApplyCrossPhase(this, ref ctx);
             }
         }
 
@@ -226,14 +232,17 @@ namespace Character.Player.Skill.Runtime
         // ========== 进化管理 ==========
         /// <summary>
         /// 设置进化节点并应用分支修改器
+        /// 注：分支效果不再存储，由 SkillDefinition.GetAllEffects(runtime) 即时计算
         /// </summary>
         public void SetEvolutionNode(SkillNode node, SkillBranch selectedBranch)
         {
+            if (node == null || selectedBranch == null) return;
+
             CurrentNode = node;
             BranchHistory.Add(selectedBranch);
 
             // 应用分支的修改器
-            if (selectedBranch?.modifiers != null)
+            if (selectedBranch.modifiers != null)
             {
                 foreach (var modifier in selectedBranch.modifiers)
                 {

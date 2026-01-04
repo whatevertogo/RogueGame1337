@@ -327,14 +327,22 @@ namespace RogueGame.Events
         public int NewLevel;
         public Character.Player.Skill.Evolution.SkillBranch SelectedBranch;
         public string BranchPath; // 例如 "A-A-B-A"
+        public Character.Player.Skill.Evolution.SkillNode EvolutionNode;
 
-        public SkillEvolvedEvent(string cardId, string instanceId, int newLevel, Character.Player.Skill.Evolution.SkillBranch selectedBranch, string branchPath)
+        public SkillEvolvedEvent(
+            string cardId,
+            string instanceId,
+            int newLevel,
+            Character.Player.Skill.Evolution.SkillBranch selectedBranch,
+            string branchPath,
+            Character.Player.Skill.Evolution.SkillNode evolutionNode = null)
         {
             CardId = cardId;
             InstanceId = instanceId;
             NewLevel = newLevel;
             SelectedBranch = selectedBranch;
             BranchPath = branchPath;
+            EvolutionNode = evolutionNode;
         }
     }
 

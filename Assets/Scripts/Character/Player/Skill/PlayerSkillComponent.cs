@@ -2,6 +2,8 @@ using Character.Components.Interface;
 using Character.Player.Skill.Core;
 using Character.Player.Skill.Runtime;
 using Character.Player.Skill.Slots;
+using Core.Events;
+using RogueGame.Events;
 using UnityEngine;
 
 namespace Character.Player
@@ -45,6 +47,57 @@ namespace Character.Player
         private void OnDestroy()
         {
             _executor?.Dispose();
+        }
+
+        private void OnEnable()
+        {
+            EventBus.Subscribe<SkillEvolvedEvent>(HandleSkillEvolvedEvent);
+        }
+
+        private void OnDisable()
+        {
+            EventBus.Unsubscribe<SkillEvolvedEvent>(HandleSkillEvolvedEvent);
+        }
+
+        /// <summary>
+        /// 处理进化完成事件并同步到运行时
+        /// 架构说明：通过 inventory 查找装备状态（O(1)），避免遍历槽位（O(n)）
+        /// </summary>
+        private void HandleSkillEvolvedEvent(SkillEvolvedEvent evt)
+        {
+            if (evt == null || string.IsNullOrEmpty(evt.InstanceId)) return;
+
+            // 1. 从 inventory 获取卡牌状态
+            var inventory = GameRoot.Instance?.InventoryManager;
+            if (inventory == null) return;
+
+            var cardState = inventory.ActiveCardService.GetCardByInstanceId(evt.InstanceId);
+            if (cardState == null || !cardState.IsEquipped)
+            {
+                // 技能未装备或已被移除，无需同步
+                return;
+            }
+
+            // 2. 确认进化数据完整性
+            var node = evt.EvolutionNode ?? GameRoot.Instance?.CardDatabase?.Resolve(evt.CardId)?.activeCardConfig?.skill?.GetEvolutionNode(evt.NewLevel);
+            var branch = evt.SelectedBranch;
+            if (node == null || branch == null)
+            {
+                Debug.LogWarning($"[PlayerSkillComponent] 进化事件缺少节点或分支: {evt.CardId} #{evt.InstanceId}");
+                return;
+            }
+
+            // 3. 同步到当前组件的槽位（仅当前玩家）
+            for (int i = 0; i < SlotCount; i++)
+            {
+                var rt = GetRuntime(i);
+                if (rt?.InstanceId == evt.InstanceId)
+                {
+                    rt.SetEvolutionNode(node, branch);
+                    Debug.Log($"[PlayerSkillComponent] 同步进化至槽位{i}: {evt.CardId} #{evt.InstanceId} Lv{evt.NewLevel}, 分支: {branch.branchName}");
+                    return;  // 找到匹配槽位后直接返回
+                }
+            }
         }
 
         // ============ ISkillComponent 实现 ============

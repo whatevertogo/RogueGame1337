@@ -24,13 +24,13 @@ namespace Character.Player.Skill.Pipeline.Phases
             if (token.IsCancelled) return SkillPhaseResult.Cancel;
 
             var def = ctx.Runtime.Skill;
-
-            // 检查是否有效果
-            if (def.Effects == null || def.Effects.Count == 0)
-                return SkillPhaseResult.Continue; // 没有效果不是失败
-
             var targets = ctx.TargetResult.Targets;
             var caster = ctx.Caster;
+
+            // 获取所有效果（基础 + 进化分支），即时计算
+            var allEffects = def.GetAllEffects(ctx.Runtime);
+            if (allEffects == null || allEffects.Count == 0)
+                return SkillPhaseResult.Continue; // 没有效果不是失败
 
             foreach (var target in targets)
             {
@@ -39,7 +39,8 @@ namespace Character.Player.Skill.Pipeline.Phases
                 var statusComp = target.GetComponent<StatusEffectComponent>();
                 if (statusComp == null) continue;
 
-                foreach (var effectDef in def.Effects)
+                // 应用所有效果（包含基础效果和分支效果）
+                foreach (var effectDef in allEffects)
                 {
                     if (effectDef == null) continue;
 

@@ -126,24 +126,25 @@ namespace RogueGame.Game.Service
                 return false;
             }
 
-            // 更新等级
-            cardState.Level = nextLevel;
-
-            // 记录进化历史
+            // 记录进化历史（索引隐式表示等级：Choices[0]=Lv2, Choices[1]=Lv3...）
             cardState.EvolutionHistory.AddChoice(
-                nextLevel,
                 chooseBranchA,
                 selectedBranch.branchName);
 
             string branchPath = cardState.EvolutionHistory.GetPathString();
 
-            // 发布进化完成事件
+            // 获取进化节点供运行时同步使用
+            var cardDef = GameRoot.Instance?.CardDatabase?.Resolve(cardId);
+            var evolutionNode = cardDef?.activeCardConfig?.skill?.GetEvolutionNode(nextLevel);
+
+            // 发布进化完成事件（包含 evolutionNode，供运行时订阅者使用）
             EventBus.Publish(new SkillEvolvedEvent(
                 cardId,
                 instanceId,
                 nextLevel,
                 selectedBranch,
-                branchPath
+                branchPath,
+                evolutionNode
             ));
 
             CDLogger.Log($"[Inventory] '{cardId}' 进化完成 Lv{nextLevel}, 选择分支: {selectedBranch.branchName}");

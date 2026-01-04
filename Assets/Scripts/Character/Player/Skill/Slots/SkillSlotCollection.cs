@@ -61,13 +61,38 @@ namespace Character.Player.Skill.Slots
             var cardDef = GameRoot.Instance?.CardDatabase?.Resolve(cardId);
             if (cardDef == null) return;
 
-            // 用于将技能运行时与库存中的某个具体实例（InstanceId）建立关联。
-            var cardState = _inventory.ActiveCardService.GetCardByInstanceId(cardId);
+            // 关联库存实例（按卡号取第一个实例）
+            var cardState = _inventory.ActiveCardService.GetFirstByCardId(cardId);
+            var skillDef = cardDef.activeCardConfig?.skill;
             var runtime = new ActiveSkillRuntime(
                 cardId,
-                cardDef.activeCardConfig?.skill,
+                skillDef,
                 cardState?.InstanceId
             );
+
+            // 如果该实例已有进化历史，回放以恢复运行时状态（修改器与分支效果）
+            if (cardState?.EvolutionHistory?.Choices != null && cardState.EvolutionHistory.Choices.Count > 0 && skillDef != null)
+            {
+                var choices = cardState.EvolutionHistory.Choices;
+                for (int i = 0; i < choices.Count; i++)
+                {
+                    int level = i + 2;  // 索引隐式表示等级：Choices[0]=Lv2
+                    var choice = choices[i];
+                    var node = skillDef.GetEvolutionNode(level);
+                    if (node == null)
+                    {
+                        UnityEngine.Debug.LogError($"[SkillSlotCollection] 回放失败: {cardId} (实例: {cardState?.InstanceId}) 缺少 Lv{level} 节点，停止回放");
+                        break;  // 停止回放，避免状态错乱
+                    }
+                    var branch = choice.ChoseBranchA ? node.branchA : node.branchB;
+                    if (branch == null)
+                    {
+                        UnityEngine.Debug.LogError($"[SkillSlotCollection] 回放失败: {cardId} (实例: {cardState?.InstanceId}) Lv{level} 分支不存在");
+                        break;
+                    }
+                    runtime.SetEvolutionNode(node, branch);
+                }
+            }
 
             _slots[index].Equip(cardId, runtime);
 

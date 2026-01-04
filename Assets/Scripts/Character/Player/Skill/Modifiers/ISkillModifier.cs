@@ -12,6 +12,12 @@ namespace Character.Player.Skill.Modifiers
         /// 修改器唯一标识（用于调试和日志）
         /// </summary>
         string ModifierId { get; }
+
+        /// <summary>
+        /// 修改器优先级（0-100，默认 50）
+        /// 较高优先级先执行，相同优先级顺序不保证
+        /// </summary>
+        int Priority => 50;  // 默认中位优先级
     }
 
     #region 阶段化修改器接口

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Card.SkillSystem.TargetingSystem;
 using Character.Player.Skill.Evolution;
+using Character.Player.Skill.Runtime;
 using UnityEngine;
 
 
@@ -56,5 +57,36 @@ public class SkillDefinition : ScriptableObject
     public bool CanEvolve(int currentLevel)
     {
         return currentLevel >= 1 && currentLevel < MaxLevel && GetEvolutionNode(currentLevel + 1) != null;
+    }
+
+    /// <summary>
+    /// 获取所有效果（基础 + 进化分支）
+    /// 根据运行时状态即时计算，不存储中间结果
+    /// </summary>
+    /// <param name="runtime">技能运行时状态</param>
+    /// <returns>合并后的效果列表（包含基础效果和所有分支效果）</returns>
+    public List<StatusEffectDefinitionSO> GetAllEffects(ActiveSkillRuntime runtime)
+    {
+        var allEffects = new List<StatusEffectDefinitionSO>();
+
+        // 1. 添加基础效果
+        if (Effects != null)
+        {
+            allEffects.AddRange(Effects);
+        }
+
+        // 2. 添加进化分支效果
+        if (runtime?.BranchHistory != null)
+        {
+            foreach (var branch in runtime.BranchHistory)
+            {
+                if (branch?.effects != null)
+                {
+                    allEffects.AddRange(branch.effects);
+                }
+            }
+        }
+
+        return allEffects;
     }
 }

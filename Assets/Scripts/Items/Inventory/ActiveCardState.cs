@@ -15,7 +15,6 @@ namespace RogueGame.Items
         public string InstanceId;        // 可选：若卡牌不是全局唯一
         public bool IsEquipped;
         public int CurrentEnergy;
-        public int Level = 1;            // 技能等级（Lv1-Lv5），用于主动技能升级系统
         public string EquippedPlayerId;  // null 表示在池中
 
         /// <summary>
@@ -28,6 +27,11 @@ namespace RogueGame.Items
         /// 获取进化历史记录
         /// </summary>
         public SkillEvolutionHistory EvolutionHistory => _evolutionHistory;
+
+        /// <summary>
+        /// 当前等级（1 + 进化选择次数），用进化历史计算，避免重复存储
+        /// </summary>
+        public int Level => (_evolutionHistory?.Choices?.Count ?? 0) + 1;
     }
 
     /// <summary>
@@ -47,9 +51,6 @@ namespace RogueGame.Items
         [Serializable]
         public class EvolutionChoice
         {
-            /// <summary>进化到的等级</summary>
-            public int Level;
-
             /// <summary>true=分支A, false=分支B</summary>
             public bool ChoseBranchA;
 
@@ -69,11 +70,10 @@ namespace RogueGame.Items
         /// <summary>
         /// 添加新的进化选择
         /// </summary>
-        public void AddChoice(int level, bool choseBranchA, string branchId)
+        public void AddChoice(bool choseBranchA, string branchId)
         {
             Choices.Add(new EvolutionChoice
             {
-                Level = level,
                 ChoseBranchA = choseBranchA,
                 BranchId = branchId
             });
