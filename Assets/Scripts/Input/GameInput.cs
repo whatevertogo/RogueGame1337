@@ -24,6 +24,7 @@ public sealed class GameInput : Singleton<GameInput>
 
     public event Action OnSkillQPressed;
     public event Action OnSkillEPressed;
+    public event Action OnSkillSpacePressed;
 
     protected override void Awake()
     {
@@ -64,6 +65,7 @@ public sealed class GameInput : Singleton<GameInput>
         // 使用方法组订阅，便于正确取消订阅
         playerInput.PlayerControl.SkillQ.performed += OnSkillQPerformed;
         playerInput.PlayerControl.SkillE.performed += OnSkillEPerformed;
+        playerInput.PlayerControl.SkillSpace.performed += OnSkillSpacePerformed;
         playerInput.UI.ESC.performed += OnESCPerformed;
     }
 
@@ -80,6 +82,7 @@ public sealed class GameInput : Singleton<GameInput>
         {
             playerInput.PlayerControl.SkillQ.performed -= OnSkillQPerformed;
             playerInput.PlayerControl.SkillE.performed -= OnSkillEPerformed;
+            playerInput.PlayerControl.SkillSpace.performed -= OnSkillSpacePerformed;
             playerInput.UI.ESC.performed -= OnESCPerformed;
         }
     }
@@ -103,5 +106,10 @@ public sealed class GameInput : Singleton<GameInput>
     { 
         playerInput?.Dispose();
         base.OnDestroy();
+    }
+
+    private void OnSkillSpacePerformed(UnityEngine.InputSystem.InputAction.CallbackContext ctx)
+    {
+        OnSkillSpacePressed?.Invoke();
     }
 }

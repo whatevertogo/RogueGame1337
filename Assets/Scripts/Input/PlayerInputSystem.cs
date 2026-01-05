@@ -136,6 +136,15 @@ public partial class @PlayerInputSystem: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""SkillSpace"",
+                    ""type"": ""Button"",
+                    ""id"": ""e706dc42-2d30-4785-b275-ee915d50d746"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -248,6 +257,17 @@ public partial class @PlayerInputSystem: IInputActionCollection2, IDisposable
                     ""action"": ""SkillE"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""d205355a-2018-40cc-aaf8-66e4b02f11cb"",
+                    ""path"": ""<Keyboard>/space"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""SkillSpace"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         },
@@ -289,6 +309,7 @@ public partial class @PlayerInputSystem: IInputActionCollection2, IDisposable
         m_PlayerControl_Interact = m_PlayerControl.FindAction("Interact", throwIfNotFound: true);
         m_PlayerControl_SkillQ = m_PlayerControl.FindAction("SkillQ", throwIfNotFound: true);
         m_PlayerControl_SkillE = m_PlayerControl.FindAction("SkillE", throwIfNotFound: true);
+        m_PlayerControl_SkillSpace = m_PlayerControl.FindAction("SkillSpace", throwIfNotFound: true);
         // UI
         m_UI = asset.FindActionMap("UI", throwIfNotFound: true);
         m_UI_ESC = m_UI.FindAction("ESC", throwIfNotFound: true);
@@ -378,6 +399,7 @@ public partial class @PlayerInputSystem: IInputActionCollection2, IDisposable
     private readonly InputAction m_PlayerControl_Interact;
     private readonly InputAction m_PlayerControl_SkillQ;
     private readonly InputAction m_PlayerControl_SkillE;
+    private readonly InputAction m_PlayerControl_SkillSpace;
     /// <summary>
     /// Provides access to input actions defined in input action map "PlayerControl".
     /// </summary>
@@ -409,6 +431,10 @@ public partial class @PlayerInputSystem: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "PlayerControl/SkillE".
         /// </summary>
         public InputAction @SkillE => m_Wrapper.m_PlayerControl_SkillE;
+        /// <summary>
+        /// Provides access to the underlying input action "PlayerControl/SkillSpace".
+        /// </summary>
+        public InputAction @SkillSpace => m_Wrapper.m_PlayerControl_SkillSpace;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -450,6 +476,9 @@ public partial class @PlayerInputSystem: IInputActionCollection2, IDisposable
             @SkillE.started += instance.OnSkillE;
             @SkillE.performed += instance.OnSkillE;
             @SkillE.canceled += instance.OnSkillE;
+            @SkillSpace.started += instance.OnSkillSpace;
+            @SkillSpace.performed += instance.OnSkillSpace;
+            @SkillSpace.canceled += instance.OnSkillSpace;
         }
 
         /// <summary>
@@ -476,6 +505,9 @@ public partial class @PlayerInputSystem: IInputActionCollection2, IDisposable
             @SkillE.started -= instance.OnSkillE;
             @SkillE.performed -= instance.OnSkillE;
             @SkillE.canceled -= instance.OnSkillE;
+            @SkillSpace.started -= instance.OnSkillSpace;
+            @SkillSpace.performed -= instance.OnSkillSpace;
+            @SkillSpace.canceled -= instance.OnSkillSpace;
         }
 
         /// <summary>
@@ -647,6 +679,13 @@ public partial class @PlayerInputSystem: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnSkillE(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "SkillSpace" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnSkillSpace(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "UI" which allows adding and removing callbacks.

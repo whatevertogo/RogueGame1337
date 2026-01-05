@@ -49,6 +49,7 @@ public class PlayerController : CharacterBase
 		{
 			GameInput.Instance.OnSkillQPressed += () => TryActivateSkill(0); // 0 = Q技能槽
 			GameInput.Instance.OnSkillEPressed += () => TryActivateSkill(1); // 1 = E技能槽
+			GameInput.Instance.OnSkillSpacePressed += () => TryActivateSkill(2); // 2 = 空格技能槽
 		}
 
 		CDTU.Utils.CDLogger.Log($"[PlayerController] Awake: {gameObject.name}, tag={gameObject.tag}, layer={LayerMask.LayerToName(gameObject.layer)}, Rigidbody2D={(rb != null ? "Yes" : "No")}, Collider2D={(col != null ? "Yes" : "No")}");
@@ -175,7 +176,6 @@ public class PlayerController : CharacterBase
 
 	protected override void OnDeath()
 	{
-
 		base.OnDeath();
 		//无法移动
 		Movement?.SetCanMove(false);
