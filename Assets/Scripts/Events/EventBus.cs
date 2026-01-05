@@ -42,8 +42,8 @@ namespace Core.Events
                     continue;
                 }
 #endif
-                if (d is Action<T> syncHandler)
-                    syncHandler(evt);
+                if (d is Action<T> Handler)
+                    Handler(evt);
             }
         }
 
