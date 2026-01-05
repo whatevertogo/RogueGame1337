@@ -6,7 +6,8 @@ namespace Character.Player.Skill.Pipeline.Phases
 {
 
     /// <summary>
-    /// 效果应用阶段：遍历目标 → 创建效果 → 应用
+    /// 效果应用阶段：从运行时缓存获取效果 → 遍历目标 → 创建实例 → 应用
+    /// 重构：使用缓存机制，避免每次施放时重新计算效果列表
     /// </summary>
     public sealed class EffectApplicationPhase : ISkillPhase
     {
@@ -23,12 +24,12 @@ namespace Character.Player.Skill.Pipeline.Phases
         {
             if (token.IsCancelled) return SkillPhaseResult.Cancel;
 
-            var def = ctx.Runtime.Skill;
+            var runtime = ctx.Runtime;
             var targets = ctx.TargetResult.Targets;
             var caster = ctx.Caster;
 
-            // 获取所有效果（基础 + 进化分支），即时计算
-            var allEffects = def.GetAllEffects(ctx.Runtime);
+            // 从运行时缓存获取所有效果（基础 + 修改器生成）
+            var allEffects = runtime.GetAllEffects();
             if (allEffects == null || allEffects.Count == 0)
                 return SkillPhaseResult.Continue; // 没有效果不是失败
 
@@ -39,7 +40,7 @@ namespace Character.Player.Skill.Pipeline.Phases
                 var statusComp = target.GetComponent<StatusEffectComponent>();
                 if (statusComp == null) continue;
 
-                // 应用所有效果（包含基础效果和分支效果）
+                // 应用所有效果
                 foreach (var effectDef in allEffects)
                 {
                     if (effectDef == null) continue;

@@ -110,6 +110,7 @@ namespace RogueGame.Game.Service
 
         /// <summary>
         /// 确认进化选择（UI 层调用）
+        /// 重构：不再记录历史，直接通知 Runtime 更新修改器
         /// </summary>
         public bool ConfirmEvolution(
             string instanceId,
@@ -126,24 +127,20 @@ namespace RogueGame.Game.Service
                 return false;
             }
 
-            // 记录进化历史（索引隐式表示等级：Choices[0]=Lv2, Choices[1]=Lv3...）
-            cardState.EvolutionHistory.AddChoice(
-                chooseBranchA,
-                selectedBranch.branchName);
-
-            string branchPath = cardState.EvolutionHistory.GetPathString();
+            // 更新持久化的等级
+            cardState.Level = nextLevel;
 
             // 获取进化节点供运行时同步使用
             var cardDef = GameRoot.Instance?.CardDatabase?.Resolve(cardId);
             var evolutionNode = cardDef?.activeCardConfig?.skill?.GetEvolutionNode(nextLevel);
 
-            // 发布进化完成事件（包含 evolutionNode，供运行时订阅者使用）
+            // 发布进化完成事件（Runtime 会订阅此事件并应用修改器）
             EventBus.Publish(new SkillEvolvedEvent(
                 cardId,
                 instanceId,
                 nextLevel,
                 selectedBranch,
-                branchPath,
+                chooseBranchA ? "A" : "B",  // 简单的分支标识
                 evolutionNode
             ));
 

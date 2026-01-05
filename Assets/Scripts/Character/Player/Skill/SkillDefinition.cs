@@ -60,33 +60,20 @@ public class SkillDefinition : ScriptableObject
     }
 
     /// <summary>
-    /// 获取所有效果（基础 + 进化分支）
-    /// 根据运行时状态即时计算，不存储中间结果
+    /// 获取所有效果（基础 + 修改器生成）
+    /// 重构：委托给 Runtime 的缓存机制，避免重复计算
     /// </summary>
     /// <param name="runtime">技能运行时状态</param>
-    /// <returns>合并后的效果列表（包含基础效果和所有分支效果）</returns>
+    /// <returns>合并后的效果列表</returns>
     public List<StatusEffectDefinitionSO> GetAllEffects(ActiveSkillRuntime runtime)
     {
-        var allEffects = new List<StatusEffectDefinitionSO>();
-
-        // 1. 添加基础效果
-        if (Effects != null)
+        if (runtime == null)
         {
-            allEffects.AddRange(Effects);
+            // 如果没有 runtime，只返回基础效果
+            return Effects ?? new List<StatusEffectDefinitionSO>();
         }
 
-        // 2. 添加进化分支效果
-        if (runtime?.BranchHistory != null)
-        {
-            foreach (var branch in runtime.BranchHistory)
-            {
-                if (branch?.effects != null)
-                {
-                    allEffects.AddRange(branch.effects);
-                }
-            }
-        }
-
-        return allEffects;
+        // 使用 Runtime 的缓存机制
+        return runtime.GetAllEffects();
     }
 }

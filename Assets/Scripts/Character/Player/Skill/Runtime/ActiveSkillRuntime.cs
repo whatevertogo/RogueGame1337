@@ -60,20 +60,6 @@ namespace Character.Player.Skill.Runtime
         [NonSerialized]
         public List<SkillBranch> BranchHistory = new List<SkillBranch>();
 
-        // ========== 动态属性（由修改器影响） ==========
-
-        // /// <summary>
-        // /// 弹射次数
-        // /// </summary>
-        // [NonSerialized]
-        // public int BounceCount;
-
-        // /// <summary>
-        // /// 弹射范围
-        // /// </summary>
-        // [NonSerialized]
-        // public float BounceRange = 5f;
-
         // ========== 卡牌配置缓存 ==========
         /// <summary>
         /// 缓存的卡牌定义（避免频繁从 CardDatabase.Resolve 查找）
@@ -119,6 +105,12 @@ namespace Character.Player.Skill.Runtime
             if (_activeModifiers.Contains(modifier)) return;
 
             _activeModifiers.Add(modifier);
+
+            // 如果是效果生成修改器，标记效果缓存为脏
+            if (modifier is IEffectGeneratorModifier)
+            {
+                MarkEffectsCacheDirty();
+            }
         }
 
         /// <summary>
@@ -126,7 +118,15 @@ namespace Character.Player.Skill.Runtime
         /// </summary>
         public bool RemoveModifier(ISkillModifier modifier)
         {
-            return _activeModifiers.Remove(modifier);
+            bool removed = _activeModifiers.Remove(modifier);
+
+            // 如果移除的是效果生成修改器，标记效果缓存为脏
+            if (removed && modifier is IEffectGeneratorModifier)
+            {
+                MarkEffectsCacheDirty();
+            }
+
+            return removed;
         }
 
         /// <summary>
@@ -135,6 +135,7 @@ namespace Character.Player.Skill.Runtime
         public void ClearAllModifiers()
         {
             _activeModifiers.Clear();
+            MarkEffectsCacheDirty();
         }
 
         #endregion
@@ -174,28 +175,6 @@ namespace Character.Player.Skill.Runtime
             }
         }
 
-        // /// <summary>
-        // /// 阶段3：应用投射物修改器
-        // /// 在创建投射物时调用
-        // /// </summary>
-        // public void ApplyProjectileModifiers(ref ProjectileConfig config)
-        // {
-        //     foreach (var modifier in _activeModifiers)
-        //     {
-        //         if (modifier is IProjectileModifier projectileModifier)
-        //         {
-        //             try
-        //             {
-        //                 projectileModifier.ApplyProjectile(this, ref config);
-        //             }
-        //             catch (Exception ex)
-        //             {
-        //                 Debug.LogError($"[ActiveSkillRuntime] 投射物修改器 {modifier.ModifierId} 应用失败: {ex.Message}");
-        //             }
-        //         }
-        //     }
-        // }
-
         /// <summary>
         /// 阶段4：应用伤害修改器
         /// 在应用效果前调用，按优先级递减排序
@@ -229,10 +208,76 @@ namespace Character.Player.Skill.Runtime
         }
 
         #endregion
+
+        #region 效果生成（新增）
+
+        // ========== 效果缓存 ==========
+        /// <summary>
+        /// 缓存的效果列表（避免重复计算）
+        /// </summary>
+        [NonSerialized]
+        private List<StatusEffectDefinitionSO> _cachedEffects;
+
+        /// <summary>
+        /// 效果缓存失效标志
+        /// </summary>
+        [NonSerialized]
+        private bool _effectsCacheDirty = true;
+
+        /// <summary>
+        /// 获取所有效果（基础 + 修改器生成）
+        /// 使用缓存机制，避免重复计算
+        /// </summary>
+        public List<StatusEffectDefinitionSO> GetAllEffects()
+        {
+            if (_effectsCacheDirty || _cachedEffects == null)
+            {
+                _cachedEffects = CalculateAllEffects();
+                _effectsCacheDirty = false;
+            }
+            return _cachedEffects;
+        }
+
+        /// <summary>
+        /// 计算所有效果（基础效果 + 修改器生成的效果）
+        /// </summary>
+        private List<StatusEffectDefinitionSO> CalculateAllEffects()
+        {
+            var allEffects = new List<StatusEffectDefinitionSO>();
+
+            // 1. 添加技能定义的基础效果
+            if (Skill?.Effects != null)
+            {
+                allEffects.AddRange(Skill.Effects);
+            }
+
+            // 2. 从所有效果生成修改器中收集效果
+            var effectGenerators = _activeModifiers.OfType<IEffectGeneratorModifier>();
+            foreach (var generator in effectGenerators)
+            {
+                var generatedEffects = generator.GenerateEffects(this);
+                if (generatedEffects != null && generatedEffects.Count > 0)
+                {
+                    allEffects.AddRange(generatedEffects);
+                }
+            }
+
+            return allEffects;
+        }
+
+        /// <summary>
+        /// 标记效果缓存为脏（在修改器变化时调用）
+        /// </summary>
+        public void MarkEffectsCacheDirty()
+        {
+            _effectsCacheDirty = true;
+        }
+
+        #endregion
+
         // ========== 进化管理 ==========
         /// <summary>
         /// 设置进化节点并应用分支修改器
-        /// 注：分支效果不再存储，由 SkillDefinition.GetAllEffects(runtime) 即时计算
         /// </summary>
         public void SetEvolutionNode(SkillNode node, SkillBranch selectedBranch)
         {
@@ -241,7 +286,7 @@ namespace Character.Player.Skill.Runtime
             CurrentNode = node;
             BranchHistory.Add(selectedBranch);
 
-            // 应用分支的修改器
+            // 应用分支的修改器（包括效果生成修改器）
             if (selectedBranch.modifiers != null)
             {
                 foreach (var modifier in selectedBranch.modifiers)
@@ -252,6 +297,8 @@ namespace Character.Player.Skill.Runtime
                     }
                 }
             }
+
+            // 修改器已添加，效果缓存会在 AddModifier 中自动标记为脏
         }
 
         /// <summary>

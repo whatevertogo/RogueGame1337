@@ -64,19 +64,24 @@ namespace Character.Player.Skill.Modifiers
         void ApplyDamage(ActiveSkillRuntime runtime, ref DamageResult result);
     }
 
-    // /// <summary>
-    // /// 投射物/弹道阶段修改器：在创建投射物时应用
-    // /// 优先级：在伤害之后执行
-    // /// </summary>
-    // public interface IProjectileModifier : ISkillModifier
-    // {
-    //     /// <summary>
-    //     /// 应用投射物配置修改
-    //     /// </summary>
-    //     /// <param name="runtime">技能运行时状态</param>
-    //     /// <param name="config">投射物配置（ref 引用，可直接修改）</param>
-    //     void ApplyProjectile(ActiveSkillRuntime runtime, ref Targeting.ProjectileConfig config);
-    // }
+    #endregion
+
+    #region 效果生成修改器接口
+
+    /// <summary>
+    /// 效果生成修改器：动态生成需要应用到目标身上的效果
+    /// 用于技能进化分支添加新效果（如燃烧、眩晕、减速等）
+    /// 优先级：在效果应用阶段收集所有效果生成器
+    /// </summary>
+    public interface IEffectGeneratorModifier : ISkillModifier
+    {
+        /// <summary>
+        /// 生成需要应用的效果定义列表
+        /// </summary>
+        /// <param name="runtime">技能运行时状态</param>
+        /// <returns>效果定义列表（可以为空，但不应返回 null）</returns>
+        System.Collections.Generic.List<StatusEffectDefinitionSO> GenerateEffects(ActiveSkillRuntime runtime);
+    }
 
     #endregion
 
@@ -110,7 +115,7 @@ namespace Character.Player.Skill.Modifiers
         /// <summary>
         /// 执行优先级，数值越小越先执行
         /// </summary>
-        int Priority { get; }
+        new int Priority { get; }
 
         /// <summary>
         /// 应用修改器效果
