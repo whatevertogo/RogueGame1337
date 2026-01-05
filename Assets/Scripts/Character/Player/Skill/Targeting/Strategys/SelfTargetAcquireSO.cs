@@ -14,7 +14,7 @@ public class SelfTargetAcquireSO : TargetAcquireSO
     [Header("过滤设置")]
     [Tooltip("目标过滤器组，用于筛选施法者是否符合条件")]
     [SerializeField] private TargetFilterGroupSO filterGroup;
-    
+
     /// <summary>
     /// 获取施法者自身作为目标
     /// </summary>
@@ -23,18 +23,18 @@ public class SelfTargetAcquireSO : TargetAcquireSO
     public override List<CharacterBase> Acquire(SkillContext ctx)
     {
         List<CharacterBase> resultTargets = new List<CharacterBase>();
-        
+
         // 保护性检查：施法者不能为空
         if (ctx.Caster == null)
             return resultTargets;
-        
+
         // 如果设置了过滤器组，应用过滤器
         if (filterGroup != null)
         {
             if (!filterGroup.IsValid(ctx, ctx.Caster))
                 return resultTargets;
         }
-        
+
         resultTargets.Add(ctx.Caster);
         return resultTargets;
     }

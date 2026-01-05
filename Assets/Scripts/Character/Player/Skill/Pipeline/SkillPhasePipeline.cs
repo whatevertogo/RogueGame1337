@@ -33,7 +33,7 @@ namespace Character.Player.Skill.Pipeline
         /// <param name="ctx">技能上下文（ref，可被 Phase 修改）</param>
         /// <param name="token">执行令牌</param>
         /// <returns>最终执行结果</returns>
-        public SkillPhaseResult Execute(ref SkillContext ctx, SkillExecutionToken token)
+        public SkillPhaseResult Execute(SkillContext ctx, SkillExecutionToken token)
         {
             foreach (var phase in _phases)
             {
@@ -41,7 +41,7 @@ namespace Character.Player.Skill.Pipeline
                 if (token.IsCancelled)
                     return SkillPhaseResult.Cancel;
 
-                var result = phase.Execute(ref ctx, token);
+                var result = phase.Execute(ctx, token);
 
                 // Fail：正常终止（如无目标、能量不足）
                 if (result == SkillPhaseResult.Fail)

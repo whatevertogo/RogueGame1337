@@ -116,7 +116,7 @@ namespace Character.Player.Skill.Core
             }
 
             // 执行 Pipeline（同步，传入 ref）
-            var result = _pipeline.Execute(ref localCtx, token);
+            var result = _pipeline.Execute(localCtx, token);
 
             // 处理结果（基于 Runtime 状态）
             if (result == SkillPhaseResult.Cancel && rt.EnergyConsumed)
@@ -187,6 +187,7 @@ namespace Character.Player.Skill.Core
             return new SkillPhasePipeline()
                 .Add(new EnergyConsumptionPhase(_inventory))
                 .Add(new TargetingPhase())
+                .Add(new CrossPhase())
                 .Add(new DamageCalculationPhase())
                 .Add(new EffectApplicationPhase(_effectFactory));
         }

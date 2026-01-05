@@ -11,10 +11,6 @@ using Character.Player.Skill.Targeting;
 [CreateAssetMenu(fileName = "AreaDamageTargetAcquire", menuName = "RogueGame/Skill/Targeting/Strategies/AreaDamageTargetAcquire")]
 public class AreaDamageTargetAcquireSO : TargetAcquireSO
 {
-    [Header("范围设置")]
-    [Tooltip("技能作用范围半径")]
-    [SerializeField] private float radius = 5f;
-    
     [Tooltip("目标检测层级")]
     [SerializeField] private LayerMask targetLayerMask;
     
@@ -32,7 +28,8 @@ public class AreaDamageTargetAcquireSO : TargetAcquireSO
         Vector3 detectionCenter = ctx.AimPoint != Vector3.zero ? ctx.AimPoint : ctx.CasterPosition;
         
         // 使用Physics2D.OverlapCircle检测范围内的所有2D碰撞体
-        Collider2D[] hitColliders = Physics2D.OverlapCircleAll(detectionCenter, radius, targetLayerMask);
+        // 从上下文中获取目标半径
+        Collider2D[] hitColliders = Physics2D.OverlapCircleAll(detectionCenter, ctx.Targeting.Radius, targetLayerMask);
 
         // 遍历检测到的碰撞体，提取CharacterBase组件
         foreach (var collider in hitColliders)
@@ -47,11 +44,6 @@ public class AreaDamageTargetAcquireSO : TargetAcquireSO
 
         return resultTargets;
     }
-    
-    /// <summary>
-    /// 获取范围半径（用于调试和可视化）
-    /// </summary>
-    public float Radius => radius;
     
     /// <summary>
     /// 获取目标层级掩码（用于调试和可视化）

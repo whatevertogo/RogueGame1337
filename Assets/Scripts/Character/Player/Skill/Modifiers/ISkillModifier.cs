@@ -1,5 +1,6 @@
 using System;
 using Character.Player.Skill.Runtime;
+using Character.Player.Skill.Targeting;
 
 namespace Character.Player.Skill.Modifiers
 {
@@ -47,7 +48,7 @@ namespace Character.Player.Skill.Modifiers
         /// </summary>
         /// <param name="runtime">技能运行时状态</param>
         /// <param name="config">目标获取配置（ref 引用，可直接修改）</param>
-        void ApplyTargeting(ActiveSkillRuntime runtime, ref Targeting.TargetingConfig config);
+        void ApplyTargeting(ActiveSkillRuntime runtime, ref TargetingConfig config);
     }
 
     /// <summary>
@@ -98,32 +99,9 @@ namespace Character.Player.Skill.Modifiers
         /// </summary>
         /// <param name="runtime">技能运行时状态</param>
         /// <param name="ctx">完整的技能目标上下文（ref 引用，可直接修改）</param>
-        void ApplyCrossPhase(ActiveSkillRuntime runtime, ref Targeting.SkillContext ctx);
+        void ApplyCrossPhase(ActiveSkillRuntime runtime,  SkillContext ctx);
     }
 
     #endregion
 
-    #region 兼容旧接口
-
-    /// <summary>
-    /// 旧版修改器接口（已废弃，保留用于向后兼容）
-    /// 请使用具体的分类接口（IEnergyCostModifier, ITargetingModifier 等）
-    /// </summary>
-    [Obsolete("请使用具体的分类接口（IEnergyCostModifier, ITargetingModifier, IDamageModifier 等）")]
-    public interface ILegacySkillModifier : ISkillModifier
-    {
-        /// <summary>
-        /// 执行优先级，数值越小越先执行
-        /// </summary>
-        new int Priority { get; }
-
-        /// <summary>
-        /// 应用修改器效果
-        /// </summary>
-        /// <param name="runtime">技能运行时状态</param>
-        /// <param name="ctx">技能目标上下文（ref 引用，可直接修改）</param>
-        void Apply(ActiveSkillRuntime runtime, ref Targeting.SkillContext ctx);
-    }
-
-    #endregion
 }

@@ -179,7 +179,7 @@ namespace Character.Player.Skill.Runtime
         /// 阶段4：应用伤害修改器
         /// 在应用效果前调用，按优先级递减排序
         /// </summary>
-        public void ApplyDamageModifiers(ref DamageResult result)
+        public void ApplyDamageModifiers( DamageResult result)
         {
             var sortedModifiers = _activeModifiers
                 .OfType<IDamageModifier>()
@@ -195,7 +195,7 @@ namespace Character.Player.Skill.Runtime
         /// 阶段6：应用跨阶段修改器
         /// 在所有阶段完成后调用（用于处理跨阶段逻辑），按优先级递减排序
         /// </summary>
-        public void ApplyCrossPhaseModifiers(ref SkillContext ctx)
+        public void ApplyCrossPhaseModifiers( SkillContext ctx)
         {
             var sortedModifiers = _activeModifiers
                 .OfType<ICrossPhaseModifier>()
@@ -203,7 +203,7 @@ namespace Character.Player.Skill.Runtime
 
             foreach (var modifier in sortedModifiers)
             {
-                modifier.ApplyCrossPhase(this, ref ctx);
+                modifier.ApplyCrossPhase(this, ctx);
             }
         }
 

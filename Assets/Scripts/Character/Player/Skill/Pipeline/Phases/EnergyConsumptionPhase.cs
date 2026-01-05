@@ -23,7 +23,7 @@ namespace Character.Player.Skill.Pipeline.Phases
             _inventory = inventory;
         }
 
-        public SkillPhaseResult Execute(ref SkillContext ctx, SkillExecutionToken token)
+        public SkillPhaseResult Execute(SkillContext ctx, SkillExecutionToken token)
         {
             if (token.IsCancelled) return SkillPhaseResult.Cancel;
 

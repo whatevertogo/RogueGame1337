@@ -12,7 +12,7 @@ namespace Character.Player.Skill.Targeting
     ///
     /// Context 是「执行快照」，Runtime 是「技能实例」（非所有权）
     /// </summary>
-    public struct SkillContext
+    public class SkillContext
     {
         // ========== 阶段1：施法输入（初始化后不应修改）==========
         /// <summary>
@@ -91,11 +91,11 @@ namespace Character.Player.Skill.Targeting
         public TeamType CasterTeam => Caster != null ? Caster.Team : TeamType.Neutral;
 
 
-        public SkillContext(CharacterBase caster, 
-        Vector3 aimPoint, 
+        public SkillContext(CharacterBase caster,
+        Vector3 aimPoint,
         Vector3 aimDirection,
-         int slotIndex, 
-        ActiveSkillRuntime runtime, 
+         int slotIndex,
+        ActiveSkillRuntime runtime,
         InventoryServiceManager inventory,
          TargetingConfig targeting,
         EnergyCostConfig energyCost,
@@ -182,35 +182,4 @@ namespace Character.Player.Skill.Targeting
         };
     }
 
-
-    // /// <summary>
-    // /// 投射物配置（独立结构体，用于 IProjectileModifier）
-    // /// </summary>
-    // public struct ProjectileConfig
-    // {
-    //     /// <summary>
-    //     /// 弹射次数（由修改器修改）
-    //     /// </summary>
-    //     public int BounceCount;
-
-    //     /// <summary>
-    //     /// 弹射范围（由修改器修改）
-    //     /// </summary>
-    //     public float BounceRange;
-
-    //     /// <summary>
-    //     /// 穿透次数（由修改器修改，0 表示不穿透）
-    //     /// </summary>
-    //     public int PierceCount;
-
-    //     /// <summary>
-    //     /// 初始化默认值
-    //     /// </summary>
-    //     public static ProjectileConfig Default => new ProjectileConfig
-    //     {
-    //         BounceCount = 0,
-    //         BounceRange = 5f,
-    //         PierceCount = 0
-    //     };
-    // }
 }
