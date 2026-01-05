@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using CDTU.Utils;
+using Character.Player.Skill.Evolution;
 using Core.Events;
 using RogueGame.Events;
 using RogueGame.Game.Service.Inventory;
@@ -118,7 +119,7 @@ namespace RogueGame.Game.Service
             int currentLevel,
             int nextLevel,
             bool chooseBranchA,
-            Character.Player.Skill.Evolution.SkillBranch selectedBranch)
+            SkillBranch selectedBranch)
         {
             var cardState = ActiveCardService.GetCardByInstanceId(instanceId);
             if (cardState == null)

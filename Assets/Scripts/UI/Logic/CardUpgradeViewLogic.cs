@@ -84,11 +84,11 @@ namespace Game.UI
         /// <summary>
         /// 确认进化选择
         /// </summary>
-        private void ConfirmEvolution(bool chooseBranchA)
+        private void ConfirmEvolution(bool isChooseBranchA)
         {
             if (_currentEvolution == null) return;
 
-            var selectedBranch = chooseBranchA 
+            var selectedBranch = isChooseBranchA 
                 ? _currentEvolution.EvolutionNode.branchA 
                 : _currentEvolution.EvolutionNode.branchB;
 
@@ -111,7 +111,7 @@ namespace Game.UI
                 _currentEvolution.CardId,
                 _currentEvolution.CurrentLevel,
                 _currentEvolution.NextLevel,
-                chooseBranchA,
+                isChooseBranchA,
                 selectedBranch
             );
 

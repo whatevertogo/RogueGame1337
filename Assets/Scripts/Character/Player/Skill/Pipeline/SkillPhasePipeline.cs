@@ -47,7 +47,7 @@ namespace Character.Player.Skill.Pipeline
                 if (result == SkillPhaseResult.Fail)
                     return SkillPhaseResult.Fail;
 
-                // Cancel：异常终止（需要退能量）
+                // Cancel：异常终止
                 if (result == SkillPhaseResult.Cancel)
                     return SkillPhaseResult.Cancel;
             }

@@ -1,5 +1,6 @@
 using System;
 using Core.Events;
+using Cysharp.Threading.Tasks;
 using Game.UI;
 using RogueGame.Events;
 
@@ -27,7 +28,7 @@ namespace UI
             EventBus.Subscribe<SkillEvolvedEvent>(OnEvolutionCompleted);
         }
 
-        private static async void OnEvolutionRequested(SkillEvolutionRequestedEvent evt)
+        private static async UniTaskVoid OnEvolutionRequested(SkillEvolutionRequestedEvent evt)
         {
             GameRoot.I?.GameFlowCoordinator?.PauseGame();
             _pending = evt;

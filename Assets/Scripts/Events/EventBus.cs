@@ -2,85 +2,69 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
+#if UNITASK
+using Cysharp.Threading.Tasks;
+#endif
+
 namespace Core.Events
 {
-    /// <summary>
-    /// 全局事件总线：使用 HashSet 实现自动去重的发布/订阅模式
-    /// </summary>
     public static class EventBus
     {
-        private static readonly Dictionary<Type, HashSet<Delegate>> _listeners
-            = new Dictionary<Type, HashSet<Delegate>>();
+        private static readonly Dictionary<Type, HashSet<Delegate>> _listeners = new();
 
-        /// <summary>
-        /// 订阅事件
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="callback"></param>
-        public static void Subscribe<T>(Action<T> callback)
+        public static void Subscribe<TEvent>(Action<TEvent> callback)
         {
-            var type = typeof(T);
+            var type = typeof(TEvent);
             if (!_listeners.TryGetValue(type, out var set))
-            {
-                set = new HashSet<Delegate>();
-                _listeners[type] = set;
-            }
-            set.Add(callback); // HashSet 自动去重
+                _listeners[type] = set = new HashSet<Delegate>();
+            set.Add(callback);
         }
 
-        /// <summary>
-        /// 取消订阅事件
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="callback"></param>
-        public static void Unsubscribe<T>(Action<T> callback)
+#if UNITASK
+        public static void Subscribe<TEvent>(Func<TEvent, UniTaskVoid> handler)
         {
-            var type = typeof(T);
-            if (_listeners.TryGetValue(type, out var set))
-            {
-                set.Remove(callback);
-                if (set.Count == 0)
-                    _listeners.Remove(type);
-            }
+            var type = typeof(TEvent);
+            if (!_listeners.TryGetValue(type, out var set))
+                _listeners[type] = set = new HashSet<Delegate>();
+            set.Add(handler);
         }
+#endif
 
-        /// <summary>
-        /// 发布事件
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="evt"></param>
         public static void Publish<T>(T evt)
         {
-            if (evt == null)
+            if (!_listeners.TryGetValue(typeof(T), out var set)) return;
+            foreach (var d in set.ToArray())
             {
-                CDTU.Utils.CDLogger.LogWarning($"[EventBus] Publish: Event of type {typeof(T).Name} is null");
-                return;
-            }
-            var type = typeof(T);
-            if (!_listeners.TryGetValue(type, out var set))
-                return;
-
-            // 创建副本以防在回调中修改订阅列表
-            var snapshot = set.ToArray();
-            foreach (var d in snapshot)
-            {
-                try
+#if UNITASK
+                if (d is Func<T, UniTaskVoid> asyncHandler)
                 {
-                    ((Action<T>)d)?.Invoke(evt);
+                    _ = asyncHandler(evt); // fire-and-forget
+                    continue;
                 }
-                catch (Exception ex)
-                {
-                    CDTU.Utils.CDLogger.LogError($"[EventBus] Publish: Exception in event handler for {typeof(T).Name}: {ex}");
-                }
+#endif
+                if (d is Action<T> syncHandler)
+                    syncHandler(evt);
             }
         }
 
-        /// <summary>
-        /// 清除所有订阅
-        /// </summary>
-        public static void Clear()
+        public static void Unsubscribe<T>(Action<T> callback)
         {
-            _listeners.Clear();
+            if (_listeners.TryGetValue(typeof(T), out var set))
+            {
+                set.Remove(callback);
+                if (set.Count == 0) _listeners.Remove(typeof(T));
+            }
         }
+
+#if UNITASK
+        public static void Unsubscribe<T>(Func<T, UniTaskVoid> handler)
+        {
+            if (_listeners.TryGetValue(typeof(T), out var set))
+            {
+                set.Remove(handler);
+                if (set.Count == 0) _listeners.Remove(typeof(T));
+            }
+        }
+#endif
     }
 }

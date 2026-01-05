@@ -3,6 +3,7 @@ using Character.Player.Skill.Pipeline;
 using Character.Player.Skill.Pipeline.Phases;
 using Character.Player.Skill.Slots;
 using Character.Player.Skill.Targeting;
+using Cysharp.Threading.Tasks;
 using RogueGame.Game.Service;
 using System;
 using System.Collections;
@@ -26,10 +27,6 @@ namespace Character.Player.Skill.Core
         private readonly SkillPhasePipeline _pipeline;
         private readonly Dictionary<int, SkillExecutionToken> _activeTokens;
 
-        /// <summary>
-        /// 技能使用完成回调
-        /// </summary>
-        public event Action<int> OnSkillUsed;
 
         public SkillExecutor(InventoryServiceManager inventory, EffectFactory effectFactory)
         {
@@ -61,7 +58,7 @@ namespace Character.Player.Skill.Core
         }
 
         /// <summary>
-        /// 执行技能（异步）
+        /// 执行技能
         /// </summary>
         public void ExecuteSkill(SkillSlot slot, CharacterBase caster, Vector3 aimPoint)
         {
@@ -89,28 +86,33 @@ namespace Character.Player.Skill.Core
 
             if (caster != null)
             {
-                caster.StartCoroutine(ExecuteAsync(def, ctx, token));
+                // 异步执行技能（Fire-and-Forget 模式）
+                ExecuteAsync(def, ctx, token).Forget();
             }
         }
 
         /// <summary>
         /// 异步执行（处理 detectionDelay）
         /// </summary>
-        private IEnumerator ExecuteAsync(SkillDefinition def, SkillContext ctx, SkillExecutionToken token)
+        private async UniTask ExecuteAsync(SkillDefinition def, SkillContext ctx, SkillExecutionToken token)
         {
-            // 使用局部可变副本以便传 ref 给 Pipeline（iterator 方法参数不能是 ref）
+            // 使用局部可变副本以便传 ref 给 Pipeline（async 方法参数不能是 ref）
             var localCtx = ctx;
             var rt = localCtx.Runtime;
 
             // 等待 detectionDelay
             if (def.detectionDelay > 0f)
-                yield return new UnityEngine.WaitForSeconds(def.detectionDelay);
+            {
+                await UniTask.Delay(TimeSpan.FromSeconds(def.detectionDelay));
+            }
 
             // 检查是否被取消
             if (token.IsCancelled)
             {
                 HandleCancellation(rt);
-                yield break;
+                _activeTokens.Remove(localCtx.SlotIndex);
+                rt.EnergyConsumed = false;
+                return;
             }
 
             // 执行 Pipeline（同步，传入 ref）
@@ -123,11 +125,10 @@ namespace Character.Player.Skill.Core
                 rt.ActualEnergyConsumed = 0;
             }
 
-            // 触发技能使用事件（注意语义见注释）
-            if (result == SkillPhaseResult.Continue || result == SkillPhaseResult.Cancel)
-            {
-                OnSkillUsed?.Invoke(localCtx.SlotIndex);
-            }
+            // TODO-触发技能使用事件（注意语义见注释）
+            // if (result == SkillPhaseResult.Continue || result == SkillPhaseResult.Cancel)
+            // {
+            // }
 
             // 清理
             _activeTokens.Remove(localCtx.SlotIndex);

@@ -33,7 +33,7 @@ namespace Character.Player.Skill.Runtime
 
 
         /// <summary>
-        /// 能量已消耗标志（用于协程取消时退还能量）
+        /// 能量已消耗标志（用于技能取消时退还能量）
         /// </summary>
         [NonSerialized]
         public bool EnergyConsumed;
