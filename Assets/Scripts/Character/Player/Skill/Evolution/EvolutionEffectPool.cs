@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using CDTU.Utils;
 using UnityEngine;
 
 namespace Character.Player.Skill.Evolution
@@ -70,7 +71,7 @@ namespace Character.Player.Skill.Evolution
 
             _isInitialized = true;
 
-            Debug.Log($"[EvolutionEffectPool] 初始化完成，效果数量: {allEffects.Count}");
+            CDLogger.Log($"[EvolutionEffectPool] 初始化完成，效果数量: {allEffects.Count}");
         }
 
         /// <summary>
@@ -89,7 +90,7 @@ namespace Character.Player.Skill.Evolution
                 // 检查空引用
                 if (effect == null)
                 {
-                    Debug.LogWarning($"[EvolutionEffectPool] 索引 {i} 的效果为空");
+                    CDLogger.LogWarning($"[EvolutionEffectPool] 索引 {i} 的效果为空");
                     emptyCount++;
                     continue;
                 }
@@ -97,11 +98,11 @@ namespace Character.Player.Skill.Evolution
                 // 检查 effectId
                 if (string.IsNullOrEmpty(effect.effectId))
                 {
-                    Debug.LogWarning($"[EvolutionEffectPool] 索引 {i} 的效果缺少 effectId");
+                    CDLogger.LogWarning($"[EvolutionEffectPool] 索引 {i} 的效果缺少 effectId");
                 }
                 else if (idSet.Contains(effect.effectId))
                 {
-                    Debug.LogWarning($"[EvolutionEffectPool] 重复的 effectId: {effect.effectId}");
+                    CDLogger.LogWarning($"[EvolutionEffectPool] 重复的 effectId: {effect.effectId}");
                     duplicateIdCount++;
                 }
                 else
@@ -112,17 +113,17 @@ namespace Character.Player.Skill.Evolution
 
             if (emptyCount > 0)
             {
-                Debug.LogWarning($"[EvolutionEffectPool] 发现 {emptyCount} 个空效果");
+                CDLogger.LogWarning($"[EvolutionEffectPool] 发现 {emptyCount} 个空效果");
             }
 
             if (duplicateIdCount > 0)
             {
-                Debug.LogWarning($"[EvolutionEffectPool] 发现 {duplicateIdCount} 个重复的 effectId");
+                CDLogger.LogWarning($"[EvolutionEffectPool] 发现 {duplicateIdCount} 个重复的 effectId");
             }
 
             if (allEffects.Count == 0)
             {
-                Debug.LogError("[EvolutionEffectPool] 效果池为空！请添加 EvolutionEffectEntry。");
+                CDLogger.LogError("[EvolutionEffectPool] 效果池为空！请添加 EvolutionEffectEntry。");
             }
         }
 
@@ -154,7 +155,7 @@ namespace Character.Player.Skill.Evolution
 
             if (available.Count == 0)
             {
-                Debug.LogWarning($"[EvolutionEffectPool] 没有可用的进化效果: {skill?.skillId} Lv{currentLevel}");
+                CDLogger.LogWarning($"[EvolutionEffectPool] 没有可用的进化效果: {skill?.skillId} Lv{currentLevel}");
                 return new List<EvolutionEffectEntry>();
             }
 
@@ -177,7 +178,7 @@ namespace Character.Player.Skill.Evolution
             // 如果可用效果少于请求数量且启用了 ensureAtLeastOne，记录日志
             if (ensureAtLeastOne && actualOptionCount < optionCount)
             {
-                Debug.Log($"[EvolutionEffectPool] 可用效果不足，降低选项数: {optionCount} → {actualOptionCount}");
+                CDLogger.Log($"[EvolutionEffectPool] 可用效果不足，降低选项数: {optionCount} → {actualOptionCount}");
             }
 
             for (int i = 0; i < actualOptionCount; i++)

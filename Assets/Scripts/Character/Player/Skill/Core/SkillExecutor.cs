@@ -136,6 +136,19 @@ namespace Character.Player.Skill.Core
         }
 
         /// <summary>
+        /// 构建技能执行管道
+        /// </summary>
+        /// <returns></returns>
+        private SkillPhasePipeline BuildPipeline()
+        {
+            return new SkillPhasePipeline()
+                .Add(new EnergyConsumptionPhase(_inventory))
+                .Add(new TargetingPhase())
+                .Add(new CrossPhase())
+                .Add(new DamageCalculationPhase())
+                .Add(new EffectApplicationPhase(_effectFactory));
+        }
+        ///  <summary>
         /// 打断技能
         /// </summary>
         public void Interrupt(int slotIndex, bool refundCharges)
@@ -182,15 +195,6 @@ namespace Character.Player.Skill.Core
             }
         }
 
-        private SkillPhasePipeline BuildPipeline()
-        {
-            return new SkillPhasePipeline()
-                .Add(new EnergyConsumptionPhase(_inventory))
-                .Add(new TargetingPhase())
-                .Add(new CrossPhase())
-                .Add(new DamageCalculationPhase())
-                .Add(new EffectApplicationPhase(_effectFactory));
-        }
 
         /// <summary>
         /// 释放资源
