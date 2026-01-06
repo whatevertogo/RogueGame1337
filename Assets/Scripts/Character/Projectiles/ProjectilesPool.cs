@@ -13,7 +13,7 @@ namespace Character.Projectiles
         [SerializeField] private int defaultPoolSize = 20;
         [SerializeField] private bool showDebugInfo = false;
 
-        // 按预制体分类的池
+        // 按预制体映射分类的池
         private readonly Dictionary<GameObject, ObjectPool<GameObject>> _pools = new();
 
         // 实例到预制体的映射（用于归还时查找）
