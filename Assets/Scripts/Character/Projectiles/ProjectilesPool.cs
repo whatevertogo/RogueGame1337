@@ -7,10 +7,8 @@ namespace Character.Projectiles
     /// <summary>
     /// 投射物对象池
     /// </summary>
-    public class ProjectilePool : MonoBehaviour
+    public class ProjectilePool : SingletonDD<ProjectilePool>
     {
-        public static ProjectilePool Instance { get; private set; }
-
         [Header("配置")]
         [SerializeField] private int defaultPoolSize = 20;
         [SerializeField] private bool showDebugInfo = false;
@@ -25,23 +23,10 @@ namespace Character.Projectiles
         private int _totalGet = 0;
         private int _totalReturn = 0;
 
-        private void Awake()
-        {
-            if (Instance != null && Instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
-            Instance = this;
-        }
-
-        private void OnDestroy()
+        protected override void OnDestroy()
         {
             ClearAll();
-            if (Instance == this)
-            {
-                Instance = null;
-            }
+            base.OnDestroy();
         }
 
         /// <summary>
