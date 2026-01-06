@@ -10,10 +10,10 @@ namespace Character.Player.Skill.Pipeline.Phases
         public SkillPhaseResult Execute(SkillContext ctx, SkillExecutionToken token)
         {
             if (token.IsCancelled) return SkillPhaseResult.Cancel;
-            var vfxPrefab = ctx.Runtime.Skill.vfxPrefab;
-            if (vfxPrefab != null)
+            var VFXName = ctx.Runtime.Skill.vfxPrefabName;
+            if (!string.IsNullOrEmpty(VFXName))
             {
-                VFXSystem.Instance.PlayAt(vfxPrefab, ctx.CasterPosition);
+                VFXSystem.Instance.PlayAt(VFXName, ctx.CasterPosition);
             }
 
             return SkillPhaseResult.Continue;

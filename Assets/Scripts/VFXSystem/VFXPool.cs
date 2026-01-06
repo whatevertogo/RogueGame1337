@@ -33,11 +33,13 @@ public class VFXPool : SingletonDD<VFXPool>
 
     [Header("配置")]
     [SerializeField] private int defaultPoolSize = 20;
+    [SerializeField] private bool warmupPresetsOnAwake = true;
     [SerializeField] private Transform poolRoot;
     [SerializeField] private List<VFXConfig> presetVfxList = new List<VFXConfig>();
 
     // 按名称与预制体映射池，便于字符串调用和动态注册
     private readonly Dictionary<string, PoolEntry> _poolsByName = new Dictionary<string, PoolEntry>();
+    // 按预制体映射池，便于快速查找
     private readonly Dictionary<GameObject, ObjectPool<GameObject>> _poolsByPrefab = new Dictionary<GameObject, ObjectPool<GameObject>>();
     // 反向映射：实例 -> 对应池，用于 Release 时无需外部记录
     private readonly Dictionary<GameObject, ObjectPool<GameObject>> _instanceToPool = new Dictionary<GameObject, ObjectPool<GameObject>>();
@@ -54,6 +56,10 @@ public class VFXPool : SingletonDD<VFXPool>
         }
 
         BuildPresetPools();
+        if (warmupPresetsOnAwake)
+        {
+            WarmupPresets();
+        }
     }
 
     protected override void OnSingletonDestroyed()
@@ -183,6 +189,14 @@ public class VFXPool : SingletonDD<VFXPool>
         if (_instanceToPool.TryGetValue(instance, out var pool))
         {
             pool.Release(instance);
+            _instanceToPool.Remove(instance);
+            var t = instance.transform;
+            if (t != null)
+            {
+                t.SetParent(poolRoot, false);
+                t.localPosition = Vector3.zero;
+                t.localRotation = Quaternion.identity;
+            }
             return;
         }
 

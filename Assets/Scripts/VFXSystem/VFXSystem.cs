@@ -12,9 +12,14 @@ public class VFXSystem : SingletonDD<VFXSystem>
     protected override void OnSingletonAwake()
     {
         base.OnSingletonAwake();
+        EnsurePool();
+    }
 
+    private VFXPool EnsurePool()
+    {
         if (vfxPool == null)
             vfxPool = VFXPool.Instance;
+        return vfxPool;
     }
 
     /// <summary>
@@ -34,7 +39,7 @@ public class VFXSystem : SingletonDD<VFXSystem>
             return null;
         }
 
-        var pool = vfxPool != null ? vfxPool : VFXPool.Instance;
+        var pool = EnsurePool();
         if (pool == null)
         {
             Debug.LogError("VFXPool 未初始化，无法播放特效");
@@ -75,12 +80,60 @@ public class VFXSystem : SingletonDD<VFXSystem>
     }
 
     /// <summary>
+    /// 按名称播放（需在 VFXPool 里注册或预设）
+    /// </summary>
+    public GameObject Play(string vfxName, Vector3 position, Quaternion rotation, Transform parent = null, float durationOverride = -1f, bool resetScale = true)
+    {
+        var pool = EnsurePool();
+        if (pool == null)
+        {
+            Debug.LogError("VFXPool 未初始化，无法播放特效");
+            return null;
+        }
+
+        var instance = pool.Get(vfxName, parent);
+        if (instance == null) return null;
+
+        var t = instance.transform;
+        t.SetPositionAndRotation(position, rotation);
+        if (resetScale) t.localScale = Vector3.one;
+
+        var particleSystems = instance.GetComponentsInChildren<ParticleSystem>(true);
+        foreach (var ps in particleSystems)
+        {
+            ps.Clear(true);
+            ps.Simulate(0f, true, true);
+            ps.Play(true);
+        }
+
+        var autoRelease = instance.GetComponent<VFXAutoRelease>();
+        if (autoRelease == null)
+            autoRelease = instance.AddComponent<VFXAutoRelease>();
+
+        autoRelease.Init(pool, instance, durationOverride);
+
+        return instance;
+    }
+
+    public GameObject PlayAt(string vfxName, Vector3 position, Transform parent = null, float durationOverride = -1f)
+    {
+        return Play(vfxName, position, Quaternion.identity, parent, durationOverride);
+    }
+
+    /// <summary>
     /// 预热指定特效
     /// </summary>
     public void Warmup(GameObject prefab, int count)
     {
-        var pool = vfxPool != null ? vfxPool : VFXPool.Instance;
-        pool?.Warmup(prefab, count);
+        EnsurePool()?.Warmup(prefab, count);
+    }
+
+    /// <summary>
+    /// 预热指定名称特效
+    /// </summary>
+    public void Warmup(string vfxName, int count)
+    {
+        EnsurePool()?.Warmup(vfxName, count);
     }
 
     /// <summary>
@@ -88,7 +141,6 @@ public class VFXSystem : SingletonDD<VFXSystem>
     /// </summary>
     public void Release(GameObject instance)
     {
-        var pool = vfxPool != null ? vfxPool : VFXPool.Instance;
-        pool?.Release(instance);
+        EnsurePool()?.Release(instance);
     }
 }
