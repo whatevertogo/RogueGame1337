@@ -110,17 +110,37 @@ namespace RogueGame.Game.Service
             => ActiveCardUpgradeService.UpgradeCard(cardId);
 
         /// <summary>
-        /// 确认进化选择（UI 层调用）
-        /// 重构：不再记录历史，直接通知 Runtime 更新修改器
+        /// 确认进化选择（UI 层调用）- 效果池系统
         /// </summary>
         public bool ConfirmEvolution(
             string instanceId,
             string cardId,
             int currentLevel,
             int nextLevel,
-            bool chooseBranchA,
-            SkillBranch selectedBranch)
+            EvolutionEffectEntry selectedEffect)
         {
+            // ✨ 防御性校验：检查选中效果有效性
+            if (selectedEffect == null || string.IsNullOrEmpty(selectedEffect.effectId))
+            {
+                CDLogger.LogError($"[Inventory] 选中的进化效果无效（null 或 effectId 为空）");
+                return false;
+            }
+
+            // ✨ 防御性校验：等级连续性
+            if (nextLevel != currentLevel + 1)
+            {
+                CDLogger.LogError($"[Inventory] 进化等级不连续: {currentLevel} → {nextLevel}");
+                return false;
+            }
+
+            // ✨ 防御性校验：软上限
+            int maxLevel = GameRoot.Instance?.StatLimitConfig?.maxActiveSkillLevel ?? 999;
+            if (nextLevel > maxLevel)
+            {
+                CDLogger.LogError($"[Inventory] 进化超过软上限: Lv{nextLevel} > Lv{maxLevel}");
+                return false;
+            }
+
             var cardState = ActiveCardService.GetCardByInstanceId(instanceId);
             if (cardState == null)
             {
@@ -128,24 +148,28 @@ namespace RogueGame.Game.Service
                 return false;
             }
 
+            // ✨ 防御性校验：确保卡牌状态与传入等级一致
+            if (cardState.Level != currentLevel)
+            {
+                CDLogger.LogWarning($"[Inventory] 卡牌等级不匹配: 状态记录 Lv{cardState.Level}, 传入 Lv{currentLevel}");
+                // 以状态为准，继续执行（处理可能的异步场景）
+            }
+
             // 更新持久化的等级
             cardState.Level = nextLevel;
 
-            // 获取进化节点供运行时同步使用
-            var cardDef = GameRoot.Instance?.CardDatabase?.Resolve(cardId);
-            var evolutionNode = cardDef?.activeCardConfig?.skill?.GetEvolutionNode(nextLevel);
+            // 保存已选择的效果 ID（用于存档）
+            cardState.AddChosenEffect(selectedEffect.effectId);
 
             // 发布进化完成事件（Runtime 会订阅此事件并应用修改器）
             EventBus.Publish(new SkillEvolvedEvent(
                 cardId,
                 instanceId,
                 nextLevel,
-                selectedBranch,
-                chooseBranchA ? "A" : "B",  // 简单的分支标识
-                evolutionNode
+                selectedEffect
             ));
 
-            CDLogger.Log($"[Inventory] '{cardId}' 进化完成 Lv{nextLevel}, 选择分支: {selectedBranch.branchName}");
+            CDLogger.Log($"[Inventory] '{cardId}' 进化完成 Lv{nextLevel}, 选择效果: {selectedEffect.effectName}");
             return true;
         }
 

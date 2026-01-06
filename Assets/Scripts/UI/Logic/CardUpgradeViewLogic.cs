@@ -1,9 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using Character.Player.Skill.Evolution;
 using Core.Events;
 using RogueGame.Events;
 using RogueGame.Game.Service;
-using RogueGame.Items;
 using UnityEngine;
 using UI;
 
@@ -11,11 +11,17 @@ namespace Game.UI
 {
     /// <summary>
     /// CardUpgradeView 纯逻辑核心（可单元测试）
+    /// 支持效果池系统的动态选项
     /// </summary>
     public class CardUpgradeViewLogicCore
     {
         protected CardUpgradeView _view;
         private SkillEvolutionRequestedEvent _currentEvolution;
+
+        /// <summary>
+        /// 当前可用的进化效果列表（效果池系统）
+        /// </summary>
+        private List<EvolutionEffectEntry> _availableOptions;
 
         public virtual void Bind(UIViewBase view)
         {
@@ -27,35 +33,63 @@ namespace Game.UI
             var evolutionArgs = args as SkillEvolutionUIArgs;
             if (evolutionArgs == null || evolutionArgs.Event == null) return;
 
-            // 保存进化请求信息
             _currentEvolution = evolutionArgs.Event;
-
             var evt = evolutionArgs.Event;
-            var evolutionNode = evt.EvolutionNode;
-            if (evolutionNode == null) return;
 
             _view.SetSkillNameText(evt.CardId);
             _view.SetSkillLevelText($"等级 {evt.NextLevel}");
 
-            if (evolutionNode.branchA != null)
+            // 从效果池设置选项
+            if (evt.Options != null && evt.Options.Count > 0)
             {
-                _view.SetOption1(evolutionNode.branchA.branchName,
-                    evolutionNode.branchA.description,
-                    evolutionNode.branchA.icon);
+                _availableOptions = evt.Options;
+                SetupOptionsFromPool(evt.Options);
+            }
+        }
+
+        /// <summary>
+        /// 从效果池设置选项
+        /// </summary>
+        private void SetupOptionsFromPool(List<EvolutionEffectEntry> options)
+        {
+            // 当前 UI 只有2个固定选项槽，最多显示前2个
+            // TODO: 后续可扩展为支持动态数量的选项槽（3-4个）
+
+            for (int i = 0; i < options.Count && i < 2; i++)
+            {
+                var effect = options[i];
+                string name = effect.effectName ?? effect.effectId;
+                string desc = effect.description ?? "无描述";
+                Sprite icon = effect.icon;
+
+                // 使用稀有度颜色
+                Color rarityColor = effect.GetRarityColor();
+                string rarityName = effect.GetRarityDisplayName();
+
+                // 显示稀有度前缀
+                string displayName = $"[{rarityName}] {name}";
+
+                if (i == 0)
+                {
+                    _view.SetOption1(displayName, desc, icon, rarityColor);
+                }
+                else if (i == 1)
+                {
+                    _view.SetOption2(displayName, desc, icon, rarityColor);
+                }
             }
 
-            if (evolutionNode.branchB != null)
-            {
-                _view.SetOption2(evolutionNode.branchB.branchName,
-                    evolutionNode.branchB.description,
-                    evolutionNode.branchB.icon);
-            }
+            // 隐藏未使用的选项槽
+            if (options.Count < 1) _view.HideOption1();
+            if (options.Count < 2) _view.HideOption2();
+
+            Debug.Log($"[CardUpgradeViewLogic] 显示 {options.Count} 个进化选项");
         }
 
         public virtual void OnClose()
         {
-            // 关闭时清理
             _currentEvolution = null;
+            _availableOptions = null;
             _view = null;
         }
 
@@ -72,33 +106,37 @@ namespace Game.UI
         public void OnOption1ImageClicked()
         {
             if (_currentEvolution == null) return;
-            ConfirmEvolution(true);
+            ConfirmEvolution(0);
         }
 
         public void OnOption2ImageClicked()
         {
             if (_currentEvolution == null) return;
-            ConfirmEvolution(false);
+            ConfirmEvolution(1);
         }
 
         /// <summary>
-        /// 确认进化选择
+        /// 确认进化选择（效果池系统）
         /// </summary>
-        private void ConfirmEvolution(bool isChooseBranchA)
+        /// <param name="optionIndex">选项索引（0-3）</param>
+        private void ConfirmEvolution(int optionIndex)
         {
-            if (_currentEvolution == null) return;
+            if (_currentEvolution == null || _availableOptions == null) return;
 
-            var selectedBranch = isChooseBranchA 
-                ? _currentEvolution.EvolutionNode.branchA 
-                : _currentEvolution.EvolutionNode.branchB;
-
-            if (selectedBranch == null)
+            if (optionIndex >= _availableOptions.Count)
             {
-                Debug.LogWarning("[CardUpgradeViewLogic] 选择的分支为空");
+                Debug.LogWarning($"[CardUpgradeViewLogic] 无效的选项索引: {optionIndex}");
                 return;
             }
 
-            // 通过 InventoryManager 确认进化（职责分离）
+            var selectedEffect = _availableOptions[optionIndex];
+
+            if (selectedEffect == null)
+            {
+                Debug.LogWarning("[CardUpgradeViewLogic] 选择的进化效果为空");
+                return;
+            }
+
             var inventoryManager = GameRoot.Instance?.InventoryManager;
             if (inventoryManager == null)
             {
@@ -111,8 +149,7 @@ namespace Game.UI
                 _currentEvolution.CardId,
                 _currentEvolution.CurrentLevel,
                 _currentEvolution.NextLevel,
-                isChooseBranchA,
-                selectedBranch
+                selectedEffect
             );
 
             if (!success)
@@ -142,9 +179,7 @@ namespace Game.UI
             }
 
             _core.Bind(view);
-            // Auto-bind event for option1Image
             _view.BindOption1ImageButton(OnOption1ImageClicked);
-            // Auto-bind event for option2Image
             _view.BindOption2ImageButton(OnOption2ImageClicked);
         }
 
@@ -157,7 +192,6 @@ namespace Game.UI
         public override void OnClose()
         {
             _core.OnClose();
-            // Button 事件由 UIViewBase.BindButton 自动清理，无需手动解绑
             _view = null;
             base.OnClose();
         }

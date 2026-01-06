@@ -47,18 +47,18 @@ namespace Character.Player.Skill.Runtime
         /// </summary>
         public IReadOnlyList<ISkillModifier> ActiveModifiers => _activeModifiers;
 
-        // ========== 进化状态（阶段3使用） ==========
+        // ========== 进化状态（效果池系统） ==========
         /// <summary>
-        /// 当前进化节点（Lv2-Lv5）
+        /// 已选择的进化效果列表（运行时，不序列化）
+        /// 保存时使用 ActiveCardState.ChosenEffectIds（只保存 effectId）
         /// </summary>
         [NonSerialized]
-        public SkillNode CurrentNode;
+        private List<EvolutionEffectEntry> _chosenEvolutions = new List<EvolutionEffectEntry>();
 
         /// <summary>
-        /// 分支选择历史（记录路径，如 "A-A-B-A"）
+        /// 获取已选择的进化效果列表（只读，防止外部直接修改）
         /// </summary>
-        [NonSerialized]
-        public List<SkillBranch> BranchHistory = new List<SkillBranch>();
+        public IReadOnlyList<EvolutionEffectEntry> ChosenEvolutions => _chosenEvolutions;
 
         // ========== 卡牌配置缓存 ==========
         /// <summary>
@@ -275,35 +275,83 @@ namespace Character.Player.Skill.Runtime
 
         #endregion
 
-        // ========== 进化管理 ==========
+        // ========== 进化效果池系统 ==========
+
         /// <summary>
-        /// 设置进化节点并应用分支修改器
+        /// 应用进化效果（效果池系统）
+        /// 从玩家选择的 EvolutionEffectEntry 中提取修改器并应用
         /// </summary>
-        public void SetEvolutionNode(SkillNode node, SkillBranch selectedBranch)
+        /// <param name="entry">要应用的进化效果</param>
+        public void ApplyEvolution(EvolutionEffectEntry entry)
         {
-            if (node == null || selectedBranch == null) return;
-
-            CurrentNode = node;
-            BranchHistory.Add(selectedBranch);
-
-            // 应用分支的修改器（包括效果生成修改器）
-            if (selectedBranch.modifiers != null)
+            if (entry == null)
             {
-                foreach (var modifier in selectedBranch.modifiers)
-                {
-                    if (modifier is ISkillModifier skillModifier)
-                    {
-                        AddModifier(skillModifier);
-                    }
-                }
+                Debug.LogWarning("[ActiveSkillRuntime] 尝试应用空的进化效果");
+                return;
             }
 
-            // 修改器已添加，效果缓存会在 AddModifier 中自动标记为脏
+            // 1. 添加到已选择列表（List 允许重复，支持 maxStacks > 1）
+            _chosenEvolutions.Add(entry);
+
+            // 2. 如果效果包含修改器，应用到技能
+            // 注意：同一修改器只添加一次（避免重复），但效果可以多次选择
+            // 叠加效果可以通过修改器内部的堆叠逻辑实现
+            if (entry.modifier is ISkillModifier modifier)
+            {
+                AddModifier(modifier);
+                int stackCount = _chosenEvolutions.Count(e => e?.effectId == entry.effectId);
+                Debug.Log($"[ActiveSkillRuntime] 应用进化效果: {entry.effectName} (Lv{CurrentLevel}, 叠加层数: {stackCount})");
+            }
+            else
+            {
+                Debug.LogWarning($"[ActiveSkillRuntime] 进化效果 {entry.effectName} 没有有效的修改器");
+            }
         }
 
         /// <summary>
-        /// 获取当前等级（1 + 进化历史数量）
+        /// 从存档恢复进化效果
+        /// 在游戏加载时调用，从保存的 effectId 列表恢复效果
         /// </summary>
-        public int CurrentLevel => 1 + BranchHistory.Count;
+        /// <param name="effectIds">保存的效果 ID 列表</param>
+        /// <param name="pool">全局效果池，用于通过 ID 查找效果</param>
+        public void LoadEvolutionFromSave(IReadOnlyList<string> effectIds, EvolutionEffectPool pool)
+        {
+            if (effectIds == null || pool == null)
+            {
+                Debug.LogWarning("[ActiveSkillRuntime] LoadEvolutionFromSave: effectIds 或 pool 为空");
+                return;
+            }
+
+            _chosenEvolutions.Clear();
+
+            foreach (string effectId in effectIds)
+            {
+                if (string.IsNullOrEmpty(effectId))
+                    continue;
+
+                EvolutionEffectEntry effect = pool.GetEffectById(effectId);
+                if (effect != null)
+                {
+                    _chosenEvolutions.Add(effect);
+
+                    // 恢复修改器
+                    if (effect.modifier is ISkillModifier modifier)
+                    {
+                        AddModifier(modifier);
+                    }
+                }
+                else
+                {
+                    Debug.LogWarning($"[ActiveSkillRuntime] 无法找到 effectId: {effectId}，可能效果池配置已更改");
+                }
+            }
+
+            Debug.Log($"[ActiveSkillRuntime] 从存档恢复 {_chosenEvolutions.Count} 个进化效果，当前等级: {CurrentLevel}");
+        }
+
+        /// <summary>
+        /// 获取当前等级（1 + 已选择进化效果数量，支持无限升级）
+        /// </summary>
+        public int CurrentLevel => 1 + ChosenEvolutions.Count;
     }
 }

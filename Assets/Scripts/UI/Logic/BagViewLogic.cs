@@ -4,6 +4,7 @@ using Character.Components;
 using Character.Player;
 using RogueGame.Items;
 using Core.Events;
+using System.Collections.Generic;
 
 namespace Game.UI
 {
@@ -80,7 +81,7 @@ namespace Game.UI
             }
 
             // 按 CardId 分组，找到最高等级的实例
-            var cardGroups = new System.Collections.Generic.Dictionary<string, ActiveCardState>();
+            var cardGroups = new Dictionary<string, ActiveCardState>();
 
             foreach (var st in inv.ActiveCardStates)
             {

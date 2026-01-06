@@ -38,7 +38,7 @@ namespace Core.Events
 #if UNITASK
                 if (d is Func<T, UniTaskVoid> asyncHandler)
                 {
-                    _ = asyncHandler(evt); // fire-and-forget
+                    asyncHandler(evt).Forget();                   
                     continue;
                 }
 #endif

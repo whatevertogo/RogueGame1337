@@ -1,4 +1,5 @@
 using Card;
+using Character.Player.Skill.Evolution;
 using Character.Player.Skill.Runtime;
 using Core.Events;
 using Game;
@@ -70,8 +71,15 @@ namespace Character.Player.Skill.Slots
                 cardState?.InstanceId
             );
 
-            // 重构：进化历史由 Runtime 的 BranchHistory 管理，无需回放
-            // 技能进化时会通过 SkillEvolvedEvent 实时更新 Runtime
+            // ✨ 从存档恢复进化效果（如果已升级过）
+            if (cardState != null && cardState.ChosenEffectIds.Count > 0)
+            {
+                var pool = GameRoot.Instance?.EvolutionEffectPool;
+                if (pool != null)
+                {
+                    runtime.LoadEvolutionFromSave(cardState.ChosenEffectIds, pool);
+                }
+            }
 
             _slots[index].Equip(cardId, runtime);
 

@@ -60,7 +60,7 @@ namespace Character.Player
         }
 
         /// <summary>
-        /// 处理进化完成事件并同步到运行时
+        /// 处理进化完成事件并同步到运行时（效果池系统）
         /// 架构说明：通过 inventory 查找装备状态（O(1)），避免遍历槽位（O(n)）
         /// </summary>
         private void HandleSkillEvolvedEvent(SkillEvolvedEvent evt)
@@ -78,12 +78,10 @@ namespace Character.Player
                 return;
             }
 
-            // 2. 确认进化数据完整性
-            var node = evt.EvolutionNode ?? GameRoot.Instance?.CardDatabase?.Resolve(evt.CardId)?.activeCardConfig?.skill?.GetEvolutionNode(evt.NewLevel);
-            var branch = evt.SelectedBranch;
-            if (node == null || branch == null)
+            // 2. 确认进化效果存在
+            if (evt.SelectedEffect == null)
             {
-                Debug.LogWarning($"[PlayerSkillComponent] 进化事件缺少节点或分支: {evt.CardId} #{evt.InstanceId}");
+                Debug.LogWarning($"[PlayerSkillComponent] 进化事件缺少效果: {evt.CardId} #{evt.InstanceId}");
                 return;
             }
 
@@ -93,8 +91,8 @@ namespace Character.Player
                 var rt = GetRuntime(i);
                 if (rt?.InstanceId == evt.InstanceId)
                 {
-                    rt.SetEvolutionNode(node, branch);
-                    Debug.Log($"[PlayerSkillComponent] 同步进化至槽位{i}: {evt.CardId} #{evt.InstanceId} Lv{evt.NewLevel}, 分支: {branch.branchName}");
+                    rt.ApplyEvolution(evt.SelectedEffect);
+                    Debug.Log($"[PlayerSkillComponent] 同步进化至槽位{i}: {evt.CardId} #{evt.InstanceId} Lv{evt.NewLevel}, 效果: {evt.SelectedEffect.effectName}");
                     return;  // 找到匹配槽位后直接返回
                 }
             }

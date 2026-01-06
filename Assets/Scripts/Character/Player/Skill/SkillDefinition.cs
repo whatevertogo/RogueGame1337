@@ -1,5 +1,5 @@
+using System;
 using System.Collections.Generic;
-using System.Linq;
 using Card.SkillSystem.TargetingSystem;
 using Character.Player.Skill.Evolution;
 using Character.Player.Skill.Runtime;
@@ -18,9 +18,9 @@ public class SkillDefinition : ScriptableObject
     public float detectionDelay = 0f;
     public GameObject vfxPrefab;  // 可选
 
-    [Header("进化树（阶段3）")]
-    [Tooltip("技能进化节点数组，索引0对应Lv2，索引1对应Lv3，索引2对应Lv4，索引3对应Lv5")]
-    public List<SkillNode> evolutionTree;
+    [Header("技能标签（效果池匹配）")]
+    [Tooltip("用于与进化效果池的标签匹配（requiredTags/excludedTags）")]
+    public List<SkillTag> skillTags = new List<SkillTag>();
 
     [Header("Executor")]
     [Tooltip("为该技能指定选择目标方法")]
@@ -32,32 +32,6 @@ public class SkillDefinition : ScriptableObject
     [Header("效果列表")]
     [Tooltip("使用 StatusEffectDefinitionSO（ScriptableObject）来配置技能要应用的效果。运行时会从 Definition 创建实例。")]
     public List<StatusEffectDefinitionSO> Effects;
-
-    /// <summary>
-    /// 技能最高等级（1 + 进化树节点数量）
-    /// </summary>
-    public int MaxLevel => 1 + (evolutionTree?.Count(x => x != null) ?? 0);
-
-    /// <summary>
-    /// 获取指定等级的进化节点
-    /// </summary>
-    /// <param name="level">技能等级（2-5）</param>
-    /// <returns>对应等级的进化节点，不存在则返回null</returns>
-    public SkillNode GetEvolutionNode(int level)
-    {
-        if (evolutionTree == null || level < 2 || level > MaxLevel)
-            return null;
-        return evolutionTree[level - 2];  // level 2 对应索引 0
-    }
-
-    /// <summary>
-    /// 检查技能是否可以进化到下一等级
-    /// </summary>
-    /// <param name="currentLevel">当前等级</param>
-    public bool CanEvolve(int currentLevel)
-    {
-        return currentLevel >= 1 && currentLevel < MaxLevel && GetEvolutionNode(currentLevel + 1) != null;
-    }
 
     /// <summary>
     /// 获取所有效果（基础 + 修改器生成）
@@ -75,5 +49,40 @@ public class SkillDefinition : ScriptableObject
 
         // 使用 Runtime 的缓存机制
         return runtime.GetAllEffects();
+    }
+
+    // ========== 标签匹配方法（效果池系统） ==========
+
+    /// <summary>
+    /// 检查技能是否包含任意一个指定标签
+    /// 用于进化效果的标签兼容性检查
+    /// </summary>
+    /// <param name="tags">要检查的标签列表</param>
+    /// <returns>如果包含任意一个标签则返回 true</returns>
+    public bool HasAnyTag(List<SkillTag> tags)
+    {
+        if (tags == null || tags.Count == 0)
+            return false;
+
+        if (skillTags == null || skillTags.Count == 0)
+            return false;
+
+        foreach (var tag in tags)
+        {
+            if (skillTags.Contains(tag))
+                return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// 检查技能是否包含指定标签
+    /// </summary>
+    /// <param name="tag">要检查的标签</param>
+    /// <returns>如果包含该标签则返回 true</returns>
+    public bool HasTag(SkillTag tag)
+    {
+        return skillTags != null && skillTags.Contains(tag);
     }
 }

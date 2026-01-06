@@ -1,5 +1,6 @@
 using UnityEngine;
 using RogueGame.Map;
+using System.Collections.Generic;
 
 namespace RogueGame.Events
 {
@@ -298,6 +299,7 @@ namespace RogueGame.Events
 
     /// <summary>
     /// 技能进化请求事件：当重复获得主动卡时发布，触发进化选择UI
+    /// 效果池系统：携带从效果池获取的随机选项列表
     /// </summary>
     public class SkillEvolutionRequestedEvent
     {
@@ -305,44 +307,50 @@ namespace RogueGame.Events
         public string InstanceId;
         public int CurrentLevel;
         public int NextLevel;
-        public Character.Player.Skill.Evolution.SkillNode EvolutionNode;
+        /// <summary>
+        /// 可选的进化效果列表（从效果池随机生成）
+        /// </summary>
+        public List<Character.Player.Skill.Evolution.EvolutionEffectEntry> Options;
 
-        public SkillEvolutionRequestedEvent(string cardId, string instanceId, int currentLevel, int nextLevel, Character.Player.Skill.Evolution.SkillNode evolutionNode)
+        public SkillEvolutionRequestedEvent(
+            string cardId,
+            string instanceId,
+            int currentLevel,
+            int nextLevel,
+            List<Character.Player.Skill.Evolution.EvolutionEffectEntry> options)
         {
             CardId = cardId;
             InstanceId = instanceId;
             CurrentLevel = currentLevel;
             NextLevel = nextLevel;
-            EvolutionNode = evolutionNode;
+            Options = options;
         }
     }
 
     /// <summary>
-    /// 技能进化完成事件：分支选择后发布，确认进化生效
+    /// 技能进化完成事件：玩家选择进化效果后发布，确认进化生效
+    /// 效果池系统：携带选中的进化效果
     /// </summary>
     public class SkillEvolvedEvent
     {
         public string CardId;
         public string InstanceId;
         public int NewLevel;
-        public Character.Player.Skill.Evolution.SkillBranch SelectedBranch;
-        public string BranchPath; // 例如 "A-A-B-A"
-        public Character.Player.Skill.Evolution.SkillNode EvolutionNode;
+        /// <summary>
+        /// 选中的进化效果（效果池系统）
+        /// </summary>
+        public Character.Player.Skill.Evolution.EvolutionEffectEntry SelectedEffect;
 
         public SkillEvolvedEvent(
             string cardId,
             string instanceId,
             int newLevel,
-            Character.Player.Skill.Evolution.SkillBranch selectedBranch,
-            string branchPath,
-            Character.Player.Skill.Evolution.SkillNode evolutionNode = null)
+            Character.Player.Skill.Evolution.EvolutionEffectEntry selectedEffect)
         {
             CardId = cardId;
             InstanceId = instanceId;
             NewLevel = newLevel;
-            SelectedBranch = selectedBranch;
-            BranchPath = branchPath;
-            EvolutionNode = evolutionNode;
+            SelectedEffect = selectedEffect;
         }
     }
 

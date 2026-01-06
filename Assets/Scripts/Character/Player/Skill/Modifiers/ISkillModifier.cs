@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Character.Player.Skill.Runtime;
 using Character.Player.Skill.Targeting;
 
@@ -81,7 +82,7 @@ namespace Character.Player.Skill.Modifiers
         /// </summary>
         /// <param name="runtime">技能运行时状态</param>
         /// <returns>效果定义列表（可以为空，但不应返回 null）</returns>
-        System.Collections.Generic.List<StatusEffectDefinitionSO> GenerateEffects(ActiveSkillRuntime runtime);
+        List<StatusEffectDefinitionSO> GenerateEffects(ActiveSkillRuntime runtime);
     }
 
     #endregion

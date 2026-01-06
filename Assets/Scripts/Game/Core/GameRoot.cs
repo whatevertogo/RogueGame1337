@@ -1,4 +1,5 @@
 using CDTU.Utils;
+using Character.Player.Skill.Evolution;
 using RogueGame.GameConfig;
 using RogueGame.Game.Service.SkillLimit;
 using RogueGame.Map;
@@ -45,6 +46,11 @@ public class GameRoot : Singleton<GameRoot>
     [Tooltip("属性上限配置（防止数值爆炸）")]
     [SerializeField] private StatLimitConfig statLimitConfig;
     public StatLimitConfig StatLimitConfig => statLimitConfig;
+
+    [Header("Evolution System")]
+    [Tooltip("技能进化效果池（全局单例）")]
+    [SerializeField] private EvolutionEffectPool evolutionEffectPool;
+    public EvolutionEffectPool EvolutionEffectPool => evolutionEffectPool;
 
     [Header("Scene Managers")]
     [SerializeField] private GameFlowCoordinator gameFlowCoordinator;
@@ -192,6 +198,10 @@ public class GameRoot : Singleton<GameRoot>
 
         InitializeUIControllers();
 
+        // ========== 初始化进化系统 ==========
+
+        InitializeEvolutionSystem();
+
         // ========== 输出服务注册状态 ==========
 
         if (enableDebugLogs)
@@ -214,6 +224,26 @@ public class GameRoot : Singleton<GameRoot>
         // 技能进化 UI 控制器（纯 C#，避免事件丢失）
         SkillEvolutionUIController.Initialize(uiManager);
         CDLogger.Log("[GameRoot] SkillEvolutionUIController 已初始化");
+    }
+
+    /// <summary>
+    /// 初始化技能进化系统
+    /// </summary>
+    private void InitializeEvolutionSystem()
+    {
+        // 初始化效果池
+        if (evolutionEffectPool != null)
+        {
+            evolutionEffectPool.Initialize();
+            CDLogger.Log($"[GameRoot] EvolutionEffectPool 已初始化 - {evolutionEffectPool.GetPoolStatistics()}");
+        }
+        else
+        {
+            Debug.LogError("[GameRoot] EvolutionEffectPool 未配置！请在 Inspector 中分配。");
+        }
+
+        // 初始化升级服务（需要效果池引用）
+        inventoryManager.ActiveCardUpgradeService.Initialize();
     }
 
     /// <summary>
