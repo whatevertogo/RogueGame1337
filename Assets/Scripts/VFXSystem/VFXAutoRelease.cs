@@ -10,16 +10,16 @@ public class VFXAutoRelease : MonoBehaviour
     [SerializeField] private float overrideDuration = -1f;
 
     private VFXPool _pool;
-    private GameObject _prefabKey;
+    private GameObject _prefabKeyInstance;
     private Coroutine _releaseRoutine;
 
     /// <summary>
     /// 初始化并开始计时
     /// </summary>
-    public void Init(VFXPool pool, GameObject prefabKey, float? customDuration = null)
+    public void Init(VFXPool pool, GameObject prefabKeyInstance, float? customDuration = null)
     {
         _pool = pool;
-        _prefabKey = prefabKey;
+        _prefabKeyInstance = prefabKeyInstance;
 
         StartReleaseTimer(customDuration ?? overrideDuration);
     }
@@ -61,6 +61,11 @@ public class VFXAutoRelease : MonoBehaviour
         Release();
     }
 
+
+    /// <summary>
+    /// 计算特效持续时间
+    /// </summary>
+    /// <returns></returns>
     private float CalculateDuration()
     {
         float maxDuration = 0f;
@@ -84,5 +89,7 @@ public class VFXAutoRelease : MonoBehaviour
     private void OnDisable()
     {
         StopTimer();
+        //确保禁用时回收对象
+        Release();
     }
 }
