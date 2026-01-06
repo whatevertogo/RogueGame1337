@@ -142,11 +142,12 @@ namespace Character.Player.Skill.Core
         private SkillPhasePipeline BuildPipeline()
         {
             return new SkillPhasePipeline()
-                .Add(new EnergyConsumptionPhase(_inventory))
-                .Add(new TargetingPhase())
-                .Add(new CrossPhase())
-                .Add(new DamageCalculationPhase())
-                .Add(new EffectApplicationPhase(_effectFactory));
+                .Add(new EnergyConsumptionPhase(_inventory))//消耗能量
+                .Add(new TargetingPhase())//目标获取
+                .Add(new VFXPhase())//播放特效
+                .Add(new CrossPhase())//跨阶段修改器
+                .Add(new DamageCalculationPhase())//伤害计算(底层也是通过effect)
+                .Add(new EffectApplicationPhase(_effectFactory));//效果应用
         }
         ///  <summary>
         /// 打断技能

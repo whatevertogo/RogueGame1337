@@ -151,45 +151,51 @@ namespace CDTU.Utils
                 return;
             }
 
+            bool wasActive = _activeObjects.Remove(obj); // 核心：只靠这个判断
+
             if (_collectionChecks)
             {
-                if (_pool.Contains(obj))
+                if (!wasActive)
                 {
-                    Debug.LogError($"尝试多次回收同一个对象到对象池: {obj}");
-                    return;
-                }
-
-                if (!_activeObjects.Remove(obj))
-                {
-                    Debug.LogError($"尝试回收不是从此对象池获取的对象: {obj}");
+                    Debug.LogError($"尝试回收不是从此对象池获取的对象，或已回收的对象: {obj}");
                     return;
                 }
             }
+            else
+            {
+                // 即使不检查，也尝试移除（防止外部Destroy导致残留引用）
+                if (!wasActive)
+                    return; // 可选：静默忽略
+            }
 
-            if (obj is GameObject gameObj) gameObj.SetActive(false);
+            if (obj is GameObject gameObj)
+            {
+                gameObj.SetActive(false);
+                // 可选：重置 transform（本地位置、旋转、缩放）
+                // gameObj.transform.SetParent(_parent, false);
+                // gameObj.transform.localPosition = Vector3.zero;
+            }
 
             _pool.Enqueue(obj);
         }
 
-        /// <summary>
-        ///     清空对象池
-        /// </summary>
-        /// <param name="destroyActive">是否也销毁当前活跃的对象</param>
         public void Clear(bool destroyActive = false)
         {
-            // 清理池中的非活跃对象
             while (_pool.Count > 0)
             {
                 var obj = _pool.Dequeue();
-                Object.Destroy(obj);
+                if (obj != null) Object.Destroy(obj);
             }
 
-            // 如果需要，也清理活跃对象
             if (destroyActive)
             {
-                foreach (var obj in _activeObjects) Object.Destroy(obj);
-                _activeObjects.Clear();
+                foreach (var obj in _activeObjects)
+                {
+                    if (obj != null) Object.Destroy(obj);
+                }
             }
+
+            _activeObjects.Clear(); // 必须清空！防止持有 destroyed 引用
         }
 
         #endregion

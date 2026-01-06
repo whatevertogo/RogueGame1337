@@ -65,12 +65,6 @@ namespace Character.Player.Skill.Targeting
         /// </summary>
         public DamageResult DamageResult;
 
-        // // ========== 阶段5：投射物配置（由 IProjectileModifier 修改）==========
-        // /// <summary>
-        // /// 投射物配置（由修改器修改，用于弹道、穿透、弹射等）
-        // /// </summary>
-        // public ProjectileConfig Projectile;
-
         // ========== 阶段6：目标获取结果（策略执行后填充，修改器只读）==========
         /// <summary>
         /// 目标获取结果（由策略填充，供跨阶段修改器读取）
