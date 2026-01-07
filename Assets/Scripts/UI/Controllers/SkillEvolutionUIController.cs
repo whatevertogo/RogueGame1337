@@ -32,13 +32,6 @@ namespace UI
         {
             GameRoot.I?.GameFlowCoordinator?.PauseGame();
             _pending = evt;
-            if (_uiManager == null)
-            {
-                UnityEngine.Debug.LogError("[SkillEvolutionUIController] UIManager is null, cannot open UI.");
-                GameRoot.I?.GameFlowCoordinator?.ResumeGame();
-                return;
-            }
-
             try
             {
                 await _uiManager.Open<CardUpgradeView>(new SkillEvolutionUIArgs(evt));

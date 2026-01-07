@@ -175,7 +175,7 @@ namespace Character.Player.Skill.Runtime
         /// 阶段4：应用伤害修改器
         /// 在应用效果前调用，按优先级递减排序
         /// </summary>
-        public void ApplyDamageModifiers( DamageResult result)
+        public void ApplyDamageModifiers(DamageResult result)
         {
             var sortedModifiers = _activeModifiers
                 .OfType<IDamageModifier>()
@@ -191,7 +191,7 @@ namespace Character.Player.Skill.Runtime
         /// 阶段6：应用跨阶段修改器
         /// 在所有阶段完成后调用（用于处理跨阶段逻辑），按优先级递减排序
         /// </summary>
-        public void ApplyCrossPhaseModifiers( SkillContext ctx)
+        public void ApplyCrossPhaseModifiers(SkillContext ctx)
         {
             var sortedModifiers = _activeModifiers
                 .OfType<ICrossPhaseModifier>()
@@ -289,20 +289,21 @@ namespace Character.Player.Skill.Runtime
             // 1. 添加到已选择列表（List 允许重复，支持 maxStacks > 1）
             _chosenEvolutions.Add(entry);
 
-            // 2. 如果效果包含修改器，应用到技能
-            // 注意：同一修改器只添加一次（避免重复），但效果可以多次选择
-            // 叠加效果可以通过修改器内部的堆叠逻辑实现
-            if (entry.modifier is ISkillModifier modifier)
+            foreach (var t in entry.modifiers)
             {
-                AddModifier(modifier);
-                int stackCount = _chosenEvolutions.Count(e => e?.effectId == entry.effectId);
-                Debug.Log($"[ActiveSkillRuntime] 应用进化效果: {entry.effectName} (Lv{CurrentLevel}, 叠加层数: {stackCount})");
-            }
-            else
-            {
-                Debug.LogWarning($"[ActiveSkillRuntime] 进化效果 {entry.effectName} 没有有效的修改器");
+                if (t is ISkillModifier modifier)
+                {
+                    AddModifier(modifier);
+                    int stackCount = _chosenEvolutions.Count(e => e?.effectId == entry.effectId);
+                    Debug.Log($"[ActiveSkillRuntime] 应用进化效果: {entry.effectName} (Lv{CurrentLevel}, 叠加层数: {stackCount})");
+                }
+                else
+                {
+                    Debug.LogWarning($"[ActiveSkillRuntime] 进化效果 {entry.effectName} 没有有效的修改器");
+                }
             }
         }
+
 
         /// <summary>
         /// 从存档恢复进化效果
@@ -331,9 +332,12 @@ namespace Character.Player.Skill.Runtime
                     _chosenEvolutions.Add(effect);
 
                     // 恢复修改器
-                    if (effect.modifier is ISkillModifier modifier)
+                    foreach (var t in effect.modifiers)
                     {
-                        AddModifier(modifier);
+                        if (t is ISkillModifier modifier)
+                        {
+                            AddModifier(modifier);
+                        }
                     }
                 }
                 else

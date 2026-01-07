@@ -8,7 +8,6 @@ namespace Character.Player.Skill.SkillModifier.EffectGenerators
 {
     /// <summary>
     /// 条件效果生成修改器：根据条件动态生成效果
-    /// 示例：技能等级 >= 3 时添加额外伤害效果
     /// </summary>
     [CreateAssetMenu(fileName = "ConditionalEffect", menuName = "RogueGame/Skill/Modifier/EffectGenerator/Conditional")]
     public class ConditionalEffectModifier : SkillModifierBase, IEffectGeneratorModifier

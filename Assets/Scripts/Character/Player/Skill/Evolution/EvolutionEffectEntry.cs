@@ -43,7 +43,7 @@ namespace Character.Player.Skill.Evolution
 
         [Header("效果修改器")]
         [Tooltip("实际的修改器（复用现有修改器系统）")]
-        public SkillModifierBase modifier;
+        public SkillModifierBase[] modifiers;
 
         #endregion
 

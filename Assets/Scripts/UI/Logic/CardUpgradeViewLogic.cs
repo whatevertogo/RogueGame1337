@@ -30,7 +30,7 @@ namespace Game.UI
 
         public virtual void OnOpen(UIArgs args)
         {
-            var evolutionArgs = args as SkillEvolutionUIArgs;
+            var evolutionArgs = (SkillEvolutionUIArgs)args;
             if (evolutionArgs == null || evolutionArgs.Event == null) return;
 
             _currentEvolution = evolutionArgs.Event;
