@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Card.SkillSystem.TargetingSystem;
 using Character.Player.Skill.Evolution;
 using Character.Player.Skill.Runtime;
+using Character.Player.Skill.Targeting;
 using UnityEngine;
 
 
@@ -39,6 +40,13 @@ public class SkillDefinition : ScriptableObject
 
     [Header("过滤器")]
     public TargetFilterGroupSO TargetFilters;
+
+    [Header("默认配置")]
+    [Tooltip("默认目标获取配置（会拷贝到 SkillContext.Targeting，随后可被修改器覆写）")]
+    public TargetingConfig defaultTargeting = TargetingConfig.Default;
+
+    [Tooltip("默认能量消耗配置（会拷贝到 SkillContext.EnergyCost，随后可被修改器覆写）")]
+    public EnergyCostConfig defaultEnergyCost = EnergyCostConfig.Default;
 
     [Header("效果列表")]
     [Tooltip("使用 StatusEffectDefinitionSO（ScriptableObject）来配置技能要应用的效果。运行时会从 Definition 创建实例。")]

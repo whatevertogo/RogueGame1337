@@ -72,6 +72,9 @@ namespace Character.Player.Skill.Core
             _activeTokens[slot.Index] = token;
 
             // 创建 Context（使用构造函数以赋值只读字段）
+            var targetingConfig =  def.defaultTargeting ;
+            var energyCostConfig =  def.defaultEnergyCost;
+
             var ctx = new SkillContext(
                 caster,
                 aimPoint,
@@ -79,8 +82,8 @@ namespace Character.Player.Skill.Core
                 slot.Index,
                 rt,
                 _inventory,
-                TargetingConfig.Default,
-                EnergyCostConfig.Default,
+                targetingConfig,
+                energyCostConfig,
                 DamageResult.Default
             );
 

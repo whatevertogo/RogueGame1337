@@ -8,33 +8,38 @@ using UnityEngine;
 /// 实现 ITargetingModifier 接口，在目标获取前应用
 /// </summary>
 [CreateAssetMenu(fileName = "TargetingModifier", menuName = "RogueGame/Skill/Modifiers/TargetingModifier")]
-public class TargetingModifier : SkillModifierBase, ITargetingModifier
+public class TargetingSkillModifier : SkillModifierBase, ITargetingModifier
 {
     // ========== 配置属性 ==========
     /// <summary>
     /// 范围倍率（默认为1，表示不改变）
     /// </summary>
-    public float RangeMultiplier { get; private set; } = 1f;
+    [Tooltip("范围倍率（默认为1，表示不改变）")]
+    public float RangeMultiplier  = 1f;
 
     /// <summary>
     /// 范围固定加值
     /// </summary>
-    public float RangeAddend { get; private set; }
+    [Tooltip("范围固定加值")]
+    public float RangeAddend;
 
     /// <summary>
     /// 目标数量上限加值
     /// </summary>
-    public int MaxCountAddend { get; private set; }
+    [Tooltip("目标数量上限加值")]
+    public int MaxCountAddend;
 
     /// <summary>
     /// 范围半径倍率（用于范围技能）
     /// </summary>
-    public float RadiusMultiplier { get; private set; } = 1f;
+    [Tooltip("范围半径倍率（用于范围技能）")]
+    public float RadiusMultiplier  = 1f;
 
     /// <summary>
     /// 范围半径加值
     /// </summary>
-    public float RadiusAddend { get; private set; }
+    [Tooltip("范围半径加值")]
+    public float RadiusAddend;
 
     // ========== ISkillModifier 实现 ==========
     public override string ModifierId => $"Targeting(Range×{RangeMultiplier}+{RangeAddend},Max+{MaxCountAddend})";
@@ -44,41 +49,41 @@ public class TargetingModifier : SkillModifierBase, ITargetingModifier
     /// <summary>
     /// 创建范围倍率修改器
     /// </summary>
-    public static TargetingModifier RangeMul(float multiplier)
+    public static TargetingSkillModifier RangeMul(float multiplier)
     {
-        return new TargetingModifier { RangeMultiplier = multiplier };
+        return new TargetingSkillModifier { RangeMultiplier = multiplier };
     }
 
     /// <summary>
     /// 创建范围加值修改器
     /// </summary>
-    public static TargetingModifier RangeAdd(float addend)
+    public static TargetingSkillModifier RangeAdd(float addend)
     {
-        return new TargetingModifier { RangeAddend = addend };
+        return new TargetingSkillModifier { RangeAddend = addend };
     }
 
     /// <summary>
     /// 创建目标数量修改器
     /// </summary>
-    public static TargetingModifier MaxCount(int addCount)
+    public static TargetingSkillModifier MaxCount(int addCount)
     {
-        return new TargetingModifier { MaxCountAddend = addCount };
+        return new TargetingSkillModifier { MaxCountAddend = addCount };
     }
 
     /// <summary>
     /// 创建范围半径修改器
     /// </summary>
-    public static TargetingModifier Radius(float multiplier, float addend = 0f)
+    public static TargetingSkillModifier Radius(float multiplier, float addend = 0f)
     {
-        return new TargetingModifier { RadiusMultiplier = multiplier, RadiusAddend = addend };
+        return new TargetingSkillModifier { RadiusMultiplier = multiplier, RadiusAddend = addend };
     }
 
     /// <summary>
     /// 创建综合修改器（同时修改多个参数）
     /// </summary>
-    public static TargetingModifier Create(float rangeMul = 1f, float rangeAdd = 0f, int maxCountAdd = 0, float radiusMul = 1f, float radiusAdd = 0f)
+    public static TargetingSkillModifier Create(float rangeMul = 1f, float rangeAdd = 0f, int maxCountAdd = 0, float radiusMul = 1f, float radiusAdd = 0f)
     {
-        return new TargetingModifier
+        return new TargetingSkillModifier
         {
             RangeMultiplier = rangeMul,
             RangeAddend = rangeAdd,

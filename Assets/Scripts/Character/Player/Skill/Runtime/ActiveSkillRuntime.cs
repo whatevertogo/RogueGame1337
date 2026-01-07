@@ -27,7 +27,6 @@ namespace Character.Player.Skill.Runtime
         [NonSerialized]
         public int ActualEnergyConsumed;
 
-
         /// <summary>
         /// 能量已消耗标志（用于技能取消时退还能量）
         /// </summary>
@@ -92,6 +91,7 @@ namespace Character.Player.Skill.Runtime
         }
 
         #region 修改器管理
+
         /// <summary>
         /// 添加修改器（惰性排序，在应用时才排序）
         /// </summary>
