@@ -91,6 +91,9 @@ namespace Character.Player.Skill.Core
             {
                 // TODO-播放技能对应动画
                 caster.GetComponent<IAnimatorController>()?.PlaySkill(def.animationTrigger);
+                // 播放特效
+                // TODO-先硬编码，后续改为配置化
+                VFXSystem.Instance.PlayAt("BurnSkillVFXPrefab", caster.transform.position, caster.transform,2f);
                 // 异步执行技能（Fire-and-Forget 模式）
                 ExecuteAsync(def, ctx, token).Forget();
             }
