@@ -12,7 +12,7 @@ using RogueGame.Game.Service;
 ///
 /// 职责：
 /// 1. 初始化所有核心管理器和服务
-/// 2. 将服务注册到 ServiceLocator 供全局访问
+/// 2. 提供全局服务访问入口（通过 GameRoot.Instance）
 /// 3. 管理服务生命周期（事件订阅/取消订阅）
 /// </summary>
 public class GameRoot : Singleton<GameRoot>
@@ -183,10 +183,6 @@ public class GameRoot : Singleton<GameRoot>
 
         SlotService = new SlotClearService();
 
-        // ========== 注册所有服务到 ServiceLocator ==========
-
-        RegisterToServiceLocator();
-
         // ========== 订阅服务的事件 ==========
 
         FloorRewardSystemService.Subscribe();
@@ -202,12 +198,7 @@ public class GameRoot : Singleton<GameRoot>
 
         InitializeEvolutionSystem();
 
-        // ========== 输出服务注册状态 ==========
-
-        if (enableDebugLogs)
-        {
-            CDLogger.Log(ServiceLocator.GetDebugInfo());
-        }
+        // TODO: 添加服务注册状态日志输出
 
         // // 启动时加载元游戏存档
         // SaveManager.LoadMeta();
@@ -246,52 +237,6 @@ public class GameRoot : Singleton<GameRoot>
         inventoryManager.ActiveCardUpgradeService.Initialize();
     }
 
-    /// <summary>
-    /// 将所有管理器和服务注册到 ServiceLocator
-    ///
-    /// 注册约定：
-    /// - 管理器（Unity Component）：使用 "Manager" 后缀
-    /// - 服务（纯 C# 类）：使用 "Service" 后缀
-    /// - 可选命名：用于同类型多实例场景
-    /// </summary>
-    private void RegisterToServiceLocator()
-    {
-        // ========== 核心管理器 ==========
-        // 这些是 Unity 单例，保留直接访问方式，同时也注册到 ServiceLocator
-
-        ServiceLocator.Register(gameFlowCoordinator);
-        ServiceLocator.Register(roomManager);
-        ServiceLocator.Register(uiManager);
-        ServiceLocator.Register(transitionController);
-        ServiceLocator.Register(playerManager);
-        ServiceLocator.Register(inventoryManager);
-        ServiceLocator.Register(shopManager);
-        ServiceLocator.Register(gameInput);
-
-        // ========== Inventory 子服务 ==========
-        // 注册 inventoryManager 的子服务，使其可独立通过 ServiceLocator 访问
-        // 注意：此时 inventoryManager.Awake() 已执行，子服务已创建完成
-        ServiceLocator.Register(inventoryManager.CoinService);
-        ServiceLocator.Register(inventoryManager.ActiveCardService);
-        ServiceLocator.Register(inventoryManager.PassiveCardService);
-        ServiceLocator.Register(inventoryManager.ActiveCardUpgradeService);
-
-        // ========== 核心服务 ==========
-        // 纯 C# 服务，主要通过 ServiceLocator 访问
-
-        ServiceLocator.Register(FloorRewardSystemService);
-        ServiceLocator.Register(DifficultyService);
-        ServiceLocator.Register(PassiveCardApplicationService);
-        ServiceLocator.Register(RoomPlayerSkillLimitService);
-        ServiceLocator.Register(CombatRewardEnergyService);
-        ServiceLocator.Register(SlotService);
-
-        // ========== 配置（可选） ==========
-        // 如果需要通过 ServiceLocator 访问配置，也可以注册
-        // ServiceLocator.Register(cardDatabase);
-        // ServiceLocator.Register(difficultyCurveConfig);
-    }
-
     private bool AssertNotNull(Object obj, string name)
     {
         if (obj == null)
@@ -313,8 +258,7 @@ public class GameRoot : Singleton<GameRoot>
         PassiveCardApplicationService?.Unsubscribe();
         FloorRewardSystemService?.Unsubscribe();
 
-        // 可选：清空 ServiceLocator（主要用于场景切换时）
-        // ServiceLocator.Clear();
+        // TODO: 添加场景切换时的清理逻辑
 
         base.OnDestroy();
     }
