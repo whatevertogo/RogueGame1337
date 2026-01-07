@@ -21,10 +21,6 @@ namespace Character.Player.Skill.Runtime
         // 链接到 InventoryServiceManager 中的 ActiveCardState.instanceId
         public string InstanceId;
 
-        // 运行时协程引用（非序列化）用于取消延迟/选择流程
-        [NonSerialized]
-        public Coroutine RunningCoroutine;
-
         /// <summary>
         /// 实际消耗的能量值（用于协程取消时退还，包含修改器影响）
         /// </summary>

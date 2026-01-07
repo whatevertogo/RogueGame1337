@@ -6,17 +6,12 @@ using UnityEngine;
 /// <summary>
 /// 玩家动画控制器，负责管理玩家的动画状态和过渡
 /// </summary>
-public class PlayerAnimator : MonoBehaviour
+public class PlayerAnimatorController : MonoBehaviour, IAnimatorController
 {
-    [Header("动画参数")]
-    [SerializeField] private float transitionDuration = 0.1f; // 动画过渡时间
-
     [Header("调试")]
     [SerializeField] private bool enabledebug;
 
     private Animator animator;
-    private PlayerStateMachine stateMachine;
-    private CharacterState lastPlayedState = CharacterState.Idle;
 
     // 动画参数名称常量
     private static readonly string IS_MOVING_PARAM = "IsMoving";
@@ -42,13 +37,6 @@ public class PlayerAnimator : MonoBehaviour
             CDTU.Utils.CDLogger.LogError("PlayerAnimator: 未找到Animator组件！", gameObject);
             return;
         }
-
-        // 获取状态机引用
-        stateMachine = GetComponent<PlayerStateMachine>();
-        if (stateMachine == null)
-        {
-            CDTU.Utils.CDLogger.LogWarning("PlayerAnimator: 未找到CharacterStateMachine组件，将无法自动同步状态！", gameObject);
-        }
     }
 
     /// <summary>
@@ -56,10 +44,6 @@ public class PlayerAnimator : MonoBehaviour
     /// </summary>
     private void OnEnable()
     {
-        if (stateMachine != null)
-        {
-            stateMachine.OnStateChanged += OnStateChanged;
-        }
     }
 
     /// <summary>
@@ -67,20 +51,6 @@ public class PlayerAnimator : MonoBehaviour
     /// </summary>
     private void OnDisable()
     {
-        if (stateMachine != null)
-        {
-            stateMachine.OnStateChanged -= OnStateChanged;
-        }
-    }
-
-    /// <summary>
-    /// 状态改变时的回调
-    /// </summary>
-    /// <param name="oldState">旧状态</param>
-    /// <param name="newState">新状态</param>
-    private void OnStateChanged(CharacterState oldState, CharacterState newState)
-    {
-        PlayStateAnimation(newState);
     }
 
     /// <summary>
@@ -99,35 +69,6 @@ public class PlayerAnimator : MonoBehaviour
         if (enabledebug && isMoving)
         {
             CDTU.Utils.CDLogger.Log($"PlayerAnimator: 设置移动参数 - 方向: {moveVector}, 移动: {isMoving}, 当前动画: {GetCurrentAnimationInfo()}");
-        }
-    }
-
-    /// <summary>
-    /// 播放指定状态的动画
-    /// </summary>
-    /// <param name="state">角色状态</param>
-    public void PlayStateAnimation(CharacterState state)
-    {
-        if (animator == null) return;
-
-        // 避免重复播放相同动画
-        if (state == lastPlayedState) return;
-
-        string stateName = GetAnimationName(state);
-
-        if (string.IsNullOrEmpty(stateName))
-        {
-            CDTU.Utils.CDLogger.LogWarning($"PlayerAnimator: 未找到状态 {state} 对应的动画名称！");
-            return;
-        }
-
-        // 使用CrossFade进行平滑过渡
-        animator.CrossFade(stateName, transitionDuration);
-        lastPlayedState = state;
-
-        if (enabledebug)
-        {
-            CDTU.Utils.CDLogger.Log($"PlayerAnimator: 播放状态动画 - {stateName}");
         }
     }
 
@@ -179,6 +120,18 @@ public class PlayerAnimator : MonoBehaviour
         }
     }
 
+    public void PlaySkill(string animationTrigger)
+    {
+        if (animator == null || string.IsNullOrEmpty(animationTrigger)) return;
+
+        animator.SetTrigger(animationTrigger);
+
+        if (enabledebug)
+        {
+            CDTU.Utils.CDLogger.Log($"PlayerAnimator: 播放技能动画 - 触发器: {animationTrigger}");
+        }
+    }
+
     /// <summary>
     /// 重置所有触发器
     /// </summary>
@@ -193,36 +146,6 @@ public class PlayerAnimator : MonoBehaviour
         if (enabledebug)
         {
             CDTU.Utils.CDLogger.Log("PlayerAnimator: 重置所有触发器");
-        }
-    }
-
-    /// <summary>
-    /// 获取状态对应的动画名称
-    /// </summary>
-    /// <param name="state">角色状态</param>
-    /// <returns>动画名称</returns>
-    private string GetAnimationName(CharacterState state)
-    {
-        switch (state)
-        {
-            case CharacterState.Idle:
-                return "Idle";
-            case CharacterState.Move:
-                return "Move";
-            case CharacterState.Attack:
-                return "Attack";
-            //skill动画由技能系统控制播放
-            // case CharacterState.Skill:
-            //     return "Skill";
-            case CharacterState.Hurt:
-                return "Hurt";
-            case CharacterState.Stunned:
-                return "Stunned";
-            case CharacterState.Dead:
-                return "Dead";
-            default:
-                CDTU.Utils.CDLogger.LogWarning($"PlayerAnimator: 未知状态 {state}");
-                return null;
         }
     }
 
@@ -251,18 +174,6 @@ public class PlayerAnimator : MonoBehaviour
 
         var animatorStateInfo = animator.GetCurrentAnimatorStateInfo(layerIndex);
         return animatorStateInfo.IsName(stateName);
-    }
-
-    /// <summary>
-    /// 检查当前是否在播放指定状态的动画
-    /// </summary>
-    /// <param name="state">角色状态</param>
-    /// <param name="layerIndex">动画层索引，默认为0</param>
-    /// <returns>是否在播放指定状态的动画</returns>
-    public bool IsPlayingStateAnimation(CharacterState state, int layerIndex = 0)
-    {
-        string animationName = GetAnimationName(state);
-        return IsPlayingAnimation(animationName, layerIndex);
     }
 
     /// <summary>

@@ -6,15 +6,13 @@ using UI;
 using RogueGame.Events;
 
 [RequireComponent(typeof(AutoPickupComponent))]
-[RequireComponent(typeof(PlayerAnimator))]
+[RequireComponent(typeof(PlayerAnimatorController))]
 [RequireComponent(typeof(Collider2D))]
 [RequireComponent(typeof(Rigidbody2D))]
 [RequireComponent(typeof(PlayerSkillComponent))]
 public class PlayerController : CharacterBase
 {
-	// private Vector2 lastFacingDirection = Vector2.down;  // 记录上次朝向
-
-	private PlayerAnimator playerAnim;
+	private PlayerAnimatorController playerAnim;
 	private AutoPickupComponent autoPickup;
 	private PlayerSkillComponent skillComponent;
 	private Camera _mainCamera;
@@ -40,7 +38,7 @@ public class PlayerController : CharacterBase
 		//初始化组件
 		var rb = GetComponent<Rigidbody2D>();
 		var col = GetComponent<Collider2D>();
-		playerAnim = GetComponent<PlayerAnimator>();
+		playerAnim = GetComponent<PlayerAnimatorController>();
 		autoPickup = GetComponent<AutoPickupComponent>();
 		skillComponent = GetComponent<PlayerSkillComponent>();
 		_mainCamera = Camera.main;
@@ -128,7 +126,7 @@ public class PlayerController : CharacterBase
 	public void TryActivateSkill(int slotIndex)
 	{
 		Vector3 aimWorld = MouseHelper2D.GetWorldPosition();
-		// 计算鼠标世界坐标作为瞄点，尝试找到显式目标（2D 优先），否则把瞄点传给技能
+		// 计算鼠标世界坐标作为瞄点，尝试找到显式目标，否则把瞄点传给技能
 		aimWorld.z = 0f;
 		// 我们使用范围伤害（AOE），不需要显式目标检测，直接把瞄点传给技能
 		skillComponent.UseSkill(slotIndex, aimWorld);
@@ -169,7 +167,7 @@ public class PlayerController : CharacterBase
 		// CDTU.Utils.Logger.Log("🔫 攻击动作执行！");
 
 		// 播放攻击动画
-		var playerAnim = GetComponent<PlayerAnimator>();
+		var playerAnim = GetComponent<PlayerAnimatorController>();
 		playerAnim?.PlayAttack();
 		// 攻击由Combat组件处理，这里只负责动画
 	}

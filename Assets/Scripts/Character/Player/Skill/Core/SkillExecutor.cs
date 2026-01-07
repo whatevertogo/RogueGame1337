@@ -86,6 +86,8 @@ namespace Character.Player.Skill.Core
 
             if (caster != null)
             {
+                // TODO-播放技能对应动画
+                caster.GetComponent<IAnimatorController>()?.PlaySkill(def.animationTrigger);
                 // 异步执行技能（Fire-and-Forget 模式）
                 ExecuteAsync(def, ctx, token).Forget();
             }

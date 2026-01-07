@@ -16,7 +16,18 @@ public class SkillDefinition : ScriptableObject
     [Header("技能配置")]
     [Tooltip("若大于0，技能触发后延迟检测目标并在延迟结束时应用效果（秒）")]
     public float detectionDelay = 0f;
-    public string vfxPrefabName; 
+
+    /// <summary>
+    /// 技能释放时的动画触发器名称
+    /// </summary>
+    [Tooltip("技能释放时的动画触发器名称")]
+    public string animationTrigger;
+
+    /// <summary>
+    /// 技能释放时播放在敌人身上的特效预制体名称
+    /// </summary>
+    [Tooltip("技能释放时播放在敌人身上的特效预制体名称")]
+    public string vfxPrefabName;
 
     [Header("技能标签（效果池匹配）")]
     [Tooltip("用于与进化效果池的标签匹配（requiredTags/excludedTags）")]

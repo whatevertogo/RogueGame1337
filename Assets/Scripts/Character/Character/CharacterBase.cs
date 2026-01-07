@@ -25,6 +25,7 @@ namespace Character
         public CombatComponent Combat;
         public StatusEffectComponent StatusEffects;
         public SpriteRenderer SpriteRenderer;
+        public Animator animator;
 
         protected virtual void Awake()
         {

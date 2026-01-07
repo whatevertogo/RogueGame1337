@@ -12,6 +12,8 @@ public sealed class LootDropper : Singleton<LootDropper>
     public GameObject CoinPickupPrefab;
     public GameObject CardPickupPrefab;
 
+    public Transform PickupLayerParent; 
+
     /// <summary>
     /// 在指定位置掉落一个带有指定数量的硬币拾取物
     /// </summary>
@@ -78,6 +80,7 @@ public sealed class LootDropper : Singleton<LootDropper>
         if (layer == -1) return;
         // set recursively
         SetLayerRecursive(go.transform, layer);
+        go.transform.SetParent(PickupLayerParent);
     }
 
     private void SetLayerRecursive(Transform t, int layer)
