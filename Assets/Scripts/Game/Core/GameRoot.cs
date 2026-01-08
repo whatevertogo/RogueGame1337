@@ -1,11 +1,11 @@
 using CDTU.Utils;
 using Character.Player.Skill.Evolution;
-using RogueGame.GameConfig;
+using RogueGame.Game.Service;
 using RogueGame.Game.Service.SkillLimit;
+using RogueGame.GameConfig;
 using RogueGame.Map;
 using UI;
 using UnityEngine;
-using RogueGame.Game.Service;
 
 /// <summary>
 /// 游戏根节点，管理全局单例和核心系统
@@ -21,65 +21,84 @@ public class GameRoot : Singleton<GameRoot>
     [Tooltip("启用全局调试日志输出")]
     public bool enableDebugLogs = false;
 
-
     [Header("Game DataBases")]
-    [SerializeField] private CardDataBase cardDatabase;
+    [SerializeField]
+    private CardDataBase cardDatabase;
     public CardDataBase CardDatabase => cardDatabase;
 
     [Header("Game Configs")]
     //游戏胜利奖励配置
     [Tooltip("层间胜利奖励配置")]
-    [SerializeField] private GameWinLayerRewardConfig gameWinLayerRewardConfig;
+    [SerializeField]
+    private GameWinLayerRewardConfig gameWinLayerRewardConfig;
     public GameWinLayerRewardConfig GameWinLayerRewardConfig => gameWinLayerRewardConfig;
 
     //主动卡去重配置
     [Tooltip("重复主动卡转换为金币的配置")]
-    [SerializeField] private ActiveCardDeduplicationConfig activeCardDeduplicationConfig;
-    public ActiveCardDeduplicationConfig ActiveCardDeduplicationConfig => activeCardDeduplicationConfig;
+    [SerializeField]
+    private ActiveCardDeduplicationConfig activeCardDeduplicationConfig;
+    public ActiveCardDeduplicationConfig ActiveCardDeduplicationConfig =>
+        activeCardDeduplicationConfig;
 
     //难度曲线配置
     [Tooltip("游戏难度曲线配置")]
-    [SerializeField] private DifficultyCurveConfig difficultyCurveConfig;
+    [SerializeField]
+    private DifficultyCurveConfig difficultyCurveConfig;
     public DifficultyCurveConfig DifficultyCurveConfig => difficultyCurveConfig;
 
     //属性上限配置
     [Tooltip("属性上限配置（防止数值爆炸）")]
-    [SerializeField] private StatLimitConfig statLimitConfig;
+    [SerializeField]
+    private StatLimitConfig statLimitConfig;
     public StatLimitConfig StatLimitConfig => statLimitConfig;
 
     [Header("Evolution System")]
     [Tooltip("技能进化效果池（全局单例）")]
-    [SerializeField] private EvolutionEffectPool evolutionEffectPool;
+    [SerializeField]
+    private EvolutionEffectPool evolutionEffectPool;
     public EvolutionEffectPool EvolutionEffectPool => evolutionEffectPool;
 
     [Header("Scene Managers")]
-    [SerializeField] private GameFlowCoordinator gameFlowCoordinator;
+    [SerializeField]
+    private GameFlowCoordinator gameFlowCoordinator;
     public GameFlowCoordinator GameFlowCoordinator => gameFlowCoordinator;
-    [SerializeField] private RoomManager roomManager;
+
+    [SerializeField]
+    private RoomManager roomManager;
     public RoomManager RoomManager => roomManager;
-    [SerializeField] private UIManager uiManager;
+
+    [SerializeField]
+    private UIManager uiManager;
     public UIManager UIManager => uiManager;
-    [SerializeField] private TransitionController transitionController;
+
+    [SerializeField]
+    private TransitionController transitionController;
     public TransitionController TransitionController => transitionController;
-    [SerializeField] private PlayerManager playerManager;
+
+    [SerializeField]
+    private PlayerManager playerManager;
     public PlayerManager PlayerManager => playerManager;
     InventoryServiceManager inventoryManager = new();
 
     public InventoryServiceManager InventoryManager => inventoryManager;
-    [SerializeField] private LootDropper lootDropper;
+
+    [SerializeField]
+    private LootDropper lootDropper;
     public LootDropper LootDropper => lootDropper;
+
     // [SerializeField] private SaveManager saveManager;
     // public SaveManager SaveManager => saveManager;
 
-    [SerializeField] private ShopManager shopManager;
+    [SerializeField]
+    private ShopManager shopManager;
     public ShopManager ShopManager => shopManager;
 
-    [SerializeField] private GameInput gameInput;
+    [SerializeField]
+    private GameInput gameInput;
 
     public GameInput GameInput => gameInput;
 
     // -------------Services----------------
-
 
     //层间奖励系统服务
     public FloorRewardSystemService FloorRewardSystemService { get; private set; }
@@ -98,8 +117,6 @@ public class GameRoot : Singleton<GameRoot>
 
     //slotService 放在 GameRoot 上，确保运行时存在
     public SlotClearService SlotService { get; private set; }
-
-
 
     protected override void Awake()
     {
@@ -134,7 +151,6 @@ public class GameRoot : Singleton<GameRoot>
             return;
         }
 
-
         CDLogger.Log("[GameRoot] All required references assigned. Initializing CardDatabase.");
         cardDatabase.Initialize();
         //SaveManager 初始化依赖于 PlayerManager 和 InventoryManager
@@ -142,11 +158,7 @@ public class GameRoot : Singleton<GameRoot>
 
         // ========== 初始化管理器 ==========
 
-        gameFlowCoordinator.Initialize(
-            roomManager,
-            transitionController,
-            uiManager
-        );
+        gameFlowCoordinator.Initialize(roomManager, transitionController, uiManager);
 
         transitionController.Initialize(playerManager);
 
@@ -155,7 +167,6 @@ public class GameRoot : Singleton<GameRoot>
         playerManager.Initialize(roomManager);
 
         shopManager.Initialize(inventoryManager);
-
 
         // ========== 创建并初始化服务 ==========
 
@@ -226,7 +237,9 @@ public class GameRoot : Singleton<GameRoot>
         if (evolutionEffectPool != null)
         {
             evolutionEffectPool.Initialize();
-            CDLogger.Log($"[GameRoot] EvolutionEffectPool 已初始化 - {evolutionEffectPool.GetPoolStatistics()}");
+            CDLogger.Log(
+                $"[GameRoot] EvolutionEffectPool 已初始化 - {evolutionEffectPool.GetPoolStatistics()}"
+            );
         }
         else
         {
@@ -246,7 +259,6 @@ public class GameRoot : Singleton<GameRoot>
         }
         return true;
     }
-
 
     protected override void OnDestroy()
     {
