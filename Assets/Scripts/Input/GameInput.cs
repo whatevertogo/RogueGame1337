@@ -1,9 +1,9 @@
-using UnityEngine;
-using UnityEngine.InputSystem;
 using System;
 using CDTU.Utils;
-using UnityEngine.XR;
 using UI;
+using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.XR;
 
 public sealed class GameInput : Singleton<GameInput>
 {
@@ -13,14 +13,21 @@ public sealed class GameInput : Singleton<GameInput>
 
     [ReadOnly]
     public Vector2 MoveDirRaw;
-    // 仅保留 Attack
-    public bool AttackPressedThisFrame => playerInput != null && playerInput.PlayerControl.Attack.WasPerformedThisFrame();
-    public bool AttackReleasedThisFrame => playerInput != null && playerInput.PlayerControl.Attack.WasReleasedThisFrame();
-    public bool AttackIsPressed => playerInput != null && playerInput.PlayerControl.Attack.IsPressed();
 
-    public bool InteractPressedThisFrame => playerInput != null && playerInput.PlayerControl.Interact.WasPerformedThisFrame();
-    public bool InteractReleasedThisFrame => playerInput != null && playerInput.PlayerControl.Interact.WasReleasedThisFrame();
-    public bool InteractIsPressed => playerInput != null && playerInput.PlayerControl.Interact.IsPressed();
+    // 仅保留 Attack
+    public bool AttackPressedThisFrame =>
+        playerInput != null && playerInput.PlayerControl.Attack.WasPerformedThisFrame();
+    public bool AttackReleasedThisFrame =>
+        playerInput != null && playerInput.PlayerControl.Attack.WasReleasedThisFrame();
+    public bool AttackIsPressed =>
+        playerInput != null && playerInput.PlayerControl.Attack.IsPressed();
+
+    public bool InteractPressedThisFrame =>
+        playerInput != null && playerInput.PlayerControl.Interact.WasPerformedThisFrame();
+    public bool InteractReleasedThisFrame =>
+        playerInput != null && playerInput.PlayerControl.Interact.WasReleasedThisFrame();
+    public bool InteractIsPressed =>
+        playerInput != null && playerInput.PlayerControl.Interact.IsPressed();
 
     public event Action OnSkillQPressed;
     public event Action OnSkillEPressed;
@@ -30,12 +37,15 @@ public sealed class GameInput : Singleton<GameInput>
     {
         base.Awake();
         CDLogger.Log("GameInput Awake called");
-        
-        try {
+
+        try
+        {
             playerInput = new PlayerInputSystem();
             playerInput.Enable();
             CDLogger.Log("PlayerInputSystem enabled successfully");
-        } catch (System.Exception ex) {
+        }
+        catch (System.Exception ex)
+        {
             CDLogger.LogError($"[GameInput] 初始化输入系统失败: {ex.Message}");
             // 尝试继续运行，但记录错误
         }
@@ -43,20 +53,22 @@ public sealed class GameInput : Singleton<GameInput>
 
     private void Update()
     {
-        MoveDir = playerInput != null ? playerInput.PlayerControl.Move.ReadValue<Vector2>() : Vector2.zero;
-        MoveDirRaw =MoveDir;
+        MoveDir =
+            playerInput != null
+                ? playerInput.PlayerControl.Move.ReadValue<Vector2>()
+                : Vector2.zero;
+        MoveDirRaw = MoveDir;
     }
 
     public void PausePlayerInput()
     {
         playerInput?.PlayerControl.Disable();
-    }   
+    }
+
     public void ResumePlayerInput()
     {
         playerInput?.PlayerControl.Enable();
     }
-
-
 
     private void OnEnable()
     {
@@ -68,7 +80,6 @@ public sealed class GameInput : Singleton<GameInput>
         playerInput.PlayerControl.SkillSpace.performed += OnSkillSpacePerformed;
         playerInput.UI.ESC.performed += OnESCPerformed;
     }
-
 
     private void HandleESCPressed()
     {
@@ -102,8 +113,9 @@ public sealed class GameInput : Singleton<GameInput>
     {
         OnSkillEPressed?.Invoke();
     }
-    protected override void OnDestroy() 
-    { 
+
+    protected override void OnDestroy()
+    {
         playerInput?.Dispose();
         base.OnDestroy();
     }

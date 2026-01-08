@@ -1,48 +1,65 @@
-using UnityEngine;
 using System;
 using Core.Events;
 using RogueGame.Events;
+using UnityEngine;
 
 namespace RogueGame.Map
 {
     /// <summary>
     /// 门控制器 - 出口锚点 + 交互触发器
     /// </summary>
-    public sealed class DoorController : MonoBehaviour
+    public sealed class DoorController : MonoBehaviour, IInteractable
     {
         [Header("方向")]
-        [SerializeField] private Direction direction;
+        [SerializeField]
+        private Direction direction;
 
         [Header("位置点")]
         [Tooltip("玩家从此门进入后的出生位置")]
-        [SerializeField] private Transform exitPoint;
+        [SerializeField]
+        private Transform exitPoint;
 
         [Tooltip("stub 放置位置（门外侧）")]
-        [SerializeField] private Transform stubPoint;
+        [SerializeField]
+        private Transform stubPoint;
 
         [Header("视觉组件")]
-        [SerializeField] private GameObject doorVisual;
-        [SerializeField] private SpriteRenderer doorSprite;
+        [SerializeField]
+        private GameObject doorVisual;
+
+        [SerializeField]
+        private SpriteRenderer doorSprite;
 
         [Header("碰撞组件")]
-        [SerializeField] private Collider2D doorBlocker;
-        [SerializeField] private Collider2D doorTrigger;
+        [SerializeField]
+        private Collider2D doorBlocker;
+
+        [SerializeField]
+        private Collider2D doorTrigger;
 
         [Header("初始状态")]
-        [SerializeField] private DoorState initialState = DoorState.Closed;
+        [SerializeField]
+        private DoorState initialState = DoorState.Closed;
 
         [Header("当前状态（调试用）")]
-        [SerializeField] private DoorState currentState = DoorState.Closed;
+        [SerializeField]
+        private DoorState currentState = DoorState.Closed;
 
         [Header("调试")]
-        [SerializeField] private bool enableDebugLog;
+        [SerializeField]
+        private bool enableDebugLog;
 
         [Header("交互设置")]
         [Tooltip("是否在玩家靠近时发布交互提示事件（由 UI 层订阅显示）")]
-        [SerializeField] private bool showPrompt = true;
+        [SerializeField]
+        private bool showPrompt = true;
 
         // 事件
         public event Action<Direction> OnPlayerEnterDoor;
+
+        // ========== 交互 ==========
+
+        private GameObject _playerInRange;
 
         // ========== 属性 ==========
 
@@ -66,7 +83,7 @@ namespace RogueGame.Map
                     Direction.South => Vector3.up * 1.5f,
                     Direction.East => Vector3.left * 1.5f,
                     Direction.West => Vector3.right * 1.5f,
-                    _ => Vector3.zero
+                    _ => Vector3.zero,
                 };
                 return transform.position + offset;
             }
@@ -86,14 +103,17 @@ namespace RogueGame.Map
             var cols = GetComponents<Collider2D>();
             foreach (var c in cols)
             {
-                if (c == null) continue;
+                if (c == null)
+                    continue;
                 if (c.isTrigger)
                 {
-                    if (doorTrigger == null) doorTrigger = c;
+                    if (doorTrigger == null)
+                        doorTrigger = c;
                 }
                 else
                 {
-                    if (doorBlocker == null) doorBlocker = c;
+                    if (doorBlocker == null)
+                        doorBlocker = c;
                 }
             }
         }
@@ -102,7 +122,8 @@ namespace RogueGame.Map
 
         public void Open()
         {
-            if (currentState == DoorState.Hidden) return;
+            if (currentState == DoorState.Hidden)
+                return;
 
             Log($"[Door-{direction}] Open() 调用，{currentState} → Open");
             currentState = DoorState.Open;
@@ -111,7 +132,8 @@ namespace RogueGame.Map
 
         public void Close()
         {
-            if (currentState == DoorState.Hidden) return;
+            if (currentState == DoorState.Hidden)
+                return;
 
             Log($"[Door-{direction}] Close() 调用，{currentState} → Closed");
             currentState = DoorState.Closed;
@@ -180,67 +202,64 @@ namespace RogueGame.Map
                     DoorState.Closed => Color.gray,
                     DoorState.Locked => Color.red,
                     DoorState.Hidden => Color.clear,
-                    _ => Color.white
+                    _ => Color.white,
                 };
             }
 
             Log($"[Door-{direction}] UpdateVisual:  state={currentState}, blocker={blockPlayer}");
         }
 
-        // ========== 交互 ==========
+        // private void OnTriggerEnter2D(Collider2D other)
+        // {
+        //     if (!other.CompareTag("Player"))
+        //         return;
 
-        private GameObject _playerInRange;
+        //     _playerInRange = other.gameObject;
 
-        private void OnTriggerEnter2D(Collider2D other)
-        {
-            if (!other.CompareTag("Player")) return;
+        //     Log($"[Door-{direction}] 玩家进入触发区，当前状态: {currentState}");
 
-            _playerInRange = other.gameObject;
+        //     if (currentState != DoorState.Open)
+        //     {
+        //         Log($"[Door-{direction}] 门未开启，无法通过");
+        //         // 若门未开启，仍可显示提示（例如提示锁定）
+        //         if (showPrompt)
+        //         {
+        //             string message = currentState switch
+        //             {
+        //                 DoorState.Locked => "门已锁定",
+        //                 DoorState.Closed => "门已关闭",
+        //                 DoorState.Open => "按 F 进入",
+        //                 _ => "",
+        //             };
 
-            Log($"[Door-{direction}] 玩家进入触发区，当前状态: {currentState}");
+        //             EventBus.Publish(new InteractionPromptEvent { Message = message, Show = true });
+        //         }
+        //         return;
+        //     }
 
-            if (currentState != DoorState.Open)
-            {
-                Log($"[Door-{direction}] 门未开启，无法通过");
-                // 若门未开启，仍可显示提示（例如提示锁定）
-                if (showPrompt)
-                {
-                    if (currentState == DoorState.Locked)
-                    {
-                        try { EventBus.Publish(new RogueGame.Events.InteractionPromptEvent { Message = "门已锁定", Show = true }); } catch { }
-                    }
-                    if(currentState == DoorState.Closed)
-                    {
-                        try { EventBus.Publish(new RogueGame.Events.InteractionPromptEvent { Message = "门已关闭", Show = true }); } catch { }
-                    }
-                    if(currentState == DoorState.Open)
-                    {
-                        try { EventBus.Publish(new RogueGame.Events.InteractionPromptEvent { Message = "按 E 进入", Show = true }); } catch { }
-                    }
-                }
-                return;
-            }
+        //     // 显示按键提示（实际穿门由按键触发）
+        //     if (showPrompt)
+        //     {
+        //         EventBus.Publish(new InteractionPromptEvent { Message = "按 F 进入", Show = true });
+        //     }
+        // }
 
-            // 显示按键提示（实际穿门由按键触发）
-            if (showPrompt)
-            {
-                try { EventBus.Publish(new RogueGame.Events.InteractionPromptEvent { Message = "按 E 进入", Show = true }); } catch { }
-            }
-        }
-
-        private void OnTriggerExit2D(Collider2D other)
-        {
-            if (!other.CompareTag("Player")) return;
-            if (_playerInRange == other.gameObject) _playerInRange = null;
-            if (showPrompt)
-            {
-                try { EventBus.Publish(new RogueGame.Events.InteractionPromptEvent { Message = "", Show = false }); } catch { }
-            }
-        }
+        // private void OnTriggerExit2D(Collider2D other)
+        // {
+        //     if (!other.CompareTag("Player"))
+        //         return;
+        //     if (_playerInRange == other.gameObject)
+        //         _playerInRange = null;
+        //     if (showPrompt)
+        //     {
+        //         EventBus.Publish(new InteractionPromptEvent { Message = "", Show = false });
+        //     }
+        // }
 
         private void Update()
         {
-            if (_playerInRange == null) return;
+            if (_playerInRange == null)
+                return;
 
             // 使用集中输入管理（GameInput）判断是否按下交互键
 
@@ -260,6 +279,66 @@ namespace RogueGame.Map
                 Debug.Log(message);
             }
         }
+
+        public void Interact(GameObject interactor)
+        {
+            if (!interactor.CompareTag("Player"))
+                return;
+
+            if (currentState != DoorState.Open)
+            {
+                Log($"[Door-{direction}] Interact() 调用，但门未开启，无法通过");
+                return;
+            }
+
+            OnPlayerEnterDoor?.Invoke(direction);
+            Log($"[Door-{direction}] Interact() 调用，玩家通过门进入");
+        }
+
+        public void OnPlayerEnter(GameObject interactor)
+        {
+            if (!interactor.CompareTag("Player"))
+                return;
+
+            _playerInRange = interactor;
+
+            Log($"[Door-{direction}] 玩家进入触发区，当前状态: {currentState}");
+
+            if (currentState != DoorState.Open)
+            {
+                Log($"[Door-{direction}] 门未开启，无法通过");
+                // 若门未开启，仍可显示提示（例如提示锁定）
+                if (showPrompt)
+                {
+                    string message = currentState switch
+                    {
+                        DoorState.Locked => "门已锁定",
+                        DoorState.Closed => "门已关闭",
+                        DoorState.Open => "按 F 进入",
+                        _ => "",
+                    };
+
+                    EventBus.Publish(new InteractionPromptEvent { Message = message, Show = true });
+                }
+                return;
+            }
+
+            // 显示按键提示（实际穿门由按键触发）
+            if (showPrompt)
+            {
+                EventBus.Publish(new InteractionPromptEvent { Message = "按 F 进入", Show = true });
+            }
+        }
+
+        public void OnPlayerExit(GameObject interactor)
+        {
+            if (_playerInRange == interactor)
+                _playerInRange = null;
+            if (showPrompt)
+            {
+                EventBus.Publish(new InteractionPromptEvent { Message = "", Show = false });
+            }
+        }
         #region  编辑器
 
 #if UNITY_EDITOR
@@ -271,33 +350,7 @@ namespace RogueGame.Map
             }
         }
 
-        private void OnDrawGizmos()
-        {
-            Gizmos.color = currentState switch
-            {
-                DoorState.Open => Color.green,
-                DoorState.Closed => Color.yellow,
-                DoorState.Locked => Color.red,
-                DoorState.Hidden => new Color(0.5f, 0.5f, 0.5f, 0.3f),
-                _ => Color.white
-            };
-            Gizmos.DrawWireCube(transform.position, Vector3.one * 0.8f);
-
-            Gizmos.color = Color.cyan;
-            Gizmos.DrawWireSphere(ExitPosition, 0.3f);
-            Gizmos.DrawLine(transform.position, ExitPosition);
-
-            if (stubPoint != null)
-            {
-                Gizmos.color = Color.magenta;
-                Gizmos.DrawWireSphere(stubPoint.position, 0.25f);
-            }
-
-            Gizmos.color = Color.blue;
-            Gizmos.DrawRay(transform.position, DirectionUtils.ToVector3(direction) * 1f);
-        }
 #endif
         #endregion
-
     }
 }

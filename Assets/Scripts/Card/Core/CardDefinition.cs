@@ -11,6 +11,7 @@ public class CardDefinition : ScriptableObject
     public ActiveCardConfig activeCardConfig;
 
     public PassiveCardConfig passiveCardConfig;
+    public int Cost;
 
     [TextArea]
     public string Description;
