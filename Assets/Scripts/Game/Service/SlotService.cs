@@ -1,0 +1,32 @@
+using Core;
+using Core.Events;
+using RogueGame.Events;
+
+/// <summary>
+/// 订阅 ClearAllSlotsRequestedEvent 并执行槽位清理的集中服务
+/// 将此组件放在场景中（例如 GameRoot 或 UI 根对象）以确保能在运行时接收事件
+/// </summary>
+public class SlotClearService
+{
+    public void Subscribe()
+    {
+        EventBus.Subscribe<ClearAllSlotsRequestedEvent>(OnClearAllSlotsRequested);
+    }
+
+    public void Unsubscribe()
+    {
+        EventBus.Unsubscribe<ClearAllSlotsRequestedEvent>(OnClearAllSlotsRequested);
+    }
+
+    private void OnClearAllSlotsRequested(ClearAllSlotsRequestedEvent evt)
+    {
+        CDTU.Utils.CDLogger.Log("[SlotService] ClearAllSlotsRequestedEvent received, clearing slots");
+        var slots = ObjectCache.Instance.FindObjectsOfType<CardSlot>();
+        foreach (var slot in slots)
+        {
+            if (slot == null) continue;
+            // 如果指定 PlayerId，可以根据需要过滤（当前 CardSlot 不包含 PlayerId 字段）
+            slot.ClearSlot();
+        }
+    }
+}
