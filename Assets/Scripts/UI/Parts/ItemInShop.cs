@@ -10,6 +10,7 @@ public class ItemInShop : MonoBehaviour, IInteractable
     private CanvasGroup MessageCanvasGroup;
     private IMessageUIDisplay _messageUI;
     private float _originalLocalY;
+    private CardDefinition card;
 
     void Start()
     {
@@ -43,7 +44,7 @@ public class ItemInShop : MonoBehaviour, IInteractable
                 break;
             case ItemType.Card:
                 var newcardId = GameRoot.I.CardDatabase.GetRandomCardId();
-                CardDefinition card = GameRoot.I.CardDatabase.Resolve(newcardId);
+                card = GameRoot.I.CardDatabase.Resolve(newcardId);
                 string Message =
                     $"卡牌ID:{card.CardId}\n"
                     +
@@ -101,6 +102,7 @@ public class ItemInShop : MonoBehaviour, IInteractable
     {
         Debug.Log($"购买了物品: {itemType} 来自 {gameObject.name}");
         //TODO- 这里添加购买逻辑，比如扣除金币，添加物品到背包等
+        GameRoot.I.ShopManager.BuyCards(card.Cost);
         Destroy(gameObject); // 购买后销毁物品
     }
 

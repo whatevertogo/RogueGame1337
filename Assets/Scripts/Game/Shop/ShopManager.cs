@@ -48,7 +48,9 @@ public class ShopManager : Singleton<ShopManager>
         // 检查是否满血
         if (health.CurrentHP >= health.MaxHP)
         {
-            CDTU.Utils.CDLogger.Log("[ShopManager] Player is already at full health. No purchase needed.");
+            CDTU.Utils.CDLogger.Log(
+                "[ShopManager] Player is already at full health. No purchase needed."
+            );
             OnPurchaseFailed?.Invoke("Already at full health");
             return false;
         }
@@ -102,7 +104,9 @@ public class ShopManager : Singleton<ShopManager>
         string cardId = cardDatabase.GetRandomCardId();
         if (string.IsNullOrEmpty(cardId))
         {
-            CDTU.Utils.CDLogger.LogError("[ShopManager] Failed to get random card, refunding coins.");
+            CDTU.Utils.CDLogger.LogError(
+                "[ShopManager] Failed to get random card, refunding coins."
+            );
             inventoryManager.AddCoins(spendCoins); // 退款
             OnPurchaseFailed?.Invoke("No cards available");
             return false;
@@ -112,7 +116,9 @@ public class ShopManager : Singleton<ShopManager>
         var cardDef = cardDatabase.Resolve(cardId);
         if (cardDef == null)
         {
-            CDTU.Utils.CDLogger.LogError($"[ShopManager] Failed to resolve card '{cardId}', refunding coins.");
+            CDTU.Utils.CDLogger.LogError(
+                $"[ShopManager] Failed to resolve card '{cardId}', refunding coins."
+            );
             inventoryManager.AddCoins(spendCoins); // 退款
             OnPurchaseFailed?.Invoke("Card definition missing");
             return false;
@@ -122,7 +128,10 @@ public class ShopManager : Singleton<ShopManager>
         if (cardDef.CardType == CardType.Active)
         {
             // 主动卡：使用 AddActiveCardSmart 处理重复升级和金币转换
-            var result = inventoryManager.AddActiveCardSmart(cardId, cardDef.activeCardConfig.energyPerKill);
+            var result = inventoryManager.AddActiveCardSmart(
+                cardId,
+                cardDef.activeCardConfig.energyPerKill
+            );
 
             if (result.Success)
             {
@@ -150,7 +159,9 @@ public class ShopManager : Singleton<ShopManager>
             else
             {
                 // 添加失败（不应该发生，因为已经处理了重复和满级情况）
-                CDTU.Utils.CDLogger.LogError($"[ShopManager] Failed to add card '{cardId}', refunding coins.");
+                CDTU.Utils.CDLogger.LogError(
+                    $"[ShopManager] Failed to add card '{cardId}', refunding coins."
+                );
                 inventoryManager.AddCoins(spendCoins); // 退款
                 OnPurchaseFailed?.Invoke("Failed to add card");
                 return false;
