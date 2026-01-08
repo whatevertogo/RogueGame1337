@@ -10,7 +10,7 @@
 # 4. 允许 Scripts 目录下的所有内容
 !Assets/Scripts/**
 
-# # 5. 忽略所有 meta 文件
-# *.meta
+# 5. 忽略所有 meta 文件
+*.meta
 
 *.md
