@@ -1,4 +1,3 @@
-using Character;
 using Character.Player.Skill.Pipeline;
 using Character.Player.Skill.Pipeline.Phases;
 using Character.Player.Skill.Slots;
@@ -6,7 +5,6 @@ using Character.Player.Skill.Targeting;
 using Cysharp.Threading.Tasks;
 using RogueGame.Game.Service;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 namespace Character.Player.Skill.Core
@@ -93,7 +91,7 @@ namespace Character.Player.Skill.Core
                 caster.GetComponent<IAnimatorController>()?.PlaySkill(def.animationTrigger);
                 // 播放特效
                 // TODO-先硬编码，后续改为配置化
-                VFXSystem.Instance.PlayAt("BurnSkillVFXPrefab", caster.transform.position, caster.transform,2f);
+                VFXSystem.Instance.PlayAt(def.animationTrigger, caster.transform.position, caster.transform,2f);
                 // 异步执行技能（Fire-and-Forget 模式）
                 ExecuteAsync(def, ctx, token).Forget();
             }
@@ -132,11 +130,6 @@ namespace Character.Player.Skill.Core
                 _inventory.AddEnergy(rt.InstanceId, rt.ActualEnergyConsumed);
                 rt.ActualEnergyConsumed = 0;
             }
-
-            // TODO-触发技能使用事件（注意语义见注释）
-            // if (result == SkillPhaseResult.Continue || result == SkillPhaseResult.Cancel)
-            // {
-            // }
 
             // 清理
             _activeTokens.Remove(localCtx.SlotIndex);
