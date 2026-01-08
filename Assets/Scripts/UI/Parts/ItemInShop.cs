@@ -2,35 +2,44 @@ using DG.Tweening;
 using UnityEngine;
 
 [RequireComponent(typeof(Collider2D))]
-public class CardInShop : MonoBehaviour
+public class ItemInShop : MonoBehaviour
 {
-    public ItemType itemType =ItemType.None;
-
-    public GameObject priceUIDisplay;
-
-    private CanvasGroup priceCanvasGroup;
+    public ItemType itemType = ItemType.None;
+    public GameObject messageUIDisplay;
+    private CanvasGroup MessageCanvasGroup;
 
     void Start()
     {
-        if (priceUIDisplay != null)
+        if (messageUIDisplay != null)
         {
-            priceCanvasGroup = priceUIDisplay.GetComponent<CanvasGroup>();
-            if (priceCanvasGroup != null)
+            MessageCanvasGroup = messageUIDisplay.GetComponent<CanvasGroup>();
+            if (MessageCanvasGroup != null)
             {
-                priceCanvasGroup.alpha = 0f; // 初始时隐藏价格UI
-                priceUIDisplay.transform.localPosition += new Vector3(0, -0.2f, 0); // 初始位置下移一点
+                MessageCanvasGroup.alpha = 0f; // 初始时隐藏价格UI
+                messageUIDisplay.transform.localPosition += new Vector3(0, -25f, 0); // 初始位置下移一点
             }
         }
-    }
 
+        if (itemType == ItemType.None)
+        {
+            Debug.LogError("ItemInShop: itemType is not set!");
+        }
+        else if (itemType == ItemType.Card)
+        {
+            var newcardId = GameRoot.I.CardDatabase.GetRandomCardId();
+            messageUIDisplay.GetComponentInChildren<IMessageUIDisplay>().Init(GameRoot.I.CardDatabase.Resolve(newcardId).CardId);
+
+            
+        }
+    }
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.CompareTag("Player"))
         {
             // 使用 DOTween 实现淡入并向上飘动
-            priceCanvasGroup.DOFade(1, 0.2f);
-            priceUIDisplay.transform.DOLocalMoveY(0.5f, 0.3f).SetEase(Ease.OutBack);
+            MessageCanvasGroup.DOFade(1, 0.2f);
+            messageUIDisplay.transform.DOLocalMoveY(25f, 0.3f).SetEase(Ease.OutBack);
         }
     }
 
@@ -39,8 +48,8 @@ public class CardInShop : MonoBehaviour
         if (collision.CompareTag("Player"))
         {
             // 淡出并回落
-            priceCanvasGroup.DOFade(0, 0.2f);
-            priceUIDisplay.transform.DOLocalMoveY(0.3f, 0.2f);
+            MessageCanvasGroup.DOFade(0, 0.2f);
+            messageUIDisplay.transform.DOLocalMoveY(-25f, 0.2f);
         }
     }
 
