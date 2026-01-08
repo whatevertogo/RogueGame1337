@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
@@ -33,12 +34,13 @@ namespace UI.Loading
         /// <summary>
         /// 正在加载中的任务（防止重复加载）
         /// </summary>
-        private readonly Dictionary<Type, Task<GameObject>> _loadingTasks = new();
+        private readonly Dictionary<Type, UniTask<GameObject>> _loadingTasks = new();
 
         /// <summary>
         /// 异步加载 UI Prefab（带缓存）
         /// </summary>
-        public async Task<GameObject> LoadAsync<T>() where T : UIViewBase
+        public async UniTask<GameObject> LoadAsync<T>()
+            where T : UIViewBase
         {
             Type type = typeof(T);
 
@@ -73,11 +75,14 @@ namespace UI.Loading
         /// <summary>
         /// 内部加载实现
         /// </summary>
-        private async Task<GameObject> LoadInternalAsync<T>() where T : UIViewBase
+        private async UniTask<GameObject> LoadInternalAsync<T>()
+            where T : UIViewBase
         {
             Type type = typeof(T);
             string address = "UI/" + type.Name;
-            AsyncOperationHandle<GameObject> handle = Addressables.LoadAssetAsync<GameObject>(address);
+            AsyncOperationHandle<GameObject> handle = Addressables.LoadAssetAsync<GameObject>(
+                address
+            );
 
             try
             {
@@ -90,21 +95,27 @@ namespace UI.Loading
                     {
                         Prefab = handle.Result,
                         Handle = handle,
-                        RefCount = 1
+                        RefCount = 1,
                     };
                     return handle.Result;
                 }
                 else
                 {
-                    CDTU.Utils.CDLogger.LogError($"[UIAssetProvider] 加载失败: {type.Name}, Status: {handle.Status}");
-                    if (handle.IsValid()) Addressables.Release(handle);
+                    CDTU.Utils.CDLogger.LogError(
+                        $"[UIAssetProvider] 加载失败: {type.Name}, Status: {handle.Status}"
+                    );
+                    if (handle.IsValid())
+                        Addressables.Release(handle);
                     return null;
                 }
             }
             catch (Exception ex)
             {
-                CDTU.Utils.CDLogger.LogError($"[UIAssetProvider] 加载 {type.Name} 时发生异常: {ex.Message}");
-                if (handle.IsValid()) Addressables.Release(handle);
+                CDTU.Utils.CDLogger.LogError(
+                    $"[UIAssetProvider] 加载 {type.Name} 时发生异常: {ex.Message}"
+                );
+                if (handle.IsValid())
+                    Addressables.Release(handle);
                 return null;
             }
         }
@@ -112,7 +123,8 @@ namespace UI.Loading
         /// <summary>
         /// 释放 UI 资源（引用计数 -1，归零时释放）
         /// </summary>
-        public void Release<T>() where T : UIViewBase
+        public void Release<T>()
+            where T : UIViewBase
         {
             Release(typeof(T));
         }
@@ -159,7 +171,8 @@ namespace UI.Loading
         /// <summary>
         /// 预加载 UI（用于提前加载常用 UI）
         /// </summary>
-        public async Task PreloadAsync<T>() where T : UIViewBase
+        public async UniTask PreloadAsync<T>()
+            where T : UIViewBase
         {
             await LoadAsync<T>();
             CDTU.Utils.CDLogger.Log($"[UIAssetProvider] 预加载完成: {typeof(T).Name}");
