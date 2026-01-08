@@ -140,8 +140,7 @@ namespace RogueGame.Game.Service.SkillLimit
                 var rt = skillComponent.GetRuntime(i);
                 if (rt != null && !string.IsNullOrEmpty(rt.InstanceId))
                 {
-                    //TODO-以后考虑优雅
-                    inventory.ActiveCardService.AddEnergy(rt.InstanceId,10000);
+                    inventory.ActiveCardService.ResetAllSkillEnergy(rt.InstanceId);
                 }
             }
         }

@@ -298,12 +298,25 @@ namespace RogueGame.Game.Service
 
         #region 能量相关（统一事件）
 
+
+        /// <summary>
+        /// 为指定实例的技能添加能量，成功则发布事件
+        /// </summary>
+        /// <param name="instanceId"></param>
+        /// <param name="energy"></param>
         public void AddEnergy(string instanceId, int energy)
         {
             ActiveCardService.AddEnergy(instanceId, energy);
             PublishEnergyChanged(GetActiveCard(instanceId));
         }
 
+
+        /// <summary>
+        /// 消耗指定实例的技能能量，成功则发布事件
+        /// </summary>
+        /// <param name="instanceId"></param>
+        /// <param name="energy"></param>
+        /// <returns></returns>
         public bool ConsumeSkillEnergy(string instanceId, int energy)
         {
             bool success = ActiveCardService.ConsumeSkillEnergy(instanceId, energy);
@@ -314,6 +327,19 @@ namespace RogueGame.Game.Service
             return success;
         }
 
+        public void ResetAllSkillEnergy(string instanceId)
+        {
+            var card = GetActiveCard(instanceId);
+            if (card == null) return;
+
+            ActiveCardService.ResetAllSkillEnergy(instanceId);
+            PublishEnergyChanged(card);
+        }
+
+        /// <summary>
+        /// 为指定玩家的所有装备主动卡添加击杀能量
+        /// </summary>
+        /// <param name="playerId"></param>
         public void AddChargesForKill(string playerId)
         {
             if (string.IsNullOrEmpty(playerId)) return;
@@ -334,6 +360,7 @@ namespace RogueGame.Game.Service
                 PublishEnergyChanged(st);
             }
         }
+
 
         private void PublishEnergyChanged(ActiveCardState card)
         {

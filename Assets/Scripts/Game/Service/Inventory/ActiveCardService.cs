@@ -102,5 +102,14 @@ namespace RogueGame.Game.Service.Inventory
             }
             return false;
         }
+
+        public void ResetAllSkillEnergy(string instanceId)
+        {
+            var card = GetCardByInstanceId(instanceId);
+            if (card != null)
+            {
+                card.CurrentEnergy = 0;
+            }
+        }
     }
 }

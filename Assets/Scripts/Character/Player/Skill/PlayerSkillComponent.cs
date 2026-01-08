@@ -38,7 +38,6 @@ namespace Character.Player
                 return;
             }
 
-            //TODO-修改slot大小
             _slots = new SkillSlotCollection(3, inventory);
             _executor = new SkillExecutor(inventory, new EffectFactory());
 

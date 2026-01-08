@@ -552,29 +552,15 @@ namespace RogueGame.Map
 
         private void SpawnRewards()
         {
-            // 简单奖励实现：基于房间类型掉落固定金币
-            int min = 0, max = 0;
             switch (roomType)
             {
-                case RoomType.Normal:
-                    min = 2; max = 4; break;
-                case RoomType.Elite:
-                    min = 6; max = 10; break;
                 case RoomType.Boss:
-                    min = 12; max = 15; break;
+                    //TODO-以后改成掉落宝箱或者卡牌选取UI
+                     break;
                 default:
                     return;
             }
 
-            int amount = UnityEngine.Random.Range(min, max + 1);
-            try
-            {
-                LootDropper.Instance?.DropCoins(transform.position, amount);
-            }
-            catch (System.Exception ex)
-            {
-                CDTU.Utils.CDLogger.LogWarning($"[RoomController] SpawnRewards failed: {ex.Message}");
-            }
         }
     }
 }
