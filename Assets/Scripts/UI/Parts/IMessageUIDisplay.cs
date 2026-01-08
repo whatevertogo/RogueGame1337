@@ -1,4 +1,3 @@
-
 using TMPro;
 
 public interface IMessageUIDisplay
