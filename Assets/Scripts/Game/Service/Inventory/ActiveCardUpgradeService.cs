@@ -1,8 +1,6 @@
 using CDTU.Utils;
 using Core.Events;
-using Character.Player;
 using Character.Player.Skill.Evolution;
-using Character.Player.Skill.Runtime;
 using RogueGame.Events;
 using RogueGame.Items;
 using System.Collections.Generic;
@@ -88,7 +86,7 @@ namespace RogueGame.Game.Service.Inventory
                 return false;
             }
 
-            //  获取已选效果列表：优先从运行时，否则从存档恢复（使用 List 支持正确计数）
+            // 获取已选效果列表（从现有Effect存档读取，用于选项过滤的动态权重衰减）
             var chosenEvolutions = GetChosenEvolutionsAsList(state);
 
             // 从效果池获取选项
@@ -114,66 +112,28 @@ namespace RogueGame.Game.Service.Inventory
         }
 
         /// <summary>
-        /// 获取已选效果列表（用于选项过滤）
-        /// 优先从运行时获取（如果已装备），否则从存档恢复
-        /// 使用 List 而非 HashSet 以支持正确的重复计数和动态衰减
+        /// 获取已选效果列表（用于选项过滤的动态权重衰减）
+        /// 直接从存档的 effectId 列表读取，避免遍历运行时
         /// </summary>
         private List<EvolutionEffectEntry> GetChosenEvolutionsAsList(ActiveCardState state)
         {
-            // 1. 尝试从运行时获取（如果已装备）
-            var runtime = GetSkillRuntime(state.InstanceId);
-            if (runtime != null && runtime.ChosenEvolutions.Count > 0)
+            if (state?.ChosenEffectIds == null || state.ChosenEffectIds.Count == 0)
+                return new List<EvolutionEffectEntry>();
+
+            if (_effectPool == null)
+                return new List<EvolutionEffectEntry>();
+
+            var result = new List<EvolutionEffectEntry>();
+            foreach (string effectId in state.ChosenEffectIds)
             {
-                return new List<EvolutionEffectEntry>(runtime.ChosenEvolutions);
-            }
-
-
-            // 2. 没有已选效果
-            return new List<EvolutionEffectEntry>();
-        }
-
-        /// <summary>
-        /// 获取技能运行时状态（用于获取已选效果）
-        /// 遍历所有本地玩家的技能槽位，查找匹配的 InstanceId
-        /// ✨ 懒加载：即使卡牌未装备，也从存档恢复已选效果
-        /// </summary>
-        private ActiveSkillRuntime GetSkillRuntime(string instanceId)
-        {
-            var playerManager = GameRoot.Instance?.PlayerManager;
-            if (playerManager == null)
-                return null;
-
-            // 遍历所有本地玩家
-            foreach (var playerState in playerManager.GetAllPlayersData())
-            {
-                if (playerState?.Controller == null) continue;
-
-                var skillComponent = playerState.Controller.GetComponent<PlayerSkillComponent>();
-                if (skillComponent == null) continue;
-
-                // 遍历所有槽位
-                for (int i = 0; i < skillComponent.SlotCount; i++)
+                var effect = _effectPool.GetEffectById(effectId);
+                if (effect != null)
                 {
-                    var runtime = skillComponent.GetRuntime(i);
-                    if (runtime?.InstanceId == instanceId)
-                    {
-                        // ✨ 懒加载：如果 runtime 尚未恢复已选效果，从存档恢复
-                        if (runtime.ChosenEvolutions.Count == 0)
-                        {
-                            var cardState = _cardService.GetCardByInstanceId(instanceId);
-                            if (cardState != null && cardState.ChosenEffectIds.Count > 0 && _effectPool != null)
-                            {
-                                runtime.LoadEvolutionFromSave(cardState.ChosenEffectIds, _effectPool);
-                                CDLogger.Log($"[ActiveCardUpgradeService] 懒加载已选效果: {instanceId}, 恢复 {runtime.ChosenEvolutions.Count} 个效果");
-                            }
-                        }
-                        return runtime;
-                    }
+                    result.Add(effect);
                 }
             }
 
-            return null;
+            return result;
         }
-        
     }
 }
