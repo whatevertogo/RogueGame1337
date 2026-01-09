@@ -81,6 +81,8 @@ namespace Game.UI
         /// </summary>
         private void OnComboChanged(ComboChangedEvent evt)
         {
+            Debug.Log($"[ComboUI] 收到连击事件: Combo={evt.CurrentCombo}, Tier={evt.ComboTier.comboState}");
+
             _currentCombo = evt.CurrentCombo;
             _currentTier = evt.ComboTier;
 
@@ -242,12 +244,14 @@ namespace Game.UI
             }
 
             _core.Bind(view);
+            Debug.Log("[ComboUI] ComboUIViewLogic 绑定成功");
         }
 
         public override void OnOpen(UIArgs args)
         {
             base.OnOpen(args);
             _core.OnOpen(args);
+            Debug.Log("[ComboUI] ComboUIView 已打开，开始订阅连击事件");
         }
 
         public override void OnClose()
@@ -272,7 +276,7 @@ namespace Game.UI
         /// <summary>
         /// 每帧更新（驱动进度条和警告状态）
         /// </summary>
-        private void Update()
+        void Update()
         {
             _core?.OnUpdate();
         }

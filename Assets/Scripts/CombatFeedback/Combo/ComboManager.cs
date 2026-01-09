@@ -18,6 +18,14 @@ public class ComboManager : Singleton<ComboManager>
     protected override void Awake()
     {
         base.Awake();
+
+        // 安全检查：确保配置已赋值
+        if (ComboConfigSO == null)
+        {
+            Debug.LogError("[ComboManager] ComboConfigSO 未配置！请在 Inspector 中分配 ComboConfigSO 资源。连击系统将无法正常工作。");
+            return;
+        }
+
         _remainingTime = ComboConfigSO.comboWindow;
 
         // 构建档位字典（按 ComboState 索引）
@@ -36,6 +44,8 @@ public class ComboManager : Singleton<ComboManager>
             rangeBonus = 0,
             tierColor = Color.white
         };
+
+        Debug.Log("[ComboManager] 初始化完成，档位数量: " + ComboConfigSO.tiers.Count);
     }
 
     private void OnEnable()
@@ -52,6 +62,8 @@ public class ComboManager : Singleton<ComboManager>
     {
         _currentCombo++;
         _remainingTime = ComboConfigSO.comboWindow;
+
+        Debug.Log($"[ComboManager] 击杀事件: Combo={_currentCombo}, Victim={evt.Victim?.name}, Attacker={evt.Attacker?.name}");
 
         // 根据连击数获取当前档位（从后往前找第一个 threshold <= currentCombo 的档位）
         ComboTier nextTier = GetTierByComboCount(_currentCombo);

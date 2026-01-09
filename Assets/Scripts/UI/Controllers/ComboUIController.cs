@@ -43,7 +43,7 @@ namespace UI
         {
             try
             {
-                await _uiManager.Open<ComboUIView>();
+                await _uiManager.Open<ComboUIView>(default, UILayer.Background);
                 UnityEngine.Debug.Log("[ComboUIController] ComboUI 已打开");
             }
             catch (Exception ex)
