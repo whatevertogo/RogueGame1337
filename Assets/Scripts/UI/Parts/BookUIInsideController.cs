@@ -38,7 +38,7 @@ public class BookUIInsideController : MonoBehaviour
     [Tooltip("退出确认视图 GameObject")]
     private GameObject quitView;
 
-    //TODO-书的画面过渡动画
+    //TODO-书的画面过渡动画（低）
     // [Header("过渡配置")]
     // [SerializeField]
     // [Tooltip("是否启用视图切换动画")]
