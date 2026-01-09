@@ -336,7 +336,10 @@ namespace Game.UI
         private void OnPauseButtonClicked()
         {
             //时间停止
-            // await UIManager.Instance.Open<PauseView>(layer: UILayer.Normal);
+            Time.timeScale = 0f;
+            //暂停玩家输入
+            GameInput.Instance.PausePlayerInput();
+            _ = UIManager.Instance.Open<PauseUIView>(layer: UILayer.Top);
             //停止游戏输入写在UILogic的 OnCovered 里
             //开启游戏输入写在UILogic的 OnResume 里
             //TODO-暂时注释掉，避免编译错误

@@ -288,9 +288,11 @@ namespace UI
         /// </summary>
         public bool HandleBack(UILayer layer = UILayer.Normal)
         {
-            var stack = _layerStacks[layer];
-            // 如果只有 1 个界面（通常是常驻主界面），可能不允许关闭
-            if (stack.Count <= 1)
+            if (!_layerStacks.TryGetValue(layer, out var stack) || stack.Count == 0)
+                return false;
+
+            // 如果只有 1 个界面（通常是常驻主界面），不允许关闭
+            if (layer == UILayer.Normal && stack.Count <= 1)
                 return false;
 
             var top = stack[stack.Count - 1];

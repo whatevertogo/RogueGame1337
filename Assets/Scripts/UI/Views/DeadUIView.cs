@@ -17,7 +17,7 @@ namespace Game.UI
         [SerializeField] private Image retryButton;
         [SerializeField] private Button retry;
         [SerializeField] private TMP_Text textTMPTMP_Text;
-        public override bool Exclusive => false;
+        public override bool Exclusive => true;
         public override bool CanBack => true;
 
         public override void OnCreate()

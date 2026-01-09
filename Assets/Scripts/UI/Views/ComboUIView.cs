@@ -45,7 +45,7 @@ namespace Game.UI
         private Coroutine _warningFlashCoroutine;
 
         public override bool Exclusive => false;
-        public override bool CanBack => true;
+        public override bool CanBack => false;
 
         public override void OnCreate()
         {

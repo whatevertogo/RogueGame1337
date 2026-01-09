@@ -1,5 +1,6 @@
 using System;
 using CDTU.Utils;
+using Game.UI;
 using UI;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -82,7 +83,22 @@ public sealed class GameInput : Singleton<GameInput>
 
     private void HandleESCPressed()
     {
-        UIManager.Instance.HandleBack(UILayer.Normal);
+        // 优先级：从最高层级往低层级查找，只要有一个消费了 ESC 就停止
+        // 1. 尝试关闭最高层级的 UI (Top -> Popup)
+        if (UIManager.Instance.HandleBack(UILayer.Top)) return;
+        if (UIManager.Instance.HandleBack(UILayer.Popup)) return;
+
+        // 2. 尝试关闭 Normal 层 UI
+        // 如果 HandleBack 返回 false，说明 Normal 层已经到主界面了，或者没东西关了
+        if (!UIManager.Instance.HandleBack(UILayer.Normal))
+        {
+            // 3. 兜底逻辑：打开退出确认菜单（放在 Top 层）
+            // 假设你的退出界面叫 QuitMenuView
+            if (!UIManager.Instance.IsOpen<PauseUIView>())
+            {
+                _ = UIManager.Instance.Open<PauseUIView>(layer: UILayer.Top);
+            }
+        }
     }
 
     private void OnDisable()

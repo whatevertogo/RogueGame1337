@@ -35,7 +35,7 @@ namespace Game.UI
 
         // Inside Controller
         public BookUIInsideController bookInsideUIController;
-        public override bool Exclusive => false;
+        public override bool Exclusive => true;
         public override bool CanBack => true;
 
         public override void OnCreate()
