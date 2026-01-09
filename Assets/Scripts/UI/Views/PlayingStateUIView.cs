@@ -1,9 +1,9 @@
+using System;
+using DG.Tweening;
+using TMPro;
+using UI;
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
-using System;
-using UI;
-using DG.Tweening;
 
 namespace Game.UI
 {
@@ -13,28 +13,46 @@ namespace Game.UI
     public partial class PlayingStateUIView : UIViewBase
     {
         // UI Components
-        [SerializeField] private Image bloorBarBackGround;
-        [SerializeField] private Image bloorBar;
-        [SerializeField] private TMP_Text nowLevel;
-        [SerializeField] private Image skillSlote1Image;
-        [SerializeField] private Image skillSlote2Image;
-        [SerializeField] private Image skillSlote3Image;
-        [SerializeField] private Image skillSlot1Energy;
-        [SerializeField] private Image skillSlot2Energy;
-        [SerializeField] private Image skillSlot3Energy;
-        [SerializeField] private Button BagButton;
-        [SerializeField] private TMP_Text coinText;
+        [SerializeField]
+        private Image bloorBar;
+
+        [SerializeField]
+        private TMP_Text nowLevel;
+
+        [SerializeField]
+        private Image skillSlote1Image;
+
+        [SerializeField]
+        private Image skillSlote2Image;
+
+        [SerializeField]
+        private Image skillSlote3Image;
+
+        [SerializeField]
+        private Image skillSlot1Energy;
+
+        [SerializeField]
+        private Image skillSlot2Energy;
+
+        [SerializeField]
+        private Image skillSlot3Energy;
+
+        [SerializeField]
+        private Button BagButton;
+
+        [SerializeField]
+        private Button pauseUIViewButton;
+
+        [SerializeField]
+        private TMP_Text coinText;
 
         public override bool Exclusive => false;
         public override bool CanBack => false;
 
         // 在运行时创建阶段进行自动绑定（UIManager 会调用 OnCreate）
-        public override void OnCreate()
-        {
-        }
+        public override void OnCreate() { }
 
         private void BindComponents() { } // 预留给自动绑定工具使用
-
 
         /// <summary>
         /// 绑定 BagButton 点击事件（使用基类 BindButton，自动在 OnClose 时清理）
@@ -42,9 +60,15 @@ namespace Game.UI
         /// <param name="onClickAction">点击时触发的回调函数</param>
         public void BindBagButton(Action onClickAction)
         {
-            if (BagButton != null && onClickAction != null) BindButton(BagButton, onClickAction);
+            if (BagButton != null && onClickAction != null)
+                BindButton(BagButton, onClickAction);
         }
 
+        public void BindPauseButton(Action onClickAction)
+        {
+            if (pauseUIViewButton != null && onClickAction != null)
+                BindButton(pauseUIViewButton, onClickAction);
+        }
 
         /// <summary>
         /// 以归一化值（0-1）更新生命值显示（血条）。
@@ -55,7 +79,10 @@ namespace Game.UI
             if (bloorBar != null)
             {
                 //TODO-或许有更好duration的值,现在默认0.1f
-                bloorBar.DOFillAmount(Mathf.Clamp01(normalized), 0.08f).SetEase(Ease.OutCirc).SetUpdate(true);
+                bloorBar
+                    .DOFillAmount(Mathf.Clamp01(normalized), 0.08f)
+                    .SetEase(Ease.OutCirc)
+                    .SetUpdate(true);
             }
         }
 
@@ -64,7 +91,8 @@ namespace Game.UI
         /// </summary>
         public void SetLevelText(string content)
         {
-            if (nowLevel != null) nowLevel.text = content;
+            if (nowLevel != null)
+                nowLevel.text = content;
         }
 
         /// <summary>
@@ -95,17 +123,26 @@ namespace Game.UI
             if (slotIndex == 0 && skillSlot1Energy != null)
             {
                 //TODO-或许有更好duration的值,现在默认0.05f
-                skillSlot1Energy.DOFillAmount(Mathf.Clamp01(normalized), 0.05f).SetEase(Ease.OutCirc).SetUpdate(true);
+                skillSlot1Energy
+                    .DOFillAmount(Mathf.Clamp01(normalized), 0.05f)
+                    .SetEase(Ease.OutCirc)
+                    .SetUpdate(true);
             }
             else if (slotIndex == 1 && skillSlot2Energy != null)
             {
                 //TODO-或许有更好duration的值,现在默认0.05f
-                skillSlot2Energy.DOFillAmount(Mathf.Clamp01(normalized), 0.05f).SetEase(Ease.OutCirc).SetUpdate(true);
+                skillSlot2Energy
+                    .DOFillAmount(Mathf.Clamp01(normalized), 0.05f)
+                    .SetEase(Ease.OutCirc)
+                    .SetUpdate(true);
             }
             else if (slotIndex == 2 && skillSlot3Energy != null)
             {
                 //TODO-或许有更好duration的值,现在默认0.05f
-                skillSlot3Energy.DOFillAmount(Mathf.Clamp01(normalized), 0.05f).SetEase(Ease.OutCirc).SetUpdate(true);
+                skillSlot3Energy
+                    .DOFillAmount(Mathf.Clamp01(normalized), 0.05f)
+                    .SetEase(Ease.OutCirc)
+                    .SetUpdate(true);
             }
         }
 
@@ -126,12 +163,12 @@ namespace Game.UI
                 //TODO-或许有更好duration的值,现在默认0.04f
                 skillSlot3Energy.DOFillAmount(0f, 0.04f).SetEase(Ease.OutCirc).SetUpdate(true);
             }
-
         }
 
         public void SetCoinText(string content)
         {
-            if (coinText != null) coinText.text = content;
+            if (coinText != null)
+                coinText.text = content;
         }
 
         public void Close()

@@ -20,7 +20,8 @@ namespace UI
 
         public static void Initialize(UIManager uiManager)
         {
-            if (_initialized) return;
+            if (_initialized)
+                return;
             _initialized = true;
             _uiManager = uiManager;
 
@@ -50,7 +51,8 @@ namespace UI
                 _pending = null;
             }
 
-            if (_uiManager == null) return;
+            if (_uiManager == null)
+                return;
             _uiManager.Close<CardUpgradeView>();
             GameRoot.I?.GameFlowCoordinator?.ResumeGame();
         }

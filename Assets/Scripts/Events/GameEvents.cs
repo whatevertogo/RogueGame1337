@@ -398,6 +398,22 @@ namespace RogueGame.Events
     }
 
     /// <summary>
+    /// 连击档位变化事件：连击档位变化时发布
+    /// </summary>
+    public class ComboTierChangedEvent
+    {
+        /// <summary>
+        /// 当前连击等级
+        /// </summary>
+        public ComboTier ComboTier;
+
+        public ComboTierChangedEvent(ComboTier comboTier)
+        {
+            ComboTier = comboTier;
+        }
+    }
+
+    /// <summary>
     /// 连击中断事件：连击超时重置时发布
     /// UI 层订阅此事件以显示中断效果
     /// </summary>

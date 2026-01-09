@@ -225,7 +225,9 @@ public class GameRoot : Singleton<GameRoot>
     {
         // 技能进化 UI 控制器（纯 C#，避免事件丢失）
         SkillEvolutionUIController.Initialize(uiManager);
+        ComboUIController.Initialize(uiManager);
         CDLogger.Log("[GameRoot] SkillEvolutionUIController 已初始化");
+        CDLogger.Log("[GameRoot] ComboUIController 已初始化");
     }
 
     /// <summary>

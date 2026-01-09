@@ -53,8 +53,7 @@ public sealed class GameInput : Singleton<GameInput>
 
     private void Update()
     {
-        MoveDir =
-            playerInput != null
+        MoveDir = playerInput != null
                 ? playerInput.PlayerControl.Move.ReadValue<Vector2>()
                 : Vector2.zero;
         MoveDirRaw = MoveDir;
@@ -83,7 +82,7 @@ public sealed class GameInput : Singleton<GameInput>
 
     private void HandleESCPressed()
     {
-        UIManager.Instance.HandleBack();
+        UIManager.Instance.HandleBack(UILayer.Normal);
     }
 
     private void OnDisable()

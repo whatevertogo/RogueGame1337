@@ -31,7 +31,8 @@ namespace UI
 
         public virtual void OnOpen(UIArgs args)
         {
-            if (_opened) return;
+            if (_opened)
+                return;
             _opened = true;
 
             // 子类在此订阅事件
@@ -40,7 +41,8 @@ namespace UI
 
         public virtual void OnClose()
         {
-            if (!_opened) return;
+            if (!_opened)
+                return;
             _opened = false;
 
             // 自动取消所有订阅
@@ -64,9 +66,7 @@ namespace UI
         /// <summary>
         /// 子类重写此方法进行事件订阅
         /// </summary>
-        protected virtual void OnSubscribeEvents()
-        {
-        }
+        protected virtual void OnSubscribeEvents() { }
 
         /// <summary>
         /// 订阅事件（会在 OnClose 时自动取消）
@@ -84,7 +84,11 @@ namespace UI
         {
             foreach (var unsubscribe in _unsubscribeActions)
             {
-                try { unsubscribe(); } catch { }
+                try
+                {
+                    unsubscribe();
+                }
+                catch { }
             }
             _unsubscribeActions.Clear();
         }

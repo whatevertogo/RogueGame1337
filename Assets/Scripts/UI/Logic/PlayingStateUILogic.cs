@@ -1,11 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using UnityEngine;
-using UI;
-using Core.Events;
-using RogueGame.Events;
 using Character.Player;
+using Core.Events;
+using Cysharp.Threading.Tasks;
+using RogueGame.Events;
+using UI;
+using UnityEngine;
 
 namespace Game.UI
 {
@@ -29,16 +30,20 @@ namespace Game.UI
             _view = view as PlayingStateUIView;
             // 绑定 BagButton 点击事件
             _view?.BindBagButton(OnBagButtonClicked);
+            // 绑定 PauseButton 点击事件
+            _view?.BindPauseButton(OnPauseButtonClicked);
             // 订阅层过渡事件以更新层数显示
             EventBus.Subscribe<LayerTransitionEvent>(OnLayerTransition);
             // 订阅金币文本更新事件以更新金币显示
             EventBus.Subscribe<CoinTextUpdateEvent>(OnCoinTextUpdate);
         }
+
         private void OnCoinTextUpdate(CoinTextUpdateEvent evt)
         {
             CDTU.Utils.CDLogger.Log($"金币文本更新事件：{evt.NewText}");
             _view?.SetCoinText($"Coin:{evt.NewText}");
         }
+
         private void OnLayerTransition(LayerTransitionEvent evt)
         {
             CDTU.Utils.CDLogger.Log($"层过渡事件：从层 {evt.FromLayer} 到层 {evt.ToLayer}");
@@ -57,10 +62,14 @@ namespace Game.UI
             PlayerRuntimeState existingState = null;
             foreach (var p in PlayerManager.Instance.GetAllPlayersData())
             {
-                if (p.IsLocal) { existingState = p; break; }
+                if (p.IsLocal)
+                {
+                    existingState = p;
+                    break;
+                }
             }
-            if (existingState != null) PlayerRegistered(existingState);
-
+            if (existingState != null)
+                PlayerRegistered(existingState);
         }
 
         public virtual void OnClose()
@@ -90,15 +99,18 @@ namespace Game.UI
         {
             GameInput.Instance.ResumePlayerInput();
         }
+
         /// <summary>
         /// 订阅技能相关的事件
         /// </summary>
         private void SubscribeToSkillEvents()
         {
             // 检查玩家状态是否有效，无效则直接返回
-            if (_myPlayerState == null) return;
+            if (_myPlayerState == null)
+                return;
             // 检查是否已经订阅过技能事件，避免重复订阅
-            if (_skillEventsSubscribed) return;
+            if (_skillEventsSubscribed)
+                return;
 
             // 订阅能量变化事件，用于处理卡牌能量改变的情况
             EventBus.Subscribe<ActiveCardEnergyChangedEvent>(OnActiveCardEnergyChanged);
@@ -114,7 +126,8 @@ namespace Game.UI
 
         private void UnsubscribeFromSkillEvents()
         {
-            if (!_skillEventsSubscribed) return;
+            if (!_skillEventsSubscribed)
+                return;
 
             EventBus.Unsubscribe<ActiveCardEnergyChangedEvent>(OnActiveCardEnergyChanged);
             EventBus.Unsubscribe<SkillSlotEquippedEvent>(OnSkillSlotEquipped);
@@ -125,11 +138,11 @@ namespace Game.UI
             _instanceToSlot.Clear();
         }
 
-
         private void PlayerRegistered(PlayerRuntimeState state)
         {
             // 只响应本地玩家的注册（UI 只关注本地玩家）
-            if (state == null || !state.IsLocal) return;
+            if (state == null || !state.IsLocal)
+                return;
 
             // 保存引用并订阅生命值与技能事件
             _myPlayerState = state;
@@ -145,9 +158,11 @@ namespace Game.UI
 
         private void SubscribeToPlayerHealthEvents()
         {
-            if (_myPlayerState == null) return;
+            if (_myPlayerState == null)
+                return;
             var stats = _myPlayerState.Controller?.Stats;
-            if (stats == null) return;
+            if (stats == null)
+                return;
 
             // 订阅 CharacterStats 的 OnHealthChanged（签名 Action<float current, float max>）
             stats.OnHealthChanged += OnPlayerHealthChanged;
@@ -158,9 +173,11 @@ namespace Game.UI
 
         private void UnsubscribeFromPlayerHealthEvents()
         {
-            if (_myPlayerState == null) return;
+            if (_myPlayerState == null)
+                return;
             var stats = _myPlayerState.Controller?.Stats;
-            if (stats == null) return;
+            if (stats == null)
+                return;
 
             stats.OnHealthChanged -= OnPlayerHealthChanged;
         }
@@ -170,7 +187,6 @@ namespace Game.UI
             _view?.SetHealthNormalized(currentHealth / Math.Max(1f, maxHealth));
         }
 
-
         // 以下方法用于界面根据事件刷新技能槽显示
 
         /// <summary>
@@ -178,10 +194,14 @@ namespace Game.UI
         /// </summary>
         private void OnSkillSlotEquipped(SkillSlotEquippedEvent evt)
         {
-            if (evt.PlayerId != _myPlayerState?.PlayerId) return;
+            if (evt.PlayerId != _myPlayerState?.PlayerId)
+                return;
 
             // 如果该 instance 已存在旧映射，先清理旧槽位映射
-            if (_instanceToSlot.TryGetValue(evt.InstanceId, out var oldSlot) && oldSlot != evt.SlotIndex)
+            if (
+                _instanceToSlot.TryGetValue(evt.InstanceId, out var oldSlot)
+                && oldSlot != evt.SlotIndex
+            )
             {
                 _slotMapping.Remove(oldSlot);
             }
@@ -191,14 +211,22 @@ namespace Game.UI
             _instanceToSlot[evt.InstanceId] = evt.SlotIndex;
 
             // 设置图标（通过实例查到定义）
-            var cardState = GameRoot.Instance?.InventoryManager?.ActiveCardService?.GetCardByInstanceId(evt.InstanceId);
-            var cardDef = cardState != null ? GameRoot.Instance?.CardDatabase?.Resolve(cardState.CardId) : null;
+            var cardState =
+                GameRoot.Instance?.InventoryManager?.ActiveCardService?.GetCardByInstanceId(
+                    evt.InstanceId
+                );
+            var cardDef =
+                cardState != null
+                    ? GameRoot.Instance?.CardDatabase?.Resolve(cardState.CardId)
+                    : null;
             _view?.SetSkillSlotIcon(evt.SlotIndex, cardDef?.GetSprite());
 
             // 设置初始能量
             if (cardState != null)
             {
-                float normalized = Mathf.Clamp01((float)cardState.CurrentEnergy / Mathf.Max(1, evt.MaxEnergy));
+                float normalized = Mathf.Clamp01(
+                    (float)cardState.CurrentEnergy / Mathf.Max(1, evt.MaxEnergy)
+                );
                 _view?.SetSkillSlotEnergy(evt.SlotIndex, normalized);
             }
         }
@@ -208,15 +236,19 @@ namespace Game.UI
         /// </summary>
         private void OnActiveCardEnergyChanged(ActiveCardEnergyChangedEvent evt)
         {
-            if (evt.PlayerId != _myPlayerState?.PlayerId) return;
+            if (evt.PlayerId != _myPlayerState?.PlayerId)
+                return;
 
             // 使用反向映射实现 O(1) 查找对应槽位
-            if (!_instanceToSlot.TryGetValue(evt.InstanceId, out var slotIndex)) return;
+            if (!_instanceToSlot.TryGetValue(evt.InstanceId, out var slotIndex))
+                return;
 
             // 优先使用事件中的 MaxEnergy（发布时从配置获取，更准确）
             // 回退到映射中缓存的值作为防御
-            int maxEnergy = evt.MaxEnergy > 0 ? evt.MaxEnergy
-                : (_slotMapping.TryGetValue(slotIndex, out var info) ? info.MaxEnergy : 100);
+            int maxEnergy =
+                evt.MaxEnergy > 0
+                    ? evt.MaxEnergy
+                    : (_slotMapping.TryGetValue(slotIndex, out var info) ? info.MaxEnergy : 100);
 
             float normalized = Mathf.Clamp01((float)evt.NewEnergy / Mathf.Max(1, maxEnergy));
             _view?.SetSkillSlotEnergy(slotIndex, normalized);
@@ -227,7 +259,8 @@ namespace Game.UI
         /// </summary>
         private void OnPlayerSkillCast(PlayerSkillCastEvent evt)
         {
-            if (_myPlayerState == null || evt.PlayerId != _myPlayerState.PlayerId) return;
+            if (_myPlayerState == null || evt.PlayerId != _myPlayerState.PlayerId)
+                return;
             _view?.SetSkillSlotUsed(evt.SlotIndex);
         }
 
@@ -236,10 +269,12 @@ namespace Game.UI
         /// </summary>
         private void RefreshAllSkillSlots()
         {
-            if (_myPlayerState == null || _view == null) return;
+            if (_myPlayerState == null || _view == null)
+                return;
 
             var skillComponent = _myPlayerState.Controller?.GetComponent<PlayerSkillComponent>();
-            if (skillComponent == null) return;
+            if (skillComponent == null)
+                return;
 
             for (int i = 0; i < skillComponent.SlotCount; i++)
             {
@@ -248,7 +283,10 @@ namespace Game.UI
                 {
                     // 获取当前状态
                     var cardDef = GameRoot.Instance?.CardDatabase?.Resolve(runtime.CardId);
-                    var cardState = GameRoot.Instance?.InventoryManager?.ActiveCardService?.GetCardByInstanceId(runtime.InstanceId);
+                    var cardState =
+                        GameRoot.Instance?.InventoryManager?.ActiveCardService?.GetCardByInstanceId(
+                            runtime.InstanceId
+                        );
                     // 建立双向映射
                     int maxEnergy = cardDef?.activeCardConfig?.maxEnergy ?? 100;
                     _slotMapping[i] = (runtime.InstanceId, maxEnergy);
@@ -260,7 +298,9 @@ namespace Game.UI
                     // 设置能量
                     if (cardState != null)
                     {
-                        float normalized = Mathf.Clamp01((float)cardState.CurrentEnergy / Mathf.Max(1, maxEnergy));
+                        float normalized = Mathf.Clamp01(
+                            (float)cardState.CurrentEnergy / Mathf.Max(1, maxEnergy)
+                        );
                         _view?.SetSkillSlotEnergy(i, normalized);
                     }
                 }
@@ -280,8 +320,10 @@ namespace Game.UI
 
         private void PlayerUnregistered(PlayerRuntimeState state)
         {
-            if (_myPlayerState == null) return;
-            if (state == null) return;
+            if (_myPlayerState == null)
+                return;
+            if (state == null)
+                return;
             if (state.PlayerId == _myPlayerState.PlayerId)
             {
                 // 对应玩家被注销，清理订阅
@@ -290,6 +332,29 @@ namespace Game.UI
                 _myPlayerState = null;
             }
         }
+
+        private void OnPauseButtonClicked()
+        {
+            //时间停止
+            // await UIManager.Instance.Open<PauseView>(layer: UILayer.Normal);
+            //停止游戏输入写在UILogic的 OnCovered 里
+            //开启游戏输入写在UILogic的 OnResume 里
+            //TODO-暂时注释掉，避免编译错误
+            // _ = OpenPauseUIAsync();
+        }
+
+        // private async UniTask<GameObject> OpenPauseUIAsync()
+        // {
+        //     try
+        //     {
+        //         await UIManager.Instance.Open<PauseView>(layer: UILayer.Normal);
+        //     }
+        //     catch (System.Exception ex)
+        //     {
+        //         CDTU.Utils.CDLogger.LogError($"打开暂停菜单失败: {ex.Message}");
+        //     }
+        //     return null;
+        // }
 
         /// <summary>
         /// BagButton 点击事件处理
@@ -303,7 +368,7 @@ namespace Game.UI
             _ = OpenBagUIAsync();
         }
 
-        private async Task<object> OpenBagUIAsync()
+        private async UniTask<GameObject> OpenBagUIAsync()
         {
             try
             {
@@ -316,7 +381,6 @@ namespace Game.UI
             return null;
         }
     }
-
 
     /// <summary>
     /// MonoBehaviour Wrapper：创建并持有 LogicCore，在运行时作为 IUILogic 注入到 View

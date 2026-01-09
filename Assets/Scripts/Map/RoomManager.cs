@@ -90,12 +90,6 @@ namespace RogueGame.Map
         private void Awake()
         {
             _loader = new AddressablesRoomLoader();
-            if (TransitionController == null)
-            {
-                CDTU.Utils.CDLogger.LogWarning(
-                    "[RoomManager] TransitionController not found in scene."
-                );
-            }
             // RoomManager 不再订阅全局流程事件，流程由 GameFlowCoordinator 统一控制。
             // 订阅 EventBus，以响应 RoomController 发布的房间级事件
             EventBus.Subscribe<RoomEnteredEvent>(HandleRoomEnteredEvent);
