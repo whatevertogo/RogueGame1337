@@ -1,6 +1,6 @@
-using UnityEngine;
-using RogueGame.Map;
 using System.Collections.Generic;
+using RogueGame.Map;
+using UnityEngine;
 
 namespace RogueGame.Events
 {
@@ -34,6 +34,7 @@ namespace RogueGame.Events
         public RoomType RoomType;
         public int ClearedEnemyCount;
     }
+
     /// <summary>
     /// 房间清除事件：UI 层可订阅以显示房间清除提示
     /// </summary>
@@ -86,7 +87,12 @@ namespace RogueGame.Events
         public RoomType RoomType;
         public int CurrentLayer;
 
-        public RewardSelectionRequestedEvent(int roomId, int instanceId, RoomType roomType, int currentLayer)
+        public RewardSelectionRequestedEvent(
+            int roomId,
+            int instanceId,
+            RoomType roomType,
+            int currentLayer
+        )
         {
             RoomId = roomId;
             InstanceId = instanceId;
@@ -132,7 +138,6 @@ namespace RogueGame.Events
         public string PlayerId;
         public CardAcquisitionSource Source;
     }
-
 
     /// <summary>
     /// Boss 解锁事件：UI 层可订阅以显示 Boss 解锁提示
@@ -192,6 +197,7 @@ namespace RogueGame.Events
     public class ClearAllSlotsRequestedEvent
     {
         public string PlayerId; // 可选：限定针对某玩家（若为空则对所有玩家生效）
+
         public ClearAllSlotsRequestedEvent(string playerId = null)
         {
             PlayerId = playerId;
@@ -204,6 +210,7 @@ namespace RogueGame.Events
     public class PlayerDiedEvent
     {
         public PlayerController Player;
+
         public PlayerDiedEvent(PlayerController player)
         {
             Player = player;
@@ -280,9 +287,9 @@ namespace RogueGame.Events
     public class ActiveCardEnergyChangedEvent
     {
         public string InstanceId;
-        public string PlayerId;   // 所属玩家ID
+        public string PlayerId; // 所属玩家ID
         public int NewEnergy;
-        public int MaxEnergy;     // 最大能量（UI层可直接计算归一化值）
+        public int MaxEnergy; // 最大能量（UI层可直接计算归一化值）
     }
 
     /// <summary>
@@ -294,7 +301,7 @@ namespace RogueGame.Events
         public string PlayerId;
         public int SlotIndex;
         public string InstanceId;
-        public int MaxEnergy;     // 预先携带最大能量，避免后续查询
+        public int MaxEnergy; // 预先携带最大能量，避免后续查询
     }
 
     /// <summary>
@@ -307,6 +314,7 @@ namespace RogueGame.Events
         public string InstanceId;
         public int CurrentLevel;
         public int NextLevel;
+
         /// <summary>
         /// 可选的进化效果列表（从效果池随机生成）
         /// </summary>
@@ -317,7 +325,8 @@ namespace RogueGame.Events
             string instanceId,
             int currentLevel,
             int nextLevel,
-            List<Character.Player.Skill.Evolution.EvolutionEffectEntry> options)
+            List<Character.Player.Skill.Evolution.EvolutionEffectEntry> options
+        )
         {
             CardId = cardId;
             InstanceId = instanceId;
@@ -336,6 +345,7 @@ namespace RogueGame.Events
         public string CardId;
         public string InstanceId;
         public int NewLevel;
+
         /// <summary>
         /// 选中的进化效果（效果池系统）
         /// </summary>
@@ -345,7 +355,8 @@ namespace RogueGame.Events
             string cardId,
             string instanceId,
             int newLevel,
-            Character.Player.Skill.Evolution.EvolutionEffectEntry selectedEffect)
+            Character.Player.Skill.Evolution.EvolutionEffectEntry selectedEffect
+        )
         {
             CardId = cardId;
             InstanceId = instanceId;
@@ -354,5 +365,192 @@ namespace RogueGame.Events
         }
     }
 
+    // ═══════════════════════════════════════════════════════════════
+    // 连击系统事件
+    // ═══════════════════════════════════════════════════════════════
 
+    /// <summary>
+    /// 连击变化事件：连击计数或连击等级变化时发布
+    /// UI 层订阅此事件以更新连击显示
+    /// </summary>
+    public class ComboChangedEvent
+    {
+        /// <summary>
+        /// 当前连击数
+        /// </summary>
+        public int CurrentCombo;
+
+        /// <summary>
+        /// 连击等级（0=普通, 1=狂热, 2=屠戮, 3=毁灭）
+        /// </summary>
+        public int ComboTier;
+
+        /// <summary>
+        /// 连击等级名称
+        /// </summary>
+        public string TierName;
+
+        /// <summary>
+        /// 能量获取加成比例（例如 1.5 表示 +50%）
+        /// </summary>
+        public float EnergyBonusMultiplier;
+
+        /// <summary>
+        /// 连击是否即将超时（剩余时间 < 1秒）
+        /// </summary>
+        public bool IsAboutToExpire;
+
+        public ComboChangedEvent(
+            int currentCombo,
+            int comboTier,
+            string tierName,
+            float energyBonusMultiplier,
+            bool isAboutToExpire
+        )
+        {
+            CurrentCombo = currentCombo;
+            ComboTier = comboTier;
+            TierName = tierName;
+            EnergyBonusMultiplier = energyBonusMultiplier;
+            IsAboutToExpire = isAboutToExpire;
+        }
+    }
+
+    /// <summary>
+    /// 连击中断事件：连击超时重置时发布
+    /// UI 层订阅此事件以显示中断效果
+    /// </summary>
+    public class ComboExpiredEvent
+    {
+        /// <summary>
+        /// 中断前的连击数
+        /// </summary>
+        public int FinalCombo;
+
+        /// <summary>
+        /// 中断前的连击等级
+        /// </summary>
+        public int FinalTier;
+
+        public ComboExpiredEvent(int finalCombo, int finalTier)
+        {
+            FinalCombo = finalCombo;
+            FinalTier = finalTier;
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // 打击感反馈事件
+    // ═══════════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// 屏幕震动请求事件：需要屏幕震动时发布
+    /// </summary>
+    public class ScreenShakeRequestedEvent
+    {
+        /// <summary>
+        /// 震动强度（0-1，建议值：微幅0.05，中幅0.15，大幅0.3）
+        /// </summary>
+        public float Intensity;
+
+        /// <summary>
+        /// 震动持续时间（秒）
+        /// </summary>
+        public float Duration;
+
+        /// <summary>
+        /// 震动类型
+        /// </summary>
+        public ShakeType ShakeType;
+
+        public ScreenShakeRequestedEvent(
+            float intensity,
+            float duration,
+            ShakeType shakeType = ShakeType.Default
+        )
+        {
+            Intensity = intensity;
+            Duration = duration;
+            ShakeType = shakeType;
+        }
+    }
+
+    /// <summary>
+    /// 震动类型
+    /// </summary>
+    public enum ShakeType
+    {
+        /// <summary>默认震动</summary>
+        Default,
+
+        /// <summary>水平震动</summary>
+        Horizontal,
+
+        /// <summary>垂直震动</summary>
+        Vertical,
+
+        /// <summary>旋转震动</summary>
+        Rotation,
+    }
+
+    /// <summary>
+    /// 帧停止请求事件：需要时间冻结时发布
+    /// </summary>
+    public class HitStopRequestedEvent
+    {
+        /// <summary>
+        /// 停止持续时间（秒，建议值：0.03-0.1）
+        /// </summary>
+        public float Duration;
+
+        /// <summary>
+        /// 是否逐渐恢复（true 则平滑过渡，false 则立即恢复）
+        /// </summary>
+        public bool GradualRecovery;
+
+        public HitStopRequestedEvent(float duration, bool gradualRecovery = true)
+        {
+            Duration = duration;
+            GradualRecovery = gradualRecovery;
+        }
+    }
+
+    /// <summary>
+    /// 敌人击退请求事件：需要击退敌人时发布
+    /// </summary>
+    public class EnemyKnockbackRequestedEvent
+    {
+        /// <summary>
+        /// 被击退的敌人
+        /// </summary>
+        public GameObject Enemy;
+
+        /// <summary>
+        /// 击退方向（从攻击者指向敌人）
+        /// </summary>
+        public Vector3 Direction;
+
+        /// <summary>
+        /// 击退力度
+        /// </summary>
+        public float Force;
+
+        /// <summary>
+        /// 击退持续时间（秒）
+        /// </summary>
+        public float Duration;
+
+        public EnemyKnockbackRequestedEvent(
+            GameObject enemy,
+            Vector3 direction,
+            float force,
+            float duration = 0.2f
+        )
+        {
+            Enemy = enemy;
+            Direction = direction;
+            Force = force;
+            Duration = duration;
+        }
+    }
 }

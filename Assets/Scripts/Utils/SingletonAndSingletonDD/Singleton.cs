@@ -1,11 +1,13 @@
 using UnityEngine;
+
 namespace CDTU.Utils
 {
     /// <summary>
     /// 单例基类
     /// 继承自 MonoBehaviour，确保场景中只有一个实例
     /// </summary>
-    public abstract class Singleton<T> : MonoBehaviour where T : Singleton<T>
+    public abstract class Singleton<T> : MonoBehaviour
+        where T : Singleton<T>
     {
         private static T _instance;
         private static bool _isQuitting;
@@ -67,6 +69,7 @@ namespace CDTU.Utils
         /// 销毁阶段（解绑事件）
         /// </summary>
         protected virtual void OnSingletonDestroyed() { }
+
         protected virtual void OnDestroy()
         {
             if (_instance == this)
@@ -74,8 +77,5 @@ namespace CDTU.Utils
                 _instance = null;
             }
         }
-
-
     }
-
 }

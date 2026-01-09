@@ -10,17 +10,26 @@ namespace Character.Components
     {
         [Header("配置模板（必填）")]
         //
-        [SerializeField] private CharacterStatsSO baseStatsSO;
+        [SerializeField]
+        private CharacterStatsSO baseStatsSO;
 
         public Sprite Icon => baseStatsSO != null ? baseStatsSO.icon : null;
 
         [Header("═══ 运行时数据（只读）═══")]
-
         [Header("生命")]
-        [ReadOnly][SerializeField] private Stat _maxHP = new(100);
+        [ReadOnly]
+        [SerializeField]
+        private Stat _maxHP = new(100);
+
         //生命恢复
-        [ReadOnly][SerializeField] private Stat _hpRegen = new(0);
-        [ReadOnly][SerializeField] private float _currentHP = 100;
+        [ReadOnly]
+        [SerializeField]
+        private Stat _hpRegen = new(0);
+
+        [ReadOnly]
+        [SerializeField]
+        private float _currentHP = 100;
+
         // 初始化期间抑制 HP 相关事件（避免 Awake/Initialize 触发订阅前的回调）
         private bool _suppressHPEvents = false;
 
@@ -28,17 +37,36 @@ namespace Character.Components
         private float _regenAccumulator;
 
         [Header("移动")]
-        [ReadOnly][SerializeField] private Stat _moveSpeed = new(4f);
-        [ReadOnly][SerializeField] private Stat _acceleration = new(10f);
+        [ReadOnly]
+        [SerializeField]
+        private Stat _moveSpeed = new(4f);
+
+        [ReadOnly]
+        [SerializeField]
+        private Stat _acceleration = new(10f);
 
         [Header("攻击")]
-        [ReadOnly][SerializeField] private Stat _attackPower = new(10f);
-        [ReadOnly][SerializeField] private Stat _attackSpeed = new(1f);
-        [ReadOnly][SerializeField] private Stat _attackRange = new(1.5f);
+        [ReadOnly]
+        [SerializeField]
+        private Stat _attackPower = new(10f);
+
+        [ReadOnly]
+        [SerializeField]
+        private Stat _attackSpeed = new(1f);
+
+        [ReadOnly]
+        [SerializeField]
+        private Stat _attackRange = new(1.5f);
 
         [Header("防御")]
-        [ReadOnly][SerializeField] private Stat _armor = new(0f);
-        [ReadOnly][SerializeField][Range(0f, 1f)] private Stat _dodge = new(0f);//闪避
+        [ReadOnly]
+        [SerializeField]
+        private Stat _armor = new(0f);
+
+        [ReadOnly]
+        [SerializeField]
+        [Range(0f, 1f)]
+        private Stat _dodge = new(0f); //闪避
 
         // ========== 属性访问器 ==========
         public Stat MaxHP => _maxHP;
@@ -48,9 +76,11 @@ namespace Character.Components
         public Stat AttackPower => _attackPower;
         public Stat AttackSpeed => _attackSpeed;
         public Stat AttackRange => _attackRange;
+
         // public Stat CritChance => _critChance;
         // public Stat CritDamage => _critDamage;
         public Stat Armor => _armor;
+
         //闪避
         public Stat Dodge => _dodge;
 
@@ -66,7 +96,8 @@ namespace Character.Components
                 _currentHP = Mathf.Clamp(value, 0, _maxHP.Value);
 
                 float delta = _currentHP - oldHP;
-                if (_suppressHPEvents) return;
+                if (_suppressHPEvents)
+                    return;
 
                 if (Math.Abs(delta) > 0.001f)
                 {
@@ -102,7 +133,7 @@ namespace Character.Components
         public CharacterStatsSO BaseSO => baseStatsSO;
 
         // ========== 事件 ==========
-        public event Action<float, float> OnHealthChanged;  // (current, max)
+        public event Action<float, float> OnHealthChanged; // (current, max)
         public event Action<float> OnDamaged;
         public event Action OnDeath;
         public event Action OnStatsChanged;
@@ -123,7 +154,9 @@ namespace Character.Components
             }
             else
             {
-                CDTU.Utils.CDLogger.LogWarning($"[CharacterStats] {gameObject.name} 没有配置 CharacterStatsSO，使用默认值！");
+                CDTU.Utils.CDLogger.LogWarning(
+                    $"[CharacterStats] {gameObject.name} 没有配置 CharacterStatsSO，使用默认值！"
+                );
             }
 
             // 应用属性上限配置
@@ -209,13 +242,14 @@ namespace Character.Components
             var info = DamageInfo.Create(amount);
             return TakeDamage(info);
         }
+
         /// <summary>
         /// 受到伤害
         /// </summary>
         public DamageResult TakeDamage(DamageInfo info)
         {
-
-            if (IsDead) return DamageResult.Default;
+            if (IsDead)
+                return DamageResult.Default;
 
             // 闪避判定（_dodge.Value 已经包含了上限限制）
             float actualDodge = _dodge.Value; // Stat 类会自动应用上限
@@ -250,14 +284,14 @@ namespace Character.Components
             result.Source = info.Source;
             return result;
         }
-            
 
         /// <summary>
         /// 治疗
         /// </summary>
         public void Heal(float amount)
         {
-            if (IsDead || amount <= 0) return;
+            if (IsDead || amount <= 0)
+                return;
             CurrentHP += amount;
         }
 
@@ -278,10 +312,12 @@ namespace Character.Components
         /// </summary>
         private void Update()
         {
-            if (IsDead) return;
+            if (IsDead)
+                return;
 
             float regen = _hpRegen.Value;
-            if (regen <= 0) return;
+            if (regen <= 0)
+                return;
 
             _regenAccumulator += regen * Time.deltaTime;
 
@@ -307,7 +343,7 @@ namespace Character.Components
             {
                 Amount = damage,
                 // IsCrit = false,
-                Source = gameObject
+                Source = gameObject,
             };
         }
 
@@ -328,7 +364,8 @@ namespace Character.Components
         private float ApplyArmor(float damage)
         {
             float armor = _armor.Value;
-            if (armor <= 0) return damage;
+            if (armor <= 0)
+                return damage;
 
             float reduction = armor / (armor + 100f);
             return damage * (1f - reduction);
@@ -354,7 +391,7 @@ namespace Character.Components
                 // StatType.CritDamage => _critDamage,
                 StatType.Armor => _armor,
                 StatType.Dodge => _dodge,
-                _ => null
+                _ => null,
             };
         }
 
@@ -395,10 +432,3 @@ namespace Character.Components
         }
     }
 }
-
-
-
-
-
-
-
