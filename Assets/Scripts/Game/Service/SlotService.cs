@@ -20,11 +20,14 @@ public class SlotClearService
 
     private void OnClearAllSlotsRequested(ClearAllSlotsRequestedEvent evt)
     {
-        CDTU.Utils.CDLogger.Log("[SlotService] ClearAllSlotsRequestedEvent received, clearing slots");
+        CDTU.Utils.CDLogger.Log(
+            "[SlotService] ClearAllSlotsRequestedEvent received, clearing slots"
+        );
         var slots = ObjectCache.Instance.FindObjectsOfType<CardSlot>();
         foreach (var slot in slots)
         {
-            if (slot == null) continue;
+            if (slot == null)
+                continue;
             // 如果指定 PlayerId，可以根据需要过滤（当前 CardSlot 不包含 PlayerId 字段）
             slot.ClearSlot();
         }

@@ -6,19 +6,12 @@ public class ComboManager : Singleton<ComboManager>
 {
     private int _currentCombo = 0;
     private float _remainingTime = 0f;
+    private ComboTier _currentTier;
 
     private void OnEntityKilled(EntityKilledEvent evt)
     {
         // 发布连击变化事件
-        // EventBus.Publish(
-        //     new ComboChangedEvent(
-        //         _currentCombo,
-        //         (int)_currentTier,
-        //         GetTierName(_currentTier),
-        //         GetEnergyMultiplier(),
-        //         false
-        //     )
-        // );
+        EventBus.Publish(new ComboChangedEvent(_currentCombo, _currentTier));
     }
 
     private void Update()
@@ -32,7 +25,6 @@ public class ComboManager : Singleton<ComboManager>
 
     private void ResetCombo()
     {
-        // EventBus.Publish(new ComboExpiredEvent(finalCombo, (int)finalTier));
-        EventBus.Publish(new ComboChangedEvent(0, 0, "无", 1.0f, false));
+        EventBus.Publish(new ComboChangedEvent(0));
     }
 }

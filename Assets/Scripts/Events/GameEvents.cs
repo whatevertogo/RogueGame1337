@@ -383,36 +383,17 @@ namespace RogueGame.Events
         /// <summary>
         /// 连击等级（0=普通, 1=狂热, 2=屠戮, 3=毁灭）
         /// </summary>
-        public int ComboTier;
+        public ComboTier ComboTier;
 
-        /// <summary>
-        /// 连击等级名称
-        /// </summary>
-        public string TierName;
-
-        /// <summary>
-        /// 能量获取加成比例（例如 1.5 表示 +50%）
-        /// </summary>
-        public float EnergyBonusMultiplier;
-
-        /// <summary>
-        /// 连击是否即将超时（剩余时间 < 1秒）
-        /// </summary>
-        public bool IsAboutToExpire;
-
-        public ComboChangedEvent(
-            int currentCombo,
-            int comboTier,
-            string tierName,
-            float energyBonusMultiplier,
-            bool isAboutToExpire
-        )
+        public ComboChangedEvent(int currentCombo, ComboTier comboTier)
         {
             CurrentCombo = currentCombo;
             ComboTier = comboTier;
-            TierName = tierName;
-            EnergyBonusMultiplier = energyBonusMultiplier;
-            IsAboutToExpire = isAboutToExpire;
+        }
+
+        public ComboChangedEvent(int currentCombo)
+        {
+            CurrentCombo = currentCombo;
         }
     }
 

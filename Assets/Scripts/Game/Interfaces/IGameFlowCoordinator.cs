@@ -8,12 +8,17 @@ public interface IGameFlowCoordinator
 {
     void StartRun(RoomMeta meta);
     void EnterRoom(RoomType type, int roomId);
-    void ChooseNextRoom();
     void TransitionToNextLayer();
+
     // 当前层（只读）
     int CurrentLayer { get; }
+
     /// <summary>
     /// 初始化注入依赖（由组合根 GameManager 调用）。
     /// </summary>
-    void Initialize(RoomManager roomManager, TransitionController transitionController, UIManager uiManager);
+    void Initialize(
+        RoomManager roomManager,
+        TransitionController transitionController,
+        UIManager uiManager
+    );
 }

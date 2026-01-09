@@ -1,7 +1,6 @@
-
 using System;
-using UnityEngine;
 using Character.Player.Skill.Targeting;
+using UnityEngine;
 
 [Serializable]
 public class ActiveCardConfig
@@ -11,7 +10,7 @@ public class ActiveCardConfig
     public int energyThreshold = 100;
 
     [Tooltip("最大能量值（超过此值不再积累）")]
-    public int maxEnergy= 100;
+    public int maxEnergy = 100;
 
     [Tooltip("击杀一名敌人时获得的能量")]
     public int energyPerKill = 10;
