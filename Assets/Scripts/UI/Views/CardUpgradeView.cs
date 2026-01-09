@@ -138,11 +138,5 @@ namespace Game.UI
             ShowOption1();
             ShowOption2();
         }
-
-
-        public void Close()
-        {
-            gameObject.SetActive(false);
-        }
     }
 }

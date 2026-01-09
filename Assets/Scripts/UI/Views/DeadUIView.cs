@@ -40,13 +40,5 @@ namespace Game.UI
         {
             if (retry != null && onClickAction != null) BindButton(retry, onClickAction);
         }
-
-
-
-
-        public void Close()
-        {
-            gameObject.SetActive(false);
-        }
     }
 }

@@ -263,13 +263,5 @@ namespace Game.UI
             if (timeProgressBar != null)
                 timeProgressBar.gameObject.SetActive(visible);
         }
-
-        /// <summary>
-        /// 关闭连击 UI
-        /// </summary>
-        public void Close()
-        {
-            gameObject.SetActive(false);
-        }
     }
 }

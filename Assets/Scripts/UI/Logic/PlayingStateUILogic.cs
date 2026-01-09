@@ -335,6 +335,7 @@ namespace Game.UI
 
         private void OnPauseButtonClicked()
         {
+            //BUG
             //时间停止
             Time.timeScale = 0f;
             //暂停玩家输入

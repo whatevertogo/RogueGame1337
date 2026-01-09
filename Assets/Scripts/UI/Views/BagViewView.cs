@@ -169,12 +169,5 @@ namespace Game.UI
                     GameObject.DestroyImmediate(child.gameObject);
             }
         }
-
-
-
-        public void Close()
-        {
-            gameObject.SetActive(false);
-        }
     }
 }

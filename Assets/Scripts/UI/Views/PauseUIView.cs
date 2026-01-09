@@ -93,14 +93,5 @@ namespace Game.UI
         {
             if (quitButton1 != null && onClickAction != null) BindButton(quitButton1, onClickAction);
         }
-
-
-
-
-
-        public void Close()
-        {
-            gameObject.SetActive(false);
-        }
     }
 }

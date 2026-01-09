@@ -170,10 +170,5 @@ namespace Game.UI
             if (coinText != null)
                 coinText.text = content;
         }
-
-        public void Close()
-        {
-            gameObject.SetActive(false);
-        }
     }
 }
