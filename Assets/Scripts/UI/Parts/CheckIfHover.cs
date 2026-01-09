@@ -13,7 +13,9 @@ public class CheckIfHover : MonoBehaviour
 
         if (!uiHoverAnimator)
         {
-            CDTU.Utils.CDLogger.LogError($"[CheckIfHover] UIHoverAnimator not found in parent of {name}");
+            CDTU.Utils.CDLogger.LogError(
+                $"[CheckIfHover] UIHoverAnimator not found in parent of {name}"
+            );
             enabled = false;
         }
     }
@@ -38,13 +40,13 @@ public class CheckIfHover : MonoBehaviour
             Hide();
     }
 
-public void Show()
-{
-    image.DOFade(1f, 0.2f);
-}
+    public void Show()
+    {
+        image.DOFade(1f, 0.2f);
+    }
 
-public void Hide()
-{
-    image.DOFade(0f, 0.2f);
-}
+    public void Hide()
+    {
+        image.DOFade(0f, 0.2f);
+    }
 }

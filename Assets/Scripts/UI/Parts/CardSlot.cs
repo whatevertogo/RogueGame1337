@@ -1,35 +1,44 @@
+using Core.Events;
+using DG.Tweening;
+using RogueGame.Events;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using Core.Events;
-using RogueGame.Events;
 using UnityEngine.UI;
-using DG.Tweening;
 
 [RequireComponent(typeof(Image), typeof(CanvasGroup))]
 public class CardSlot : MonoBehaviour, IDropHandler
 {
-    [SerializeField] private int SlotIndex;
+    [SerializeField]
+    private int SlotIndex;
     private string _cardID;
     public string CardID
     {
         get => _cardID;
         set
         {
-            if (_cardID == value) return;
+            if (_cardID == value)
+                return;
             _cardID = value;
-            
+
             //发布槽位变更事件
-            EventBus.Publish(new OnPlayerSkillEquippedEvent(GameRoot.Instance.PlayerManager.GetLocalPlayerRuntimeState().PlayerId,SlotIndex,CardID));
+            EventBus.Publish(
+                new OnPlayerSkillEquippedEvent(
+                    GameRoot.Instance.PlayerManager.GetLocalPlayerRuntimeState().PlayerId,
+                    SlotIndex,
+                    CardID
+                )
+            );
         }
     }
 
     private Sprite _defaultSprite;
+
     private void Awake()
     {
         var img = GetComponent<Image>();
-        if (img != null) _defaultSprite = img.sprite;
+        if (img != null)
+            _defaultSprite = img.sprite;
     }
-
 
     private void Reset()
     {
@@ -42,8 +51,10 @@ public class CardSlot : MonoBehaviour, IDropHandler
 
     public void OnDrop(PointerEventData eventData)
     {
-        if (eventData.pointerDrag == null) return;
-        if (!eventData.pointerDrag.TryGetComponent<CardUIPrefab>(out var draggedCard)) return;
+        if (eventData.pointerDrag == null)
+            return;
+        if (!eventData.pointerDrag.TryGetComponent<CardUIPrefab>(out var draggedCard))
+            return;
 
         // 检查当前槽位是否已有卡牌（排除拖拽的卡牌本身）
         CardUIPrefab existingCard = null;
@@ -75,7 +86,9 @@ public class CardSlot : MonoBehaviour, IDropHandler
 
                 draggedCard.transform.SetParent(transform, false);
                 draggedCard.transform.localScale = Vector3.one;
-                draggedCard.transform.DOLocalMove(Vector3.zero, 0.25f).SetEase(DG.Tweening.Ease.OutCubic);
+                draggedCard
+                    .transform.DOLocalMove(Vector3.zero, 0.25f)
+                    .SetEase(DG.Tweening.Ease.OutCubic);
 
                 // 同时更新两个槽位的ID
                 originalSlot.CardID = existingCard.CardId;
@@ -92,7 +105,9 @@ public class CardSlot : MonoBehaviour, IDropHandler
             // 槽位为空，直接放入
             draggedCard.transform.SetParent(transform, false);
             draggedCard.transform.localScale = Vector3.one;
-            draggedCard.transform.DOLocalMove(Vector3.zero, 0.25f).SetEase(DG.Tweening.Ease.OutCubic);
+            draggedCard
+                .transform.DOLocalMove(Vector3.zero, 0.25f)
+                .SetEase(DG.Tweening.Ease.OutCubic);
 
             // 清空原槽位（如果有）
             if (originalSlot != null)

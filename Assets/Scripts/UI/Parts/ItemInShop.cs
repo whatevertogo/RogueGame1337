@@ -65,11 +65,9 @@ public class ItemInShop : MonoBehaviour, IInteractable
                     );
                 }
                 break;
-            // case ItemType.Skill:
-            //     // 设置技能信息
-            //     break;
+            //TODO-遗物系统
             // case ItemType.Consumable:
-            //     // 设置消耗品信息
+            //     // 设置遗物信息
             //     break;
             default:
                 break;
