@@ -78,7 +78,7 @@ namespace RogueGame.Game.Service.Inventory
         /// </summary>
         private bool RequestEvolution(ActiveCardState state)
         {
-            var skillDef = ResolveSkillDefinition(state.CardId);
+            var skillDef = GameRoot.Instance.CardDatabase.Resolve(state.CardId).activeCardConfig.skill;
             if (skillDef == null)
                 return false;
 
@@ -127,35 +127,9 @@ namespace RogueGame.Game.Service.Inventory
                 return new List<EvolutionEffectEntry>(runtime.ChosenEvolutions);
             }
 
-            // 2. 否则从存档恢复到临时列表（确保未装备卡牌也能正确过滤）
-            if (state.ChosenEffectIds.Count > 0)
-            {
-                return RestoreChosenEvolutionsFromSaveAsList(state.ChosenEffectIds);
-            }
 
-            // 3. 没有已选效果
+            // 2. 没有已选效果
             return new List<EvolutionEffectEntry>();
-        }
-
-        /// <summary>
-        /// 从存档恢复已选效果到临时列表（用于选项过滤）
-        /// 使用 List 而非 HashSet 以支持正确的重复计数
-        /// </summary>
-        private List<EvolutionEffectEntry> RestoreChosenEvolutionsFromSaveAsList(IReadOnlyList<string> effectIds)
-        {
-            var list = new List<EvolutionEffectEntry>();
-
-            if (_effectPool == null || effectIds == null)
-                return list;
-
-            foreach (string id in effectIds)
-            {
-                var effect = _effectPool.GetEffectById(id);
-                if (effect != null)
-                    list.Add(effect);  // List 允许重复添加同一效果
-            }
-
-            return list;
         }
 
         /// <summary>
@@ -200,24 +174,6 @@ namespace RogueGame.Game.Service.Inventory
 
             return null;
         }
-
-        private SkillDefinition ResolveSkillDefinition(string cardId)
-        {
-            var cardDef = GameRoot.Instance?.CardDatabase?.Resolve(cardId);
-            if (cardDef == null)
-            {
-                CDLogger.LogWarning($"[ActiveCardUpgradeService] CardDefinition not found: {cardId}");
-                return null;
-            }
-
-            var skillDef = cardDef.activeCardConfig?.skill;
-            if (skillDef == null)
-            {
-                CDLogger.LogWarning($"[ActiveCardUpgradeService] SkillDefinition not found: {cardId}");
-                return null;
-            }
-
-            return skillDef;
-        }
+        
     }
 }
