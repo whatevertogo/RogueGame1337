@@ -95,8 +95,10 @@ namespace Game.UI
 
         public void OnQuitButton1Clicked()
         {
-            // TODO: 处理按钮点击后的业务逻辑（纯逻辑）
-            // 可在此调用 _view.SetXXX 方法更新文本内容
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#endif
+            Application.Quit();
         }
     }
 
