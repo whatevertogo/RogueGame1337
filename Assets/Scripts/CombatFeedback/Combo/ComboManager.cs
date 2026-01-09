@@ -7,9 +7,10 @@ using UnityEngine;
 public class ComboManager : Singleton<ComboManager>
 {
     [SerializeField]
-    private ComboConfigSO ComboConfigSO;
+    private ComboConfigSO _comboConfigSO;
     private int _currentCombo = 0;
     private float _remainingTime = 0f;
+    public ComboConfigSO ConboConfigSO => _comboConfigSO;
 
     private Dictionary<ComboState, ComboTier> _tierDict = new Dictionary<ComboState, ComboTier>();
 
@@ -20,16 +21,16 @@ public class ComboManager : Singleton<ComboManager>
         base.Awake();
 
         // 安全检查：确保配置已赋值
-        if (ComboConfigSO == null)
+        if (_comboConfigSO == null)
         {
             Debug.LogError("[ComboManager] ComboConfigSO 未配置！请在 Inspector 中分配 ComboConfigSO 资源。连击系统将无法正常工作。");
             return;
         }
 
-        _remainingTime = ComboConfigSO.comboWindow;
+        _remainingTime = _comboConfigSO.comboWindow;
 
         // 构建档位字典（按 ComboState 索引）
-        foreach (var tier in ComboConfigSO.tiers)
+        foreach (var tier in _comboConfigSO.tiers)
         {
             _tierDict[tier.comboState] = tier;
         }
@@ -45,7 +46,7 @@ public class ComboManager : Singleton<ComboManager>
             tierColor = Color.white
         };
 
-        Debug.Log("[ComboManager] 初始化完成，档位数量: " + ComboConfigSO.tiers.Count);
+        Debug.Log("[ComboManager] 初始化完成，档位数量: " + _comboConfigSO.tiers.Count);
     }
 
     private void OnEnable()
@@ -61,7 +62,7 @@ public class ComboManager : Singleton<ComboManager>
     private void OnEntityKilled(EntityKilledEvent evt)
     {
         _currentCombo++;
-        _remainingTime = ComboConfigSO.comboWindow;
+        _remainingTime = _comboConfigSO.comboWindow;
 
         Debug.Log($"[ComboManager] 击杀事件: Combo={_currentCombo}, Victim={evt.Victim?.name}, Attacker={evt.Attacker?.name}");
 
@@ -84,7 +85,7 @@ public class ComboManager : Singleton<ComboManager>
     /// </summary>
     private ComboTier GetTierByComboCount(int comboCount)
     {
-        if (ComboConfigSO.tiers == null || ComboConfigSO.tiers.Count == 0)
+        if (_comboConfigSO.tiers == null || _comboConfigSO.tiers.Count == 0)
             return default;
 
         // 特殊处理：comboCount = 0 时返回 None 档位
@@ -102,14 +103,14 @@ public class ComboManager : Singleton<ComboManager>
         }
 
         // 从后往前找，找到第一个满足 threshold <= comboCount 的档位
-        for (int i = ComboConfigSO.tiers.Count - 1; i >= 0; i--)
+        for (int i = _comboConfigSO.tiers.Count - 1; i >= 0; i--)
         {
-            if (comboCount >= ComboConfigSO.tiers[i].threshold)
-                return ComboConfigSO.tiers[i];
+            if (comboCount >= _comboConfigSO.tiers[i].threshold)
+                return _comboConfigSO.tiers[i];
         }
 
         // 如果都没有匹配，返回第一个档位
-        return ComboConfigSO.tiers[0];
+        return _comboConfigSO.tiers[0];
     }
 
     private void Update()

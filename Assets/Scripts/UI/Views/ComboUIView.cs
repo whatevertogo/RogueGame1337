@@ -15,17 +15,15 @@ namespace Game.UI
     {
         [Header("连击显示组件")]
         [SerializeField]
-        [Tooltip("连击数字文本（使用 @ 前缀命名，例如 @ComboCountText）")]
+        [Tooltip("连击数字文本")]
         private TMP_Text comboCountText;
 
         [SerializeField]
-        [Tooltip("档位名称文本（使用 @ 前缀命名，例如 @TierNameText）")]
+        [Tooltip("档位名称文本")]
         private TMP_Text tierNameText;
 
         [SerializeField]
-        [Tooltip(
-            "时间进度条（Image Type 必须设置为 Filled，Fill Method: Horizontal, Fill Origin: Left）"
-        )]
+        [Tooltip("时间进度条" )]
         private Image timeProgressBar;
 
         [Header("动画配置")]

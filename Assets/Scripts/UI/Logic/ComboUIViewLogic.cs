@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using CDTU.Utils;
 using Core.Events;
 using RogueGame.Events;
 using UI;
@@ -18,7 +19,8 @@ namespace Game.UI
         private int _currentCombo = 0;
         private ComboTier _currentTier;
         private float _remainingTime = 0f;
-        private float _comboWindow = 5f; // 从 ComboConfigSO 获取
+        private float _currentComboWindow = 3f; // 当前连击窗口（可能因档位加成变化）
+        private float _warningThreshold = 1f;
 
         // 警告状态标记
         private bool _isWarningState = false;
@@ -37,14 +39,37 @@ namespace Game.UI
 
             // 初始化 UI：隐藏连击显示（初始连击为 0）
             if (_view != null)
-                _view.SetComboVisible(false);
-
-            // 获取 ComboConfigSO 配置
-            if (ComboManager.Instance != null)
             {
-                // 假设 ComboManager 暴露了 ComboConfigSO
-                // 如果没有暴露，可以硬编码或通过其他方式获取
-                _comboWindow = 5f; // 默认值
+                _view.SetComboVisible(false);
+                _view.SetProgressBarFill(0f);
+            }
+
+            // 从 ComboManager 读取真实配置
+            LoadComboConfig();
+        }
+
+        /// <summary>
+        /// 从 ComboManager 加载配置
+        /// </summary>
+        private void LoadComboConfig()
+        {
+            var comboConfig = ComboManager.Instance != null ? ComboManager.Instance.ConboConfigSO : null;
+
+            if (comboConfig != null)
+            {
+                // 基础连击窗口（不含档位加成）
+                float baseComboWindow = comboConfig.comboWindow;
+                _warningThreshold = comboConfig.warningThreshold;
+                _currentComboWindow = baseComboWindow;
+
+                CDLogger.Log($"[ComboUI] 成功加载配置: baseComboWindow={baseComboWindow}s, warningThreshold={_warningThreshold}s");
+            }
+            else
+            {
+                // 降级：使用默认值
+                _currentComboWindow = 3f;
+                _warningThreshold = 1f;
+                CDLogger.LogWarning("[ComboUI] 无法读取 ComboConfigSO，使用默认配置");
             }
         }
 
@@ -57,7 +82,9 @@ namespace Game.UI
 
             // 停止所有 DOTween 动画
             if (_view != null)
+            {
                 _view.StopProgressBarWarningAnimation(Color.white);
+            }
 
             _view = null;
         }
@@ -81,17 +108,21 @@ namespace Game.UI
         /// </summary>
         private void OnComboChanged(ComboChangedEvent evt)
         {
-            Debug.Log($"[ComboUI] 收到连击事件: Combo={evt.CurrentCombo}, Tier={evt.ComboTier.comboState}");
-
             _currentCombo = evt.CurrentCombo;
             _currentTier = evt.ComboTier;
+
+            CDLogger.Log($"[ComboUI] 收到连击事件: Combo={_currentCombo}, Tier={_currentTier.comboState}");
 
             // 连击为 0 时隐藏 UI
             if (_currentCombo == 0)
             {
                 if (_view != null)
+                {
                     _view.SetComboVisible(false);
+                    _view.SetProgressBarFill(0f);
+                }
                 _isWarningState = false;
+                _remainingTime = 0f;
                 return;
             }
 
@@ -103,7 +134,7 @@ namespace Game.UI
             if (_view != null)
                 _view.SetComboCountText(_currentCombo.ToString());
 
-            // 更新颜色
+            // 更新颜色（使用当前档位颜色）
             if (_view != null)
             {
                 _view.SetComboCountColor(_currentTier.tierColor);
@@ -111,15 +142,23 @@ namespace Game.UI
                 _view.SetProgressBarColor(_currentTier.tierColor);
             }
 
-            // 更新档位名称
+            // 更新档位名称（每次连击都更新，确保档位名称始终显示）
             if (_view != null)
                 _view.SetTierNameText(_currentTier.comboState.ToString());
 
+            // 重新计算连击窗口（基础窗口 + 档位加成）
+            float baseComboWindow = 3f;
+            if (ComboManager.Instance != null && ComboManager.Instance.ConboConfigSO != null)
+            {
+                baseComboWindow = ComboManager.Instance.ConboConfigSO.comboWindow;
+            }
+            _currentComboWindow = baseComboWindow + _currentTier.energyMult;
+
             // 重置时间（击杀时时间重置为满）
-            _remainingTime = _comboWindow;
+            _remainingTime = _currentComboWindow;
             UpdateProgressBar();
 
-            // 停止警告动画
+            // 停止警告动画（如果正在警告状态）
             if (_isWarningState)
             {
                 if (_view != null)
@@ -139,6 +178,8 @@ namespace Game.UI
         {
             _currentTier = evt.ComboTier;
 
+            CDLogger.Log($"[ComboUI] 档位跃迁: {_currentTier.comboState}, EnergyMult={_currentTier.energyMult}");
+
             if (_view != null)
             {
                 // 更新档位名称和颜色
@@ -157,9 +198,7 @@ namespace Game.UI
         /// </summary>
         private void OnComboExpired(ComboExpiredEvent evt)
         {
-            // 连击中断，UI 已在 OnComboChanged(0) 中隐藏
-            // 可在此添加额外的中断特效（如屏幕边缘红色闪光）
-
+            CDLogger.Log($"[ComboUI] 连击中断: Combo={evt.FinalCombo}");
             _isWarningState = false;
         }
 
@@ -183,6 +222,20 @@ namespace Game.UI
 
             // 检查警告状态
             CheckWarningState();
+
+            // 超时检查（虽然 ComboManager 会重置，但这里也需要同步处理 UI 隐藏）
+            if (_remainingTime <= 0)
+            {
+                _currentCombo = 0;
+                _isWarningState = false;
+
+                if (_view != null)
+                {
+                    _view.SetComboVisible(false);
+                    _view.StopProgressBarWarningAnimation(Color.white);
+                    _view.SetProgressBarFill(0f);
+                }
+            }
         }
 
         /// <summary>
@@ -193,7 +246,7 @@ namespace Game.UI
             if (_view == null)
                 return;
 
-            float fillAmount = Mathf.Clamp01(_remainingTime / _comboWindow);
+            float fillAmount = Mathf.Clamp01(_remainingTime / _currentComboWindow);
             _view.SetProgressBarFill(fillAmount);
         }
 
@@ -205,8 +258,7 @@ namespace Game.UI
             if (_view == null)
                 return;
 
-            float warningThreshold = 1f; // 从 ComboConfigSO 获取
-            bool shouldWarn = _remainingTime <= warningThreshold;
+            bool shouldWarn = _remainingTime <= _warningThreshold;
 
             // 状态切换时触发动画
             if (shouldWarn && !_isWarningState)

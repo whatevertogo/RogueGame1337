@@ -76,6 +76,8 @@ public class ItemInShop : MonoBehaviour, IInteractable
 
     private void MoveOver()
     {
+        if (messageUIDisplay == null) return;
+
         // 防止残留 tween 叠加
         messageUIDisplay.transform.DOKill();
         if (MessageCanvasGroup != null)
@@ -86,6 +88,8 @@ public class ItemInShop : MonoBehaviour, IInteractable
 
     private void MoveOverBack()
     {
+        if (messageUIDisplay == null) return;
+
         // 防止残留 tween 叠加
         messageUIDisplay.transform.DOKill();
         if (MessageCanvasGroup != null)
@@ -101,6 +105,17 @@ public class ItemInShop : MonoBehaviour, IInteractable
         Debug.Log($"购买了物品: {itemType} 来自 {gameObject.name}");
         //TODO- 这里添加购买逻辑，比如扣除金币，添加物品到背包等
         GameRoot.I.ShopManager.BuyCards(card.Cost);
+
+        // 销毁前清理所有 DOTween 动画，防止访问已销毁对象
+        if (messageUIDisplay != null)
+        {
+            messageUIDisplay.transform.DOKill();
+        }
+        if (MessageCanvasGroup != null)
+        {
+            MessageCanvasGroup.DOKill();
+        }
+
         Destroy(gameObject); // 购买后销毁物品
     }
 
