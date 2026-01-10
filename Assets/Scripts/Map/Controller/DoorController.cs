@@ -42,8 +42,11 @@ namespace RogueGame.Map
         private DoorState initialState = DoorState.Closed;
 
         [Header("当前状态（调试用）")]
-        [SerializeField]
+        [SerializeField, ReadOnly]
         private DoorState currentState = DoorState.Closed;
+
+        [Header("材质设置")]
+        [SerializeField] private PortalColorController portalColorController;
 
         [Header("调试")]
         [SerializeField]
@@ -193,10 +196,10 @@ namespace RogueGame.Map
                 doorVisual.SetActive(showVisual);
             }
 
-            // 更新颜色
-            if (doorSprite != null)
+            // 更新SpriteRenderer材质的颜色
+            if(portalColorController != null)
             {
-                doorSprite.color = currentState switch
+                Color targetColor = currentState switch
                 {
                     DoorState.Open => Color.green,
                     DoorState.Closed => Color.gray,
@@ -204,57 +207,11 @@ namespace RogueGame.Map
                     DoorState.Hidden => Color.clear,
                     _ => Color.white,
                 };
+                portalColorController.FadeToColor(targetColor, 0.5f);
             }
 
             Log($"[Door-{direction}] UpdateVisual:  state={currentState}, blocker={blockPlayer}");
         }
-
-        // private void OnTriggerEnter2D(Collider2D other)
-        // {
-        //     if (!other.CompareTag("Player"))
-        //         return;
-
-        //     _playerInRange = other.gameObject;
-
-        //     Log($"[Door-{direction}] 玩家进入触发区，当前状态: {currentState}");
-
-        //     if (currentState != DoorState.Open)
-        //     {
-        //         Log($"[Door-{direction}] 门未开启，无法通过");
-        //         // 若门未开启，仍可显示提示（例如提示锁定）
-        //         if (showPrompt)
-        //         {
-        //             string message = currentState switch
-        //             {
-        //                 DoorState.Locked => "门已锁定",
-        //                 DoorState.Closed => "门已关闭",
-        //                 DoorState.Open => "按 F 进入",
-        //                 _ => "",
-        //             };
-
-        //             EventBus.Publish(new InteractionPromptEvent { Message = message, Show = true });
-        //         }
-        //         return;
-        //     }
-
-        //     // 显示按键提示（实际穿门由按键触发）
-        //     if (showPrompt)
-        //     {
-        //         EventBus.Publish(new InteractionPromptEvent { Message = "按 F 进入", Show = true });
-        //     }
-        // }
-
-        // private void OnTriggerExit2D(Collider2D other)
-        // {
-        //     if (!other.CompareTag("Player"))
-        //         return;
-        //     if (_playerInRange == other.gameObject)
-        //         _playerInRange = null;
-        //     if (showPrompt)
-        //     {
-        //         EventBus.Publish(new InteractionPromptEvent { Message = "", Show = false });
-        //     }
-        // }
 
         private void Update()
         {
