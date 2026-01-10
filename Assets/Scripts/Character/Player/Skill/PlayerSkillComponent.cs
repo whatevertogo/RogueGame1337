@@ -39,7 +39,7 @@ namespace Character.Player
             }
 
             _slots = new SkillSlotCollection(3, inventory);
-            _executor = new SkillExecutor(inventory, new EffectFactory());
+            _executor = new SkillExecutor(inventory);
 
         }
 

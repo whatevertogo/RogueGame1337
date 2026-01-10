@@ -1,19 +1,18 @@
 using System.Collections.Generic;
 using CDTU.Utils;
+using Character;
 using Core.Events;
 using RogueGame.Events;
 using UnityEngine;
 
+
 public class ComboManager : Singleton<ComboManager>
 {
-    [SerializeField]
-    private ComboConfigSO _comboConfigSO;
+    [SerializeField] private ComboConfigSO _comboConfigSO;
     private int _currentCombo = 0;
     private float _remainingTime = 0f;
     public ComboConfigSO ConboConfigSO => _comboConfigSO;
-
     private Dictionary<ComboState, ComboTier> _tierDict = new Dictionary<ComboState, ComboTier>();
-
 
     private ComboTier _currentTier;
 
@@ -147,4 +146,6 @@ public class ComboManager : Singleton<ComboManager>
             tierColor = Color.white
         };
     }
+
+
 }

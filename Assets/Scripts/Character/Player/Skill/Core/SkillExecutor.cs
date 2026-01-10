@@ -21,15 +21,13 @@ namespace Character.Player.Skill.Core
     public sealed class SkillExecutor
     {
         private readonly InventoryServiceManager _inventory;
-        private readonly EffectFactory _effectFactory;
         private readonly SkillPhasePipeline _pipeline;
         private readonly Dictionary<int, SkillExecutionToken> _activeTokens;
 
 
-        public SkillExecutor(InventoryServiceManager inventory, EffectFactory effectFactory)
+        public SkillExecutor(InventoryServiceManager inventory)
         {
             _inventory = inventory;
-            _effectFactory = effectFactory;
             _pipeline = BuildPipeline();
             _activeTokens = new Dictionary<int, SkillExecutionToken>();
         }
@@ -88,10 +86,9 @@ namespace Character.Player.Skill.Core
             if (caster != null)
             {
                 // TODO-播放技能对应动画
-                caster.GetComponent<IAnimatorController>()?.PlaySkill(def.animationTrigger);
-                // 播放特效
-                // TODO-先硬编码，后续改为配置化
-                VFXSystem.Instance.PlayAt(def.animationTrigger, caster.transform.position, caster.transform,2f);
+                // caster.GetComponent<IAnimatorController>()?.PlaySkill(def.animationTrigger);
+                // 播放人物释放特效
+                VFXSystem.Instance.PlayAt(def.vfxPrefabName, caster.transform.position, caster.transform,2f);
                 // 异步执行技能（Fire-and-Forget 模式）
                 ExecuteAsync(def, ctx, token).Forget();
             }
@@ -148,7 +145,7 @@ namespace Character.Player.Skill.Core
                 .Add(new VFXPhase())//播放特效
                 .Add(new CrossPhase())//跨阶段修改器
                 .Add(new DamageCalculationPhase())//伤害计算(底层也是通过effect)
-                .Add(new EffectApplicationPhase(_effectFactory));//效果应用
+                .Add(new EffectApplicationPhase());//效果应用
         }
         ///  <summary>
         /// 打断技能

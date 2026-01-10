@@ -146,6 +146,10 @@ namespace Game.UI
             if (_view != null)
                 _view.SetTierNameText(_currentTier.comboState.ToString());
 
+            // 更新档位加成显示
+            if (_view != null)
+                _view.SetBonusText(_currentTier.speedBonus, _currentTier.attackSpeedBonus);
+
             // 重新计算连击窗口（基础窗口 + 档位加成）
             float baseComboWindow = 3f;
             if (ComboManager.Instance != null && ComboManager.Instance.ConboConfigSO != null)
@@ -187,6 +191,9 @@ namespace Game.UI
                 _view.SetTierNameColor(_currentTier.tierColor);
                 _view.SetComboCountColor(_currentTier.tierColor);
                 _view.SetProgressBarColor(_currentTier.tierColor);
+
+                // 更新档位加成显示
+                _view.SetBonusText(_currentTier.speedBonus, _currentTier.attackSpeedBonus);
 
                 // 播放档位跃迁特效（闪烁 + 缩放）
                 _view.PlayTierNameFlashAnimation(Color.white);

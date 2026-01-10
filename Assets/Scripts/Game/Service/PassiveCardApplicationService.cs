@@ -18,7 +18,6 @@ public sealed class PassiveCardApplicationService
     private readonly InventoryServiceManager inventoryManager;
     private readonly PlayerManager playerManager;
     private readonly CardDataBase cardDatabase;
-    private readonly EffectFactory effectFactory;
 
     // 追踪已应用的被动效果 (cardId -> List<effect instances>)
     private readonly Dictionary<string, List<IStatusEffect>> _appliedEffects = new();
@@ -34,7 +33,6 @@ public sealed class PassiveCardApplicationService
         this.inventoryManager = inventoryManager;
         this.playerManager = playerManager;
         this.cardDatabase = cardDatabase;
-        this.effectFactory = new EffectFactory();
     }
 
     /// <summary>
@@ -198,7 +196,7 @@ public sealed class PassiveCardApplicationService
                 if (effectDef == null) continue;
 
                 // 创建效果实例
-                var effectInstance = effectFactory.CreateInstance(effectDef, caster);
+                var effectInstance = EffectFactory.CreateInstance(effectDef, caster);
 
                 // 设置为永久效果（持续时间 = -1 表示永久）
                 if (effectInstance is StatusEffectInstanceBase baseInstance)
@@ -318,7 +316,7 @@ public sealed class PassiveCardApplicationService
         if (evt == null) return;
 
         // 检查是否有"暴风骤雨"卡牌（P10）
-        var cardCount = inventoryManager.GetPassiveCardCount("P10");
+        var cardCount = inventoryManager.GetPassiveCardCount("暴风骤雨");
         if (cardCount <= 0) return;
 
         // 获取本地玩家
@@ -329,16 +327,16 @@ public sealed class PassiveCardApplicationService
         if (statusEffectComponent == null) return;
 
         // 获取 P10 卡牌定义，从中读取 StatusEffect 配置
-        var cardDef = cardDatabase.Resolve("P10");
+        var cardDef = cardDatabase.Resolve("暴风骤雨");
         if (cardDef == null || cardDef.passiveCardConfig?.passiveEffects == null || cardDef.passiveCardConfig.passiveEffects.Length == 0)
         {
-            CDTU.Utils.CDLogger.LogWarning("[PassiveCardApplicationService] P10 卡牌配置错误，未找到 StatusEffect");
+            CDTU.Utils.CDLogger.LogWarning("[PassiveCardApplicationService] 暴风骤雨 卡牌配置错误，未找到 StatusEffect");
             return;
         }
 
         // 创建攻速增益效果实例
         var effectDef = cardDef.passiveCardConfig.passiveEffects[0];
-        var effectInstance = effectFactory.CreateInstance(effectDef, localPlayer);
+        var effectInstance = EffectFactory.CreateInstance(effectDef, localPlayer);
 
         // 设置持续时间为3秒（临时 Buff）
         if (effectInstance is StatusEffectInstanceBase baseInstance)

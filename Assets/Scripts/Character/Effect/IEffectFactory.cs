@@ -1,6 +1,6 @@
-using Character;
+// using Character;
 
-public interface IEffectFactory
-{
-    StatusEffectInstanceBase CreateInstance(StatusEffectDefinitionSO definition, CharacterBase caster = null);
-}
+// public interface IEffectFactory
+// {
+//     StatusEffectInstanceBase CreateInstance(StatusEffectDefinitionSO definition, CharacterBase caster = null);
+// }

@@ -26,6 +26,11 @@ namespace Game.UI
         [Tooltip("时间进度条" )]
         private Image timeProgressBar;
 
+        [Header("档位加成显示")]
+        [SerializeField]
+        [Tooltip("档位加成文本（显示移速/攻速加成，如 '+20% 移速 +15% 攻速'）")]
+        private TMP_Text bonusText;
+
         [Header("动画配置")]
         [SerializeField]
         private float comboCountPunchScale = 1.3f; // 连击数字跳动放大倍数
@@ -77,6 +82,35 @@ namespace Game.UI
         {
             if (tierNameText != null)
                 tierNameText.text = content;
+        }
+
+        /// <summary>
+        /// 更新档位加成文本（显示移速/攻速加成）
+        /// </summary>
+        /// <param name="speedBonus">移速加成（百分比，如 20 表示 +20%）</param>
+        /// <param name="attackSpeedBonus">攻速加成（百分比，如 15 表示 +15%）</param>
+        public void SetBonusText(float speedBonus, float attackSpeedBonus)
+        {
+            if (bonusText == null)
+                return;
+
+            // 构建加成显示字符串
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+
+            if (speedBonus != 0f)
+            {
+                sb.Append($"+{speedBonus:F0}% 移速");
+            }
+
+            if (attackSpeedBonus != 0f)
+            {
+                if (sb.Length > 0)
+                    sb.Append(" ");
+                sb.Append($"+{attackSpeedBonus:F0}% 攻速");
+            }
+
+            // 如果没有任何加成，显示空或默认文本
+            bonusText.text = sb.Length > 0 ? sb.ToString() : "";
         }
 
         // ═══════════════════════════════════════════════════════════════
@@ -260,6 +294,9 @@ namespace Game.UI
 
             if (timeProgressBar != null)
                 timeProgressBar.gameObject.SetActive(visible);
+
+            if (bonusText != null)
+                bonusText.gameObject.SetActive(visible);
         }
     }
 }

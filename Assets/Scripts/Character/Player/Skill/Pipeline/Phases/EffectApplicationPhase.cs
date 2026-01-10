@@ -11,14 +11,8 @@ namespace Character.Player.Skill.Pipeline.Phases
     /// </summary>
     public sealed class EffectApplicationPhase : ISkillPhase
     {
-        private readonly EffectFactory _effectFactory;
-
         public string PhaseName => "EffectApplication";
 
-        public EffectApplicationPhase(EffectFactory effectFactory)
-        {
-            _effectFactory = effectFactory;
-        }
 
         public SkillPhaseResult Execute (SkillContext ctx, SkillExecutionToken token)
         {
@@ -45,7 +39,7 @@ namespace Character.Player.Skill.Pipeline.Phases
                 {
                     if (effectDef == null) continue;
 
-                    var effectInstance = _effectFactory.CreateInstance(effectDef, caster);
+                    var effectInstance = EffectFactory.CreateInstance(effectDef, caster);
                     if (effectInstance == null) continue;
 
                     // 传递真伤标记
