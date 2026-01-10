@@ -14,6 +14,7 @@ public class ComboManager : Singleton<ComboManager>
 
     private Dictionary<ComboState, ComboTier> _tierDict = new Dictionary<ComboState, ComboTier>();
 
+
     private ComboTier _currentTier;
 
     protected override void Awake()
@@ -36,15 +37,7 @@ public class ComboManager : Singleton<ComboManager>
         }
 
         // 初始化为 None 档位（无连击状态）
-        _currentTier = new ComboTier
-        {
-            comboState = ComboState.None,
-            threshold = 0,
-            energyMult = 0,
-            speedBonus = 0,
-            rangeBonus = 0,
-            tierColor = Color.white
-        };
+        _currentTier = GetNoneStateTier();
 
         Debug.Log("[ComboManager] 初始化完成，档位数量: " + _comboConfigSO.tiers.Count);
     }
@@ -91,15 +84,7 @@ public class ComboManager : Singleton<ComboManager>
         // 特殊处理：comboCount = 0 时返回 None 档位
         if (comboCount <= 0)
         {
-            return new ComboTier
-            {
-                comboState = ComboState.None,
-                threshold = 0,
-                energyMult = 0,
-                speedBonus = 0,
-                rangeBonus = 0,
-                tierColor = Color.white
-            };
+            return GetNoneStateTier();
         }
 
         // 从后往前找，找到第一个满足 threshold <= comboCount 的档位
@@ -144,17 +129,22 @@ public class ComboManager : Singleton<ComboManager>
         _remainingTime = 0f;
 
         // 重置为 None 档位（无连击状态）
-        _currentTier = new ComboTier
+        _currentTier = GetNoneStateTier();
+
+        // 发布连击归零事件
+        EventBus.Publish(new ComboChangedEvent(0, _currentTier));
+    }
+
+    private ComboTier GetNoneStateTier()
+    {
+        return new ComboTier
         {
             comboState = ComboState.None,
             threshold = 0,
             energyMult = 0,
             speedBonus = 0,
-            rangeBonus = 0,
+            attackSpeedBonus = 0,
             tierColor = Color.white
         };
-
-        // 发布连击归零事件
-        EventBus.Publish(new ComboChangedEvent(0, _currentTier));
     }
 }

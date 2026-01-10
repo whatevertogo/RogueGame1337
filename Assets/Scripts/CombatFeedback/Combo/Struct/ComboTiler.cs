@@ -16,8 +16,8 @@ public struct ComboTier
     [Tooltip("移动速度加成")]
     public float speedBonus;
 
-    [Tooltip("攻击范围加成")]
-    public float rangeBonus;
+    [Tooltip("攻击速度加成")]
+    public float attackSpeedBonus;
 
     [Tooltip("此档位的 UI 和特效显示颜色")]
     public Color tierColor;
@@ -36,7 +36,6 @@ public struct ComboTier
             && tier1.threshold == tier2.threshold
             && tier1.energyMult == tier2.energyMult
             && tier1.speedBonus == tier2.speedBonus
-            && tier1.rangeBonus == tier2.rangeBonus
             && tier1.tierColor.Equals(tier2.tierColor); // 注意 Color 可能需要使用 Equals 方法比较
     }
 
@@ -60,6 +59,6 @@ public struct ComboTier
     public override int GetHashCode()
     {
         // 通过元组生成哈希值，保证包含所有字段
-        return (comboState, threshold, energyMult, speedBonus, rangeBonus, tierColor).GetHashCode();
+        return (comboState, threshold, energyMult, speedBonus, attackSpeedBonus, tierColor).GetHashCode();
     }
 }
