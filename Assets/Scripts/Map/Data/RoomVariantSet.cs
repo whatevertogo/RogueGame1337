@@ -6,6 +6,7 @@ namespace RogueGame.Map.Data
     /// <summary>
     /// 某房间类型下的 prefab/变体列表（用于 Room_<Type>_<Index> 选择）。
     /// </summary>
+    [ManagedData("Map")]
     [CreateAssetMenu(fileName = "RoomVariantSet", menuName = "RogueGame/Map/Room Variant Set")]
     public class RoomVariantSet : ScriptableObject
     {

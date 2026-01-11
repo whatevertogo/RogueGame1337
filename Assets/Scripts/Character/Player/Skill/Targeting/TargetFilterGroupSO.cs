@@ -1,10 +1,12 @@
 using System.Collections.Generic;
 using System.Linq;
+
 using Character;
 using Character.Player.Skill.Targeting;
 using UnityEngine;
 
 
+[ManagedData("Skill")]
 [CreateAssetMenu(
     fileName = "TargetFilterGroup",
     menuName = "RogueGame/Skill/Targeting/Filters/TargetFilterGroup")]

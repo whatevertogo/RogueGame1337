@@ -6,6 +6,7 @@ using UnityEngine;
 /// 伤害修改器：修改技能的最终伤害和真实伤害标记
 /// 实现 IDamageModifier 接口，在伤害计算阶段应用
 /// </summary>
+[ManagedData("Skill")]
 [CreateAssetMenu(fileName = "DamageSkillModifier", menuName = "RogueGame/Skill/Modifiers/DamageSkillModifier")]
 public class DamageSkillModifier : SkillModifierBase, IDamageModifier
 {

@@ -1,8 +1,10 @@
 using System.Collections.Generic;
+
 using UnityEngine;
 using System.Linq;
 
 
+[ManagedData("Card")]
 [CreateAssetMenu(fileName = "NewCardDatabase", menuName = "RogueGame/Card/Database")]
 /// <summary>
 /// 全局卡牌定义注册表：通过 cardId 查找 CardDefinition(SO)

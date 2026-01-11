@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+
 using CDTU.Utils;
 using UnityEngine;
 
@@ -10,6 +11,7 @@ namespace Character.Player.Skill.Evolution
     /// 进化效果池（全局单例，管理所有进化效果）
     /// 负责根据技能、等级、已选效果动态生成进化选项
     /// </summary>
+    [ManagedData("Skill")]
     [CreateAssetMenu(fileName = "EvolutionEffectPool", menuName = "RogueGame/Skill/EvolutionPool")]
     public class EvolutionEffectPool : ScriptableObject
     {

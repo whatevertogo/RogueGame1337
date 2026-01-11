@@ -7,6 +7,7 @@ namespace RogueGame.GameConfig
     /// 属性上限配置
     /// 定义游戏中各种属性的最大值限制，防止数值爆炸
     /// </summary>
+    [ManagedData("Game")]
     [CreateAssetMenu(fileName = "StatLimit", menuName = "RogueGame/Game/Stat Limit Config")]
     public class StatLimitConfig : ScriptableObject
     {

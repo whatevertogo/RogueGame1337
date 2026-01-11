@@ -31,6 +31,7 @@ namespace RogueGame.Map
     /// <summary>
     /// 敌人生成配置
     /// </summary>
+    [ManagedData("Map")]
     [CreateAssetMenu(fileName = "EnemySpawn", menuName = "RogueGame/Map/Enemy Spawn Config")]
     public class EnemySpawnConfig :  ScriptableObject
     {

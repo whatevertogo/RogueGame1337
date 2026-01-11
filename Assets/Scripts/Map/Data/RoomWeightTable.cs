@@ -4,8 +4,9 @@ using UnityEngine;
 namespace RogueGame.Map.Data
 {
     /// <summary>
-    /// 基于“当前房间类型”到“下一房间类型”的权重表。
+    /// 基于"当前房间类型"到"下一房间类型"的权重表。
     /// </summary>
+    [ManagedData("Map")]
     [CreateAssetMenu(fileName = "RoomWeightTable", menuName = "RogueGame/Map/Room Weight Table")]
     public class RoomWeightTable : ScriptableObject
     {

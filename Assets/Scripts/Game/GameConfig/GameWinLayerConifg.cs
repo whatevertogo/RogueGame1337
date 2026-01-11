@@ -1,6 +1,7 @@
 
 
 using UnityEngine;
+[ManagedData("Game")]
 [CreateAssetMenu(fileName = "WinLayerReward", menuName = "RogueGame/Game/Win Layer Reward")]
 public class GameWinLayerRewardConfig : ScriptableObject
 {

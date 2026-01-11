@@ -1,8 +1,10 @@
+
 using Character;
 using Character.Effects;
 using UnityEngine;
 
 
+[ManagedData("Effect")]
 public abstract class StatusEffectDefinitionSO : ScriptableObject
 {
     public string effectId;

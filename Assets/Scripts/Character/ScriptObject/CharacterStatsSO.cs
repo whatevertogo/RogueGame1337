@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[ManagedData("Character")]
 /// <summary>
 /// 角色属性配置模板
 /// </summary>

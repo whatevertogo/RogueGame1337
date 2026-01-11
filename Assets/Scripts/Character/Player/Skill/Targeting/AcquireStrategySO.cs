@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+
 using Character;
 using Character.Player.Skill.Targeting;
 using UnityEngine;
@@ -9,6 +10,7 @@ namespace Card.SkillSystem.TargetingSystem
     /// 目标获取策略抽象基类
     /// 所有目标获取逻辑的基类，定义了统一的接口
     /// </summary>
+    [ManagedData("Skill")]
     public abstract class TargetAcquireSO : ScriptableObject, ITargetAcquireStrategy
     {
         /// <summary>

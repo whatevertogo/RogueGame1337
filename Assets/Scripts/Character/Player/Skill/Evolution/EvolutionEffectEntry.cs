@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+
 using Character.Player.Skill.Modifiers;
 using UnityEngine;
 
@@ -9,6 +10,7 @@ namespace Character.Player.Skill.Evolution
     /// 进化效果条目（效果池中的单项）
     /// 每个效果定义了一个可选的技能进化选项
     /// </summary>
+    [ManagedData("Skill")]
     [CreateAssetMenu(fileName = "EvolutionEffect", menuName = "RogueGame/Skill/EvolutionEffect")]
     public class EvolutionEffectEntry : ScriptableObject
     {

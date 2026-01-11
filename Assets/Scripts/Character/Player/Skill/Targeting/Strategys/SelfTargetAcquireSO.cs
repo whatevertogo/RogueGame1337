@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+
 using Character;
 using UnityEngine;
 using Card.SkillSystem.TargetingSystem;
@@ -8,6 +9,7 @@ using Character.Player.Skill.Targeting;
 /// 自我目标获取策略
 /// 返回施法者自身作为技能目标，可应用过滤器进行筛选
 /// </summary>
+[ManagedData("Skill")]
 [CreateAssetMenu(fileName = "SelfTargetAcquire", menuName = "RogueGame/Skill/Targeting/Strategies/SelfTargetAcquire")]
 public class SelfTargetAcquireSO : TargetAcquireSO
 {

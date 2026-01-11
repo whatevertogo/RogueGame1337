@@ -1,6 +1,7 @@
 using Character;
 using UnityEngine;
 
+[ManagedData("Character")]
 [CreateAssetMenu(fileName = "Enemy", menuName = "RogueGame/Character/Enemy")]
 public class EnemyConfigSO : ScriptableObject
 {

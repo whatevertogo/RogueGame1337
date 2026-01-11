@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+
 using Character;
 using UnityEngine;
 using Card.SkillSystem.TargetingSystem;
@@ -8,6 +9,7 @@ using Character.Player.Skill.Targeting;
 /// 范围伤害目标获取策略
 /// 通过球形范围检测获取所有目标，并可应用过滤器进行筛选
 /// </summary>
+[ManagedData("Skill")]
 [CreateAssetMenu(fileName = "AreaDamageTargetAcquire", menuName = "RogueGame/Skill/Targeting/Strategies/AreaDamageTargetAcquire")]
 public class AreaDamageTargetAcquireSO : TargetAcquireSO
 {

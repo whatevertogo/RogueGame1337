@@ -3,6 +3,7 @@ using UnityEngine;
 /// <summary>
 /// 投射物配置
 /// </summary>
+[ManagedData("Character")]
 [CreateAssetMenu(fileName = "Projectile", menuName = "RogueGame/Combat/Projectile")]
 public class ProjectileConfig : ScriptableObject
 {

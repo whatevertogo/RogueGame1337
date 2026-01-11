@@ -1,3 +1,4 @@
+
 using Character.Effects;
 using UnityEngine;
 using Character;
@@ -6,6 +7,7 @@ using Character;
     /// <summary>
     /// 灼烧效果定义（持续伤害效果）
     /// </summary>
+    [ManagedData("Effect")]
     [CreateAssetMenu(fileName = "Burn", menuName = "RogueGame/Character/Effects/Debuffs/Burn")]
     public class BurnEffectDefinitionSO : StatusEffectDefinitionSO
     {

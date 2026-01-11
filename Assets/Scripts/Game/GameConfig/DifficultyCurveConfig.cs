@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿#pragma warning disable CS0436 // 类型与导入的类型冲突
+using UnityEngine;
 
 namespace RogueGame.GameConfig
 {
@@ -6,6 +7,7 @@ namespace RogueGame.GameConfig
     /// 游戏难度曲线配置
     /// 定义随层数递增的难度缩放参数，支持线性和指数两种增长模式
     /// </summary>
+    [ManagedData("Game")]
     [CreateAssetMenu(fileName = "DifficultyCurve", menuName = "RogueGame/Game/Difficulty Curve")]
     public class DifficultyCurveConfig : ScriptableObject
     {

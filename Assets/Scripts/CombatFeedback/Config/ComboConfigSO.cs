@@ -1,8 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-
-[ManagedData("ComboConfigSO")]
+[ManagedData("Combo")]
 [CreateAssetMenu(fileName = "ComboConfig", menuName = "RogueGame/Config/ComboConfig")]
 public class ComboConfigSO : ScriptableObject
 {

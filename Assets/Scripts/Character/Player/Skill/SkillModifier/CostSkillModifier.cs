@@ -7,6 +7,7 @@ using UnityEngine;
 /// 能量消耗修改器：修改技能的能量消耗
 /// 实现 IEnergyCostModifier 接口，在能量消耗前应用
 /// </summary>
+[ManagedData("Skill")]
 [CreateAssetMenu(fileName = "CostSkillModifier", menuName = "RogueGame/Skill/Modifiers/CostSkillModifier")]
 public class CostSkillModifier : SkillModifierBase, IEnergyCostModifier
 {

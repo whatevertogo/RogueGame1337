@@ -7,6 +7,7 @@ using Character.Player.Skill.Targeting;
 using UnityEngine;
 
 
+[ManagedData("Skill")]
 [CreateAssetMenu(fileName = "Skill", menuName = "RogueGame/Card/Skill")]
 public class SkillDefinition : ScriptableObject
 {
